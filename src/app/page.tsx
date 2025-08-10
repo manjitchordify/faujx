@@ -10,7 +10,7 @@ const Content = () => {
           alt="FaujX Logo"
           width={240}
           height={60}
-          className="w-60 h-[80px] md:w-72 md:h-[92px]"
+          className="w-60 h-[80px] md:w-72 md:h-[100px]"
         />
       </div>
 
@@ -21,7 +21,7 @@ const Content = () => {
             <h1 className="text-3xl lg:text-4xl font-bold mb-6 text-[#1F514C] leading-tight">
               FaujX — More Than Just for Applicants
             </h1>
-            <p className="max-w-2xl mx-auto mt-4 text-base lg:text-lg leading-relaxed text-[#1F514C]/90">
+            <p className="px-5 md:px-0 max-w-2xl mx-auto mt-4 text-base lg:text-lg leading-relaxed text-[#1F514C]/90 text-justify">
               FaujX is your global platform connecting{" "}
               <b>Foundation Engineers</b> with opportunities that matter —
               empowering <b>applicants</b> ready to showcase their capabilities,{" "}
