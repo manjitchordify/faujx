@@ -22,35 +22,13 @@ const Content = () => {
               FaujX — More Than Just for Applicants
             </h1>
             <p className="max-w-2xl mx-auto mt-4 text-base lg:text-lg leading-relaxed text-[#1F514C]/90">
-              FaujX is your global platform connecting Foundation Engineers with
-              opportunities that matter — empowering applicants ready to
-              showcase their capabilities, clients in need of top-tier vetted
-              engineers, and experts eager to mentor, review, and guide projects
-              to success.
+              FaujX is your global platform connecting{" "}
+              <b>Foundation Engineers</b> with opportunities that matter —
+              empowering <b>applicants</b> ready to showcase their capabilities,{" "}
+              <b>clients</b> in need of top-tier vetted engineers, and{" "}
+              <b>experts</b> eager to mentor, review, and guide projects to
+              success.
             </p>
-            <form
-              action="https://formspree.io/f/abcdwxyz"
-              method="POST"
-              className="flex flex-col items-center gap-4 mt-8 w-full max-w-md mx-auto bg-white rounded-lg shadow p-6"
-            >
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                placeholder="Enter your email to get updates"
-                className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#1F514C] text-base"
-              />
-              <button
-                type="submit"
-                className="w-full bg-[#1F514C] text-white font-semibold py-3 rounded hover:bg-[#17403a] transition"
-              >
-                Notify Me
-              </button>
-            </form>
           </div>
           <h1 className="text-3xl lg:text-4xl font-bold mb-6 text-[#1F514C] leading-tight mt-10 text-center">
             🚀 Stay Tuned — More Details Coming Soon!
