@@ -5,7 +5,13 @@ const Content = () => {
   return (
     <div className="w-full min-h-screen bg-gray-50">
       <div className="flex justify-center items-center pt-10">
-        <Image src="/faujx.png" alt="FaujX Logo" width={240} height={60} className="w-60 h-auto mb-6" />
+        <Image
+          src="/faujx.png"
+          alt="FaujX Logo"
+          width={240}
+          height={60}
+          className="w-60 h-[80px] md:w-72 md:h-[92px]"
+        />
       </div>
 
       {/* Main Content */}
@@ -46,7 +52,7 @@ const Content = () => {
               </button>
             </form>
           </div>
-          <h1 className="text-3xl lg:text-4xl font-bold mb-6 text-[#1F514C] leading-tight mt-10">
+          <h1 className="text-3xl lg:text-4xl font-bold mb-6 text-[#1F514C] leading-tight mt-10 text-center">
             🚀 Stay Tuned — More Details Coming Soon!
           </h1>
         </div>
