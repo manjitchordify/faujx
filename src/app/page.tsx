@@ -1,112 +1,54 @@
-"use client";
-
-import React, { useState } from "react";
-import Link from "next/link";
-
-const FAQ = [
-  {
-    q: "Who is FaujX for?",
-    a: "Customers hiring great junior engineers, Engineers seeking high-quality roles, and Experts who love mentoring.",
-  },
-  {
-    q: "How does matching work?",
-    a: "AI assessments + expert interviews + focused upskilling to ensure consistently high-quality matches.",
-  },
-];
+import React from "react";
+import Image from "next/image";
 
 const Content = () => {
-  const [faqOpen, setFaqOpen] = useState<number | null>(0);
-
   return (
     <div className="w-full min-h-screen bg-gray-50">
-      {/* Coming Soon Header */}
-      <section className="w-full py-12 px-4 bg-[#EAEAE2] border-t border-black/5">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#1F514C]/10 px-4 py-2 ring-1 ring-[#1F514C]/20">
-            <span className="text-5xl font-semibold text-[#1F514C]">
-              Coming Soon...
-            </span>
-          </div>
-          <h2 className="mt-4 text-2xl lg:text-3xl font-bold text-[#1F514C]">
-            New experiences for Customers, Engineers, and Experts
-          </h2>
-        </div>
-      </section>
+      <div className="flex justify-center items-center pt-10">
+        <Image src="/faujx.png" alt="FaujX Logo" width={240} height={60} className="w-60 h-auto mb-6" />
+      </div>
 
       {/* Main Content */}
-      <section className="bg-[url('/landingpage_background.png')] bg-auto">
-        <div className="flex flex-col items-center justify-center px-2 lg:px-4 py-12 lg:py-20 max-w-7xl mx-auto">
-          <div className="w-full max-w-2xl text-center mt-11">
-            <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-[#1F514C] leading-tight">
-              FaujX
+      <section>
+        <div className="flex flex-col items-center justify-center px-2 lg:px-4 py-12 lg:py-10 max-w-7xl mx-auto">
+          <div className="w-full text-center mt-11">
+            <h1 className="text-3xl lg:text-4xl font-bold mb-6 text-[#1F514C] leading-tight">
+              FaujX — More Than Just for Applicants
             </h1>
-            <div className="mb-8">
-              <p className="text-xl lg:text-2xl text-[#1F514C] mb-2 font-medium">
-                Hire smarter, grow faster.
-              </p>
-              <p className="text-xl lg:text-2xl text-[#1F514C] font-medium">
-                Apply better, get hired quicker.
-              </p>
-            </div>
-
-            {/* Tab-style Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 justify-center">
-              <Link
-                href="#"
-                className="px-6 py-3 bg-[#EAEAE2] text-black rounded-full font-medium text-base transition-all duration-300 hover:bg-[#1F514C] hover:text-white hover:scale-105 shadow-lg text-center min-w-[140px]"
-              >
-                I&apos;m a Customer
-              </Link>
-              <Link
-                href="#"
-                className="px-6 py-3 bg-[#EAEAE2] text-black rounded-full font-medium text-base transition-all duration-300 hover:bg-[#1F514C] hover:text-white hover:scale-105 shadow-lg text-center min-w-[140px]"
-              >
-                I&apos;m an Engineer
-              </Link>
-              <Link
-                href="#"
-                className="px-6 py-3 bg-[#EAEAE2] text-black rounded-full font-medium text-base transition-all duration-300 hover:bg-[#1F514C] hover:text-white hover:scale-105 shadow-lg text-center min-w-[140px]"
-              >
-                I&apos;m an Expert
-              </Link>
-            </div>
-
-            <p className="mt-4 text-base lg:text-lg leading-relaxed text-[#1F514C]/90">
-              a global, premium talent acceleration platform designed to connect
-              vetted, job-ready Foundation Engineers—with leading tech companies
-              across India, the U.S., Europe, Canada, and Singapore. It
-              integrates AI-powered assessment with expert interviews and
-              LMS-based upskilling to ensure a high-quality talent match.
+            <p className="max-w-2xl mx-auto mt-4 text-base lg:text-lg leading-relaxed text-[#1F514C]/90">
+              FaujX is your global platform connecting Foundation Engineers with
+              opportunities that matter — empowering applicants ready to
+              showcase their capabilities, clients in need of top-tier vetted
+              engineers, and experts eager to mentor, review, and guide projects
+              to success.
             </p>
-          </div>
-
-          {/* Feature Highlights */}
-          <div className="w-full max-w-5xl mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              {
-                title: "AI-Powered Vetting",
-                desc: "Structured assessments tailored to junior engineering skills.",
-              },
-              {
-                title: "Expert Interviews",
-                desc: "Human-in-the-loop reviews for signal over noise.",
-              },
-              {
-                title: "Global Opportunities",
-                desc: "India, U.S., Europe, Canada, Singapore — one pipeline.",
-              },
-            ].map((f) => (
-              <div
-                key={f.title}
-                className="rounded-2xl bg-white/90 backdrop-blur p-5 ring-1 ring-black/5 shadow-sm"
+            <form
+              action="https://formspree.io/f/abcdwxyz"
+              method="POST"
+              className="flex flex-col items-center gap-4 mt-8 w-full max-w-md mx-auto bg-white rounded-lg shadow p-6"
+            >
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                placeholder="Enter your email to get updates"
+                className="w-full px-4 py-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#1F514C] text-base"
+              />
+              <button
+                type="submit"
+                className="w-full bg-[#1F514C] text-white font-semibold py-3 rounded hover:bg-[#17403a] transition"
               >
-                <div className="text-lg font-semibold text-[#1F514C]">
-                  {f.title}
-                </div>
-                <p className="mt-1 text-sm text-[#1F514C]/80">{f.desc}</p>
-              </div>
-            ))}
+                Notify Me
+              </button>
+            </form>
           </div>
+          <h1 className="text-3xl lg:text-4xl font-bold mb-6 text-[#1F514C] leading-tight mt-10">
+            🚀 Stay Tuned — More Details Coming Soon!
+          </h1>
         </div>
       </section>
 
