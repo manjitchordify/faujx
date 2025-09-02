@@ -26,7 +26,7 @@ const Content = () => {
               <b>Foundation Engineers</b> with opportunities that matter —
               empowering <b>applicants</b> ready to showcase their capabilities,{" "}
               <b>clients</b> in need of top-tier vetted engineers, and{" "}
-              <b>experts</b> eager to mentor, review, and guide projects to
+              <b>experts</b> eager to mentor, review, and guid projects to
               success.
             </p>
           </div>
