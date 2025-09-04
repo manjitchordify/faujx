@@ -113,10 +113,12 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
               <Image
                 src="/applogo.png"
                 alt="Faujx Logo"
-                height={40}
-                width={40}
+                height={80}
+                width={80}
                 className="h-8 lg:h-10 w-auto mr-2"
                 priority
+                quality={100}
+                style={{ objectFit: 'contain' }}
               />
             </Link>
           </div>
