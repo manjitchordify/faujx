@@ -151,7 +151,7 @@ const Content = () => {
                       className={`flex items-start space-x-2 transition-all duration-500 delay-75 transform ${isAnimating ? 'translate-y-2 opacity-0' : 'translate-y-0 opacity-100'}`}
                     >
                       <div
-                        className={`w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0 transition-all duration-300 transform ${isAnimating ? 'scale-0' : 'scale-100'}`}
+                        className={`hidden md:block w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0 transition-all duration-300 transform ${isAnimating ? 'scale-0' : 'scale-100'}`}
                       ></div>
                       <p className="text-sm sm:text-base md:text-md lg:text-xl leading-relaxed font-medium">
                         {currentContent.text}
@@ -162,7 +162,7 @@ const Content = () => {
                       className={`flex items-start space-x-2 transition-all duration-500 delay-150 transform ${isAnimating ? 'translate-y-2 opacity-0' : 'translate-y-0 opacity-100'}`}
                     >
                       <div
-                        className={`w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0 transition-all duration-300 delay-75 transform ${isAnimating ? 'scale-0' : 'scale-100'}`}
+                        className={`hidden md:block w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0 transition-all duration-300 delay-75 transform ${isAnimating ? 'scale-0' : 'scale-100'}`}
                       ></div>
                       <p className="text-sm sm:text-base md:text-md lg:text-xl leading-relaxed font-light">
                         {currentContent.subText}

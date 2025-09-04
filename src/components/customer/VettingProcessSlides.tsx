@@ -79,10 +79,10 @@ export default function VettingProcessSlides() {
   };
 
   return (
-    <div className="relative w-full bg-white py-16">
-      <div className="max-w-7xl mx-auto px-6">
+    <div className="relative w-full bg-white py-8 sm:py-12 lg:py-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-12">
+        <div className="mb-8 sm:mb-10 lg:mb-12">
           <SectionHeader mainText="Smart Vetting Process" aboutSection="" />
         </div>
 
@@ -92,17 +92,17 @@ export default function VettingProcessSlides() {
           <button
             onClick={prevStep}
             disabled={currentStep === 0}
-            className={`absolute left-0 z-10 p-4 rounded-full transition-all duration-200 ${
+            className={`absolute left-0 sm:left-2 lg:left-0 z-10 p-2 sm:p-3 lg:p-4 rounded-full transition-all duration-200 ${
               currentStep === 0
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'text-gray-600 hover:text-green-600 hover:bg-white hover:shadow-lg'
             }`}
           >
-            <ChevronLeft size={48} />
+            <ChevronLeft size={24} className="sm:w-8 sm:h-8 lg:w-12 lg:h-12" />
           </button>
 
           {/* Slide Content */}
-          <div className="w-full max-w-5xl mx-16">
+          <div className="w-full max-w-5xl mx-8 sm:mx-12 lg:mx-16">
             <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.div
                 key={currentStep}
@@ -115,22 +115,22 @@ export default function VettingProcessSlides() {
                   x: { type: 'spring', stiffness: 300, damping: 30 },
                   opacity: { duration: 0.2 },
                 }}
-                className="grid lg:grid-cols-2 gap-12 items-center space-x-0 "
+                className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center"
               >
                 {/* Left Side - Illustration */}
-                <div className="flex justify-center lg:justify-end">
+                <div className="flex justify-center lg:justify-end order-2 lg:order-1">
                   <div className="relative">
                     {/* Main illustration card */}
-                    <div className=" rounded-3xl  p-8 w-96 h-96 flex flex-col items-center justify-center relative overflow-hidden">
+                    <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 w-64 md:h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 flex flex-col items-center justify-center relative overflow-hidden">
                       {/* Step icon */}
-                      <div className="relative z-10 ">
-                        <div className="relative z-10 mt-10">
+                      <div className="relative z-10">
+                        <div className="relative z-10 mt-4 sm:mt-6 lg:mt-10">
                           <Image
                             src={steps[currentStep].image}
                             alt={steps[currentStep].title}
                             width={128}
                             height={128}
-                            className="object-contain w-full h-full"
+                            className="object-contain w-16 h-16 sm:w-20 sm:h-20 lg:w-32 lg:h-32"
                           />
                         </div>
                       </div>
@@ -139,19 +139,19 @@ export default function VettingProcessSlides() {
                 </div>
 
                 {/* Right Side - Content */}
-                <div className="text-center lg:text-left">
+                <div className="text-center lg:text-left order-1 lg:order-2">
                   {/* Step Badge */}
-                  <div className="inline-block bg-green-600 text-white px-6 py-3 rounded-full text-lg font-semibold mb-8">
+                  <div className="inline-block bg-green-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 rounded-full text-sm sm:text-base lg:text-lg font-semibold mb-4 sm:mb-6 lg:mb-8">
                     Step {currentStep + 1}
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-3xl lg:text-4xl font-medium text-gray-900 mb-6 leading-tight">
+                  <h3 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-medium text-gray-900 mb-4 sm:mb-5 lg:mb-6 leading-tight">
                     {steps[currentStep].title}
                   </h3>
 
                   {/* Description */}
-                  <p className="text-lg text-gray-600 leading-relaxed max-w-lg">
+                  <p className="text-sm sm:text-base lg:text-lg text-gray-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
                     {steps[currentStep].description}
                   </p>
                 </div>
@@ -163,23 +163,23 @@ export default function VettingProcessSlides() {
           <button
             onClick={nextStep}
             disabled={currentStep === steps.length - 1}
-            className={`absolute right-0 z-10 p-4 rounded-full transition-all duration-200 ${
+            className={`absolute right-0 sm:right-2 lg:right-0 z-10 p-2 sm:p-3 lg:p-4 rounded-full transition-all duration-200 ${
               currentStep === steps.length - 1
                 ? 'text-gray-300 cursor-not-allowed'
                 : 'text-gray-600 hover:text-green-600 hover:bg-white hover:shadow-lg'
             }`}
           >
-            <ChevronRight size={48} />
+            <ChevronRight size={24} className="sm:w-8 sm:h-8 lg:w-12 lg:h-12" />
           </button>
         </div>
 
         {/* Progress Indicators */}
-        <div className="flex justify-center mt-12 space-x-3">
+        <div className="flex justify-center mt-8 sm:mt-10 lg:mt-12 space-x-2 sm:space-x-3">
           {steps.map((_, idx) => (
             <button
               key={idx}
               onClick={() => goToStep(idx)}
-              className={`w-4 h-4 rounded-full transition-all duration-300 ${
+              className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full transition-all duration-300 ${
                 idx === currentStep
                   ? 'bg-green-600 scale-125'
                   : idx < currentStep
@@ -191,8 +191,8 @@ export default function VettingProcessSlides() {
         </div>
 
         {/* Step Counter */}
-        <div className="text-center mt-6">
-          <span className="text-sm text-gray-500">
+        <div className="text-center mt-4 sm:mt-5 lg:mt-6">
+          <span className="text-xs sm:text-sm text-gray-500">
             {currentStep + 1} of {steps.length}
           </span>
         </div>
