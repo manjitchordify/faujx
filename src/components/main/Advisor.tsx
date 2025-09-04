@@ -69,7 +69,7 @@ const Advisor: React.FC = () => {
     {
       id: 3,
       name: 'Sachin Gupta',
-      title: 'Technical Advisor',
+      title: 'Engineering Leader, Investor',
       expertise: ['AI/ML', 'Software Engineering', 'Product Development'],
       experience: '8+ years',
       rating: 4.7,
@@ -86,7 +86,7 @@ const Advisor: React.FC = () => {
         'System Architecture',
       ],
       availability: 'Available for technical consultations',
-      linkedin: 'https://www.linkedin.com/',
+      linkedin: 'https://www.linkedin.com/in/sachingp/',
     },
   ];
 
