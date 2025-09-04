@@ -1,0 +1,27 @@
+{
+  "name": "FaujX - Mission-Driven Tech Hiring Platform",
+  "short_name": "FaujX",
+  "description": "Discover, vet, upskill, and deploy Foundation Engineers with real-world capabilities",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1F514C",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "education", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}
