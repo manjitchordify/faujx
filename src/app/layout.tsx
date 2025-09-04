@@ -1,52 +1,41 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Analytics } from "@vercel/analytics/next";
+'use client';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+import Providers from '@/store/Providers';
+import './globals.css';
+import { GoogleAnalytics } from '@next/third-parties/google';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import AuthGuard from '@/components/AuthGuard';
+import { Plus_Jakarta_Sans } from 'next/font/google';
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
 });
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "FaujX – Global Talent Acceleration Platform",
-  description:
-    "FaujX connects vetted, job-ready junior software engineers with top tech companies across India, the U.S., Europe, Canada, and Singapore. Combining AI-powered assessments, expert interviews, and LMS-based upskilling, it ensures a high-quality talent match.",
-  keywords: [
-    "FaujX",
-    "talent acceleration",
-    "junior software engineers",
-    "tech hiring",
-    "AI-powered assessment",
-    "expert interview",
-    "LMS upskilling",
-    "recruitment platform",
-    "India tech jobs",
-    "global hiring",
-    "Foundation Engineers",
-    "vetted talent",
-  ],
-  authors: [{ name: "FaujX" }],
-  category: "Technology / Recruitment / EdTech",
-};
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-        <Analytics />
+    <html lang="en" className={jakarta.className}>
+      <body className="min-h-screen flex flex-col font-sans bg-background text-foreground w-full">
+        <Providers>
+          <AuthGuard>{children}</AuthGuard>
+          <GoogleAnalytics gaId="G-5SNKDVPJ9M" />
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+        </Providers>
       </body>
     </html>
   );
