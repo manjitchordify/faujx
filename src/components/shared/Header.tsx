@@ -106,7 +106,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
     <header
       className={`w-full md:pt-6 shadow-lgg sticky top-0 z-50 ${isEngineerLandingPage ? 'bg-[#1F514C]' : 'bg-white'}`}
     >
-      <div className="container mx-auto">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 sm:h-20">
           <div className="flex-shrink-0 flex items-center">
             <Link href="/" className="flex items-center">
@@ -123,10 +123,10 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
             </Link>
           </div>
 
-          <div className="hidden md:flex-1 md:flex items-center space-x-8">
+          <div className="hidden md:flex-1 md:flex items-center space-x-6 lg:space-x-8">
             {/* Navigation Menu - Hide when logged in */}
             {!isLoggedIn && (
-              <nav className="!ml-auto hidden md:flex items-center space-x-8">
+              <nav className="!ml-auto hidden md:flex items-center space-x-6 lg:space-x-8">
                 {!hideNavMenu &&
                   navItems.map((item, index) => (
                     <Link
@@ -154,7 +154,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
 
             {/* User Profile Section - Show when logged in */}
             {isLoggedIn ? (
-              <div className="ml-auto relative flex items-center space-x-3">
+              <div className="ml-auto relative flex items-center space-x-3 lg:space-x-4">
                 {/* Notifications Component - Same as in Topbar */}
                 <div className="relative">
                   <NotificationDropdown
@@ -166,7 +166,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
                 {/* Profile Section */}
                 <button
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center space-x-3 focus:outline-none relative"
+                  className="flex items-center space-x-2 lg:space-x-3 focus:outline-none relative"
                 >
                   <div className="w-10 h-10 rounded-full overflow-hidden border-2 relative">
                     <Image
@@ -213,7 +213,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
                       onClick={() => setProfileDropdownOpen(false)}
                     />
 
-                    <div className="absolute right-0 mt-21 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                       <button
                         onClick={handleLogout}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
@@ -244,12 +244,12 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
               <div
                 className={clsx(
                   [isMain || isPrivacyRoute ? 'hidden' : 'md:flex'],
-                  'items-center gap-4'
+                  'items-center gap-3 lg:gap-4'
                 )}
               >
                 <button
                   onClick={() => router.push(`/${role}/login`)}
-                  className={`font-semibold py-2 px-6 rounded-full text-sm transition-all duration-200 hover:shadow-xl transform hover:-translate-y-0.5 ${
+                  className={`font-semibold py-2 px-4 lg:px-6 rounded-full text-sm transition-all duration-200 hover:shadow-xl transform hover:-translate-y-0.5 ${
                     isEngineerLandingPage
                       ? 'bg-white text-[#1F514C] hover:bg-gray-100'
                       : 'bg-[#1F514C] hover:bg-[#1F514C]/75 text-white'
@@ -259,7 +259,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
                 </button>
                 <button
                   onClick={() => router.push(`/${role}/signup`)}
-                  className={`font-semibold py-2 px-6 rounded-full text-sm transition-all duration-200 hover:shadow-xl transform hover:-translate-y-0.5 ${
+                  className={`font-semibold py-2 px-4 lg:px-6 rounded-full text-sm transition-all duration-200 hover:shadow-xl transform hover:-translate-y-0.5 ${
                     isEngineerLandingPage
                       ? 'bg-transparent border-[1.5px] border-white text-white hover:bg-white hover:text-[#1F514C]'
                       : 'bg-transparent border-[1.5px] border-[#1F514C] hover:bg-[#1F514C] text-[#1F514C] hover:text-white'
@@ -323,7 +323,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
 
           {/* Mobile Profile Display - Show when logged in on mobile */}
           {isLoggedIn && (
-            <div className="md:hidden relative flex items-center space-x-2">
+            <div className="md:hidden relative flex items-center space-x-3">
               {/* Mobile Notifications */}
               <div className="relative">
                 <NotificationDropdown
@@ -370,7 +370,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
 
               {/* Mobile Dropdown Menu */}
               {profileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200"
@@ -407,7 +407,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
           }`}
         >
           <div
-            className={`px-2 pt-2 pb-4 space-y-1 sm:px-3 border-t border-gray-200 ${isEngineerLandingPage ? 'bg-[#1F514C]' : 'bg-white'}`}
+            className={`px-4 pt-3 pb-4 space-y-2 sm:px-6 border-t border-gray-200 ${isEngineerLandingPage ? 'bg-[#1F514C]' : 'bg-white'}`}
           >
             {navItems.map((item, index) => (
               <Link
@@ -421,7 +421,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
                   }
                   setMenuOpen(false);
                 }}
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                className={`block px-4 py-3 rounded-md text-base font-medium ${
                   pathname === item.href
                     ? `${isMain ? 'bg-blue-50 text-blue-600' : isEngineerLandingPage ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-600'}`
                     : `${isMain ? 'text-gray-700 hover:bg-gray-50 hover:text-blue-600' : isEngineerLandingPage ? 'text-white hover:bg-white/10 hover:text-white' : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'}`
