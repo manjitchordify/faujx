@@ -122,7 +122,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
                 alt="Faujx Logo"
                 height={80}
                 width={80}
-                className="h-8 lg:h-10 w-auto mr-2"
+                className="h-12 lg:h-14 w-auto mr-2"
                 priority
                 quality={100}
                 style={{ objectFit: 'contain' }}
