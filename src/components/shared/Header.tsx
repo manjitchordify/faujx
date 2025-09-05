@@ -8,7 +8,7 @@ import clsx from 'clsx';
 import { useAppSelector, useAppDispatch } from '@/store/store';
 import { clearAuthCookies } from '@/services/authService';
 import NotificationDropdown from '@/components/shared/NotificationDropdown';
-import { setMainContent } from '@/store/slices/uiSlice';
+import { setMainContent, resetMainContent } from '@/store/slices/uiSlice';
 
 interface HeaderProps {
   hideNavMenu?: boolean;
@@ -109,7 +109,14 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 sm:h-20">
           <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center">
+            <Link
+              href="/"
+              className="flex items-center"
+              onClick={() => {
+                // Reset main content to show home page when logo is clicked
+                dispatch(resetMainContent());
+              }}
+            >
               <Image
                 src="/applogo.png"
                 alt="Faujx Logo"
