@@ -9,6 +9,7 @@ type UserRole = 'customer' | 'candidate' | 'expert';
 
 const Content = () => {
   const mainContent = useAppSelector(state => state.ui.mainContent);
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   const handleRoleSelection = (role: UserRole): void => {
     try {
@@ -18,49 +19,34 @@ const Content = () => {
     }
   };
 
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-
   // Content variations that change over time
   const contentSlides = [
     {
       text: 'Mission-driven tech hiring platform',
       subText: 'Discovers, vets, upskills, and deploys Foundation Engineers',
-      feature: 'Focuses on real-world capabilities over textbook knowledge',
-      image: '/portraitFrame.png', // Professional woman
+      image: '/portraitFrame.png',
       alt: 'Professional woman - Mission-driven approach',
     },
     {
       text: 'Builds disciplined, dependable, job-ready engineers',
       subText:
         'Designed to accelerate hiring, careers, and expertise from day one',
-      feature: 'Combines military precision with cutting-edge technology',
-      image: '/images/slideimage2.png', // You'll need a second image
+      image: '/images/slideimage2.png',
       alt: 'Professional person - Building expertise',
     },
   ];
 
-  // Auto-rotate content every 5 seconds with animation
+  // Auto-rotate content every 5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentSlide(prev => (prev + 1) % contentSlides.length);
-        setIsAnimating(false);
-      }, 150); // Half of transition duration
+      setCurrentSlide(prev => (prev + 1) % contentSlides.length);
     }, 5000);
 
     return () => clearInterval(timer);
   }, [contentSlides.length]);
 
   const handleSlideChange = (index: number) => {
-    if (index !== currentSlide) {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentSlide(index);
-        setIsAnimating(false);
-      }, 150);
-    }
+    setCurrentSlide(index);
   };
 
   const currentContent = contentSlides[currentSlide];
@@ -130,41 +116,65 @@ const Content = () => {
             </div>
           </div>
 
-          {/* Right Section - Dynamic Hero Card */}
-          <div className="flex-1 flex justify-center lg:justify-end mb-12 lg:mb-0 mt-10 ">
-            <div className="relative ">
-              {/* Background Card with Dynamic Content */}
-              <div className="bg-[#1F514C] rounded-3xl p-4 md:p-6 lg:p-8 shadow-2xl w-[450px] md:w-[550px] lg:w-[700px] flex flex-col justify-center h-60 md:h-64 lg:h-80 overflow-hidden relative">
-                {/* Animated background pattern */}
-                <div className="absolute inset-0 opacity-5">
-                  <div
-                    className={`w-full h-full bg-gradient-to-r from-white/10 to-transparent transform transition-transform duration-1000 ${isAnimating ? 'translate-x-full' : 'translate-x-0'}`}
-                  ></div>
+          {/* Right Section - Hybrid Responsive Slider */}
+          <div className="flex-1 flex justify-center lg:justify-end mb-8 lg:mb-0 mt-8 lg:mt-0">
+            {/* Simple Design for Small Screens (mobile) */}
+            <div className="w-full max-w-sm md:hidden">
+              {/* Content Card */}
+              <div className="bg-[#1F514C] rounded-2xl p-6 shadow-2xl mb-6">
+                <div className="text-white space-y-4">
+                  <p className="text-lg font-medium leading-relaxed">
+                    {currentContent.text}
+                  </p>
+                  <p className="text-sm font-light leading-relaxed opacity-90">
+                    {currentContent.subText}
+                  </p>
                 </div>
+              </div>
 
-                <div
-                  className={`text-white mb-6 w-full md:w-36 lg:w-[400px] transition-all duration-300 transform ${isAnimating ? 'translate-x-4 opacity-0' : 'translate-x-0 opacity-100'}`}
-                >
-                  <div className="space-y-3 lg:space-y-4 w-40 sm:w-36 md:w-52 lg:w-60">
-                    {/* Main feature point with staggered animation */}
-                    <div
-                      className={`flex items-start space-x-2 transition-all duration-500 delay-75 transform ${isAnimating ? 'translate-y-2 opacity-0' : 'translate-y-0 opacity-100'}`}
-                    >
-                      <div
-                        className={`hidden md:block w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0 transition-all duration-300 transform ${isAnimating ? 'scale-0' : 'scale-100'}`}
-                      ></div>
-                      <p className="text-sm sm:text-base md:text-md lg:text-xl leading-relaxed font-medium">
+              {/* Image Card */}
+              <div className="relative w-full aspect-[4/5]">
+                <Image
+                  src={currentContent.image}
+                  alt={currentContent.alt}
+                  fill
+                  className="object-cover rounded-2xl shadow-2xl"
+                  priority
+                />
+              </div>
+
+              {/* Simple Slide Indicators */}
+              <div className="flex justify-center space-x-2 mt-6">
+                {contentSlides.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSlideChange(index)}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      index === currentSlide
+                        ? 'bg-[#1F514C] scale-110'
+                        : 'bg-gray-300 hover:bg-gray-400'
+                    }`}
+                    aria-label={`Go to slide ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Optimized Complex Design for Medium and Large Screens */}
+            <div className="hidden md:block relative">
+              {/* Background Card with Content */}
+              <div className="bg-[#1F514C] rounded-3xl p-6 lg:p-8 shadow-2xl w-[500px] lg:w-[600px] flex flex-col justify-center h-64 lg:h-80 overflow-hidden relative">
+                <div className="text-white w-[200px] lg:w-[240px]">
+                  <div className="space-y-4">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-lg lg:text-xl leading-relaxed font-medium">
                         {currentContent.text}
                       </p>
                     </div>
-
-                    <div
-                      className={`flex items-start space-x-2 transition-all duration-500 delay-150 transform ${isAnimating ? 'translate-y-2 opacity-0' : 'translate-y-0 opacity-100'}`}
-                    >
-                      <div
-                        className={`hidden md:block w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0 transition-all duration-300 delay-75 transform ${isAnimating ? 'scale-0' : 'scale-100'}`}
-                      ></div>
-                      <p className="text-sm sm:text-base md:text-md lg:text-xl leading-relaxed font-light">
+                    <div className="flex items-start space-x-3">
+                      <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
+                      <p className="text-base lg:text-lg leading-relaxed font-light">
                         {currentContent.subText}
                       </p>
                     </div>
@@ -172,47 +182,28 @@ const Content = () => {
                 </div>
               </div>
 
-              {/* Overlapping Dynamic Image Card with Enhanced Animation */}
-              <div className="absolute -bottom-6 -right-6 lg:-bottom-8 lg:-right-8 mr-12 lg:mr-24">
-                <div
-                  className={`relative w-56 h-70 md:w-64 md:h-80 lg:w-80 lg:h-96 transition-all duration-700 transform ${isAnimating ? 'scale-95 rotate-1' : 'scale-100 rotate-0'}`}
-                >
-                  {/* Image container with fade and slide effect */}
-                  <div
-                    className={`relative w-full h-full transition-all duration-500 transform ${isAnimating ? 'opacity-0 translate-x-2' : 'opacity-100 translate-x-0'}`}
-                  >
-                    <Image
-                      src={currentContent.image}
-                      alt={currentContent.alt}
-                      fill
-                      className="object-cover rounded-2xl shadow-2xl"
-                      priority
-                    />
-
-                    {/* Animated overlay effect */}
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-r from-[#1F514C]/20 to-transparent rounded-2xl transition-opacity duration-500 ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
-                    ></div>
-                  </div>
-
-                  {/* Floating animation elements */}
-                  <div
-                    className={`absolute -top-2 -left-2 w-4 h-4 bg-white/20 rounded-full transition-all duration-1000 transform ${isAnimating ? 'scale-0 -translate-y-4' : 'scale-100 translate-y-0'}`}
-                  ></div>
-                  <div
-                    className={`absolute -bottom-2 -right-2 w-3 h-3 bg-white/30 rounded-full transition-all duration-1000 delay-100 transform ${isAnimating ? 'scale-0 translate-y-4' : 'scale-100 translate-y-0'}`}
-                  ></div>
+              {/* Overlapping Image Card */}
+              <div className="absolute -bottom-6 -right-6 lg:-bottom-8 lg:-right-8 mr-12 lg:mr-16">
+                <div className="relative w-64 h-80 lg:w-72 lg:h-96">
+                  <Image
+                    src={currentContent.image}
+                    alt={currentContent.alt}
+                    fill
+                    className="object-cover rounded-2xl shadow-2xl"
+                    priority
+                  />
                 </div>
               </div>
-              {/* Slide indicator moved inside the background card */}
-              <div className="absolute  left-1/2 transform -translate-x-1/2 flex space-x-2 z-20 mt-14">
+
+              {/* Slide Indicators */}
+              <div className="absolute left-1/2 transform -translate-x-1/2 flex space-x-2 z-20 mt-16">
                 {contentSlides.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => handleSlideChange(index)}
-                    className={`w-2 h-2 rounded-full transition-all duration-500 transform hover:scale-125 ${
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
                       index === currentSlide
-                        ? 'bg-black scale-110 shadow-lg'
+                        ? 'bg-black scale-110'
                         : 'bg-gray-500 hover:bg-white/80'
                     }`}
                     aria-label={`Go to slide ${index + 1}`}
