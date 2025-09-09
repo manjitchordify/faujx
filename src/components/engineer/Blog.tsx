@@ -58,7 +58,7 @@ const blogData = {
     },
     {
       id: 4,
-      title: 'How to Build Your Tech Team in Under 7 Days Using ChordifyED',
+      title: 'How to Build Your Tech Team in Under 7 Days Using FaujX LMS',
       subtitle:
         'Time-to-match metrics, onboarding support, and interview concierge services.',
       author: 'Editorial Team',

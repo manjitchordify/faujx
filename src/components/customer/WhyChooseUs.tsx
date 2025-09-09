@@ -109,7 +109,7 @@ function WhyChooseUs() {
   const benefits = [
     {
       icon: UsersIcon,
-      title: 'Job-Ready Engineers',
+      title: 'Pre-Vetted Engineers',
       description: 'Pre-vetted talent across top tech skills.',
     },
     {
@@ -120,7 +120,7 @@ function WhyChooseUs() {
     {
       icon: GraduationCapIcon,
       title: 'LMS Powered',
-      description: 'Upskill candidates via ChordifyED.',
+      description: 'Upskill candidates via FaujX LMS.',
     },
     {
       icon: ArrowLeftRightIcon,
