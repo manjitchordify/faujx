@@ -123,7 +123,7 @@ const Content = () => {
               {/* Content Card */}
               <div className="bg-[#1F514C] rounded-2xl p-6 shadow-2xl mb-6">
                 <div className="text-white space-y-4">
-                  <p className="text-lg font-medium leading-relaxed">
+                  <p className="text-lg leading-relaxed">
                     {currentContent.text}
                   </p>
                   <p className="text-sm font-light leading-relaxed opacity-90">
@@ -174,7 +174,7 @@ const Content = () => {
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
-                      <p className="text-base lg:text-lg leading-relaxed font-light">
+                      <p className="text-base lg:text-lg leading-relaxed font-medium">
                         {currentContent.subText}
                       </p>
                     </div>

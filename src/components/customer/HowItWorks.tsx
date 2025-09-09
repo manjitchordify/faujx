@@ -61,7 +61,7 @@ const HowItWorks: React.FC = () => {
                 }}
               >
                 <div
-                  className="rounded-xl p-6 min-h-[200px] flex flex-col"
+                  className="rounded-xl p-6 min-h-[230px] flex flex-col"
                   style={{
                     background: 'linear-gradient(to bottom, #FFFFFF, #F7F7F7)',
                   }}

@@ -17,6 +17,7 @@ import interviewReducer from './slices/interviewSlice';
 import persistSlice from './slices/persistSlice';
 import engineerProfileReducer from './slices/engineerProfileSlice';
 import uiReducer from './slices/uiSlice';
+import customerReducer from './slices/customerSlice';
 const persistConfig = {
   key: 'root',
   storage,
@@ -29,6 +30,7 @@ const rootReducer = combineReducers({
   persist: persistSlice,
   engineerProfile: engineerProfileReducer,
   ui: uiReducer,
+  customer: customerReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

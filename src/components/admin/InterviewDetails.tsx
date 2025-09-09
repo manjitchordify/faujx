@@ -830,6 +830,7 @@ function InterviewDetails() {
           {/* Sidebar - Actions */}
           <div className="space-y-6">
             {/* Quick Actions */}
+            {/* Quick Actions */}
             <div className="bg-white shadow rounded-lg">
               <div className="px-6 py-5 border-b border-gray-200">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -837,8 +838,11 @@ function InterviewDetails() {
                 </h3>
               </div>
               <div className="px-6 py-5 space-y-4">
-                {/* Enhanced Meeting Button Logic */}
-                {hasMeetingLink && isMeetingEnabled ? (
+                {/* Enhanced Meeting Button Logic with Completed Status Check */}
+                {hasMeetingLink &&
+                isMeetingEnabled &&
+                overallInterviewStatus.toLowerCase() !== 'completed' &&
+                interviewData.myAction?.toLowerCase() !== 'completed' ? (
                   <button
                     onClick={() =>
                       joinMeeting(
@@ -851,6 +855,22 @@ function InterviewDetails() {
                     <FiVideo className="mr-2 h-4 w-4" />
                     Join Meeting
                   </button>
+                ) : hasMeetingLink &&
+                  (overallInterviewStatus.toLowerCase() === 'completed' ||
+                    interviewData.myAction?.toLowerCase() === 'completed') ? (
+                  <div className="w-full text-center space-y-2">
+                    <div className="w-full inline-flex justify-center items-center px-4 py-3 border-2 border-dashed border-green-300 text-sm font-medium rounded-md text-green-700 bg-green-50">
+                      <FiVideo className="mr-2 h-4 w-4" />
+                      Interview Completed
+                    </div>
+                    <p className="text-xs text-green-600">
+                      This interview has been completed
+                      <br />
+                      <span className="font-mono text-xs">
+                        Status: {overallInterviewStatus}
+                      </span>
+                    </p>
+                  </div>
                 ) : hasMeetingLink && !isMeetingEnabled ? (
                   <div className="w-full text-center space-y-2">
                     <div className="w-full inline-flex justify-center items-center px-4 py-3 border-2 border-dashed border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-gray-50">
@@ -914,13 +934,15 @@ function InterviewDetails() {
                   </>
                 ) : (
                   <div className="text-center py-6">
-                    <div className="mx-auto h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                      {getMyActionIcon(interviewData.myAction)}
+                    <div className="mx-auto h-12 w-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
+                      <div className="text-green-600">
+                        {getMyActionIcon(interviewData.myAction)}
+                      </div>
                     </div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-green-900">
                       {getMyActionDisplayText(interviewData.myAction)}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-green-500 mt-1">
                       Your Response: {interviewData.myAction}
                     </p>
                   </div>

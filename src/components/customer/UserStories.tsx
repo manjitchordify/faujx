@@ -60,27 +60,27 @@ export default function UserStories() {
       title: '',
       image: '',
     },
-    {
-      message:
-        'Simply exceptional! This service provides outstanding talent, seamless processes, and unmatched results.',
-      name: 'John Hollingsworth',
-      title: 'Founder of educeri',
-      image: '',
-    },
-    {
-      message:
-        'Genuinely impressive! This solution delivers expert candidates, smooth collaboration, and consistent excellence.',
-      name: 'Sachin Gupta',
-      title: 'JuiceMedia.AI',
-      image: '',
-    },
-    {
-      message:
-        "I'm truly grateful for the comprehensive vetting process that ensured exceptionally quality candidates.",
-      name: 'Maria Piennar',
-      title: 'COO,Femmar',
-      image: '/images/customer/testmonial/maria_femmar.jpeg',
-    },
+    // {
+    //   message:
+    //     'Simply exceptional! This service provides outstanding talent, seamless processes, and unmatched results.',
+    //   name: 'John Hollingsworth',
+    //   title: 'Founder of educeri',
+    //   image: '',
+    // },
+    // {
+    //   message:
+    //     'Genuinely impressive! This solution delivers expert candidates, smooth collaboration, and consistent excellence.',
+    //   name: 'Sachin Gupta',
+    //   title: 'JuiceMedia.AI',
+    //   image: '',
+    // },
+    // {
+    //   message:
+    //     "I'm truly grateful for the comprehensive vetting process that ensured exceptionally quality candidates.",
+    //   name: 'Maria Piennar',
+    //   title: 'COO,Femmar',
+    //   image: '/images/customer/testmonial/maria_femmar.jpeg',
+    // },
   ];
 
   const initialCardCount = isMobile ? 3 : 6;

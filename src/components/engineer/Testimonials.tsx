@@ -19,7 +19,7 @@ const testimonials: Testimonial[] = [
     id: 1,
     company: 'Chordify',
     companyLogo: '/images/engineer/testimonials/chordifyLogo copy.avif',
-    position: 'React Native Developer',
+    position: 'React Developer',
     name: 'Abhijith BR',
     role: 'Software Developer',
     profileImage: '/images/engineer/testimonials/abhijith1.jpeg',

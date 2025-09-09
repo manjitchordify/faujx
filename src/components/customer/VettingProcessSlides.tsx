@@ -115,31 +115,25 @@ export default function VettingProcessSlides() {
                   x: { type: 'spring', stiffness: 300, damping: 30 },
                   opacity: { duration: 0.2 },
                 }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center"
+                className="flex flex-col items-center justify-center"
               >
-                {/* Left Side - Illustration */}
-                <div className="flex justify-center lg:justify-end order-2 lg:order-1">
+                {/* Left Side - Illustration - Hidden */}
+                {/* <div className="flex justify-center lg:justify-end order-2 lg:order-1">
                   <div className="relative">
-                    {/* Main illustration card */}
                     <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 w-64 md:h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 flex flex-col items-center justify-center relative overflow-hidden">
-                      {/* Step icon */}
-                      <div className="relative z-10">
-                        <div className="relative z-10 mt-4 sm:mt-6 lg:mt-10">
-                          <Image
-                            src={steps[currentStep].image}
-                            alt={steps[currentStep].title}
-                            width={128}
-                            height={128}
-                            className="object-contain w-16 h-16 sm:w-20 sm:h-20 lg:w-32 lg:h-32"
-                          />
-                        </div>
-                      </div>
+                      <Image
+                        src={steps[currentStep].image}
+                        alt={steps[currentStep].title}
+                        width={200}
+                        height={200}
+                        className="object w-full h-full mr-15"
+                      />
                     </div>
                   </div>
-                </div>
+                </div> */}
 
-                {/* Right Side - Content */}
-                <div className="text-center lg:text-left order-1 lg:order-2">
+                {/* Content */}
+                <div className="text-center">
                   {/* Step Badge */}
                   <div className="inline-block bg-green-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 rounded-full text-sm sm:text-base lg:text-lg font-semibold mb-4 sm:mb-6 lg:mb-8">
                     Step {currentStep + 1}
@@ -151,7 +145,7 @@ export default function VettingProcessSlides() {
                   </h3>
 
                   {/* Description */}
-                  <p className="text-sm sm:text-base lg:text-lg text-gray-600 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                  <p className="text-sm sm:text-base lg:text-lg text-gray-600 leading-relaxed max-w-lg mx-auto">
                     {steps[currentStep].description}
                   </p>
                 </div>

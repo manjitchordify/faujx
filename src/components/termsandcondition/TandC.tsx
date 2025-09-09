@@ -19,10 +19,10 @@ const TandC: React.FC = () => {
             1. Introduction
           </h2>
           <p className="text-gray-600 leading-relaxed text-lg">
-            Welcome to faujx, an employee recruitment brokerage platform. These
+            Welcome to FaujX, an employee recruitment brokerage platform. These
             Terms and Conditions (&quot;Terms&quot;) govern your use of our
             services, services, website, and platform (collectively, the
-            &quot;Service&quot;). By accessing or using faujx, you agree to be
+            &quot;Service&quot;). By accessing or using FaujX, you agree to be
             bound by these Terms.
           </p>
         </section>
@@ -33,7 +33,7 @@ const TandC: React.FC = () => {
             2. About Our Service
           </h2>
           <p className="text-gray-600 leading-relaxed text-lg mb-4">
-            faujx is a recruitment platform that connects:
+            FaujX is a recruitment platform that connects:
           </p>
           <ul className="space-y-4 text-gray-600 leading-relaxed text-lg">
             <li className="flex items-start">
@@ -162,7 +162,7 @@ const TandC: React.FC = () => {
                 <li className="flex items-start">
                   <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
                   <span>
-                    faujx reserves the right to verify user information and
+                    FaujX reserves the right to verify user information and
                     qualifications
                   </span>
                 </li>
@@ -200,7 +200,7 @@ const TandC: React.FC = () => {
                 <li className="flex items-start">
                   <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
                   <span>
-                    Participate in faujx&apos;s interview and testing process
+                    Participate in FaujX&apos;s interview and testing process
                   </span>
                 </li>
                 <li className="flex items-start">
@@ -220,7 +220,7 @@ const TandC: React.FC = () => {
                 <li className="flex items-start">
                   <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
                   <span>
-                    Participate in mentoring sessions with faujx experts
+                    Participate in mentoring sessions with FaujX experts
                   </span>
                 </li>
               </ul>
@@ -276,7 +276,7 @@ const TandC: React.FC = () => {
                 <li className="flex items-start">
                   <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
                   <span>
-                    faujx charges fees for successful placements and expert
+                    FaujX charges fees for successful placements and expert
                     services
                   </span>
                 </li>
@@ -316,7 +316,7 @@ const TandC: React.FC = () => {
                 <li className="flex items-start">
                   <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
                   <span>
-                    faujx reserves the right to suspend services for overdue
+                    FaujX reserves the right to suspend services for overdue
                     accounts
                   </span>
                 </li>
@@ -407,7 +407,7 @@ const TandC: React.FC = () => {
                 <li className="flex items-start">
                   <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
                   <span>
-                    faujx owns all rights to the platform, including design,
+                    FaujX owns all rights to the platform, including design,
                     functionality, and proprietary algorithms
                   </span>
                 </li>
@@ -435,7 +435,7 @@ const TandC: React.FC = () => {
                 <li className="flex items-start">
                   <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
                   <span>
-                    Users grant faujx a license to use, display, and distribute
+                    Users grant FaujX a license to use, display, and distribute
                     user content as necessary for service provision
                   </span>
                 </li>
@@ -467,7 +467,7 @@ const TandC: React.FC = () => {
             <li className="flex items-start">
               <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
               <span>
-                faujx implements appropriate security measures to protect user
+                FaujX implements appropriate security measures to protect user
                 data
               </span>
             </li>
@@ -495,7 +495,7 @@ const TandC: React.FC = () => {
                 <li className="flex items-start">
                   <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
                   <span>
-                    faujx makes no guarantee of placement success for candidates
+                    FaujX makes no guarantee of placement success for candidates
                   </span>
                 </li>
                 <li className="flex items-start">
@@ -521,7 +521,7 @@ const TandC: React.FC = () => {
                 <li className="flex items-start">
                   <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
                   <span>
-                    faujx&apos;s liability is limited to the fees paid for
+                    FaujX&apos;s liability is limited to the fees paid for
                     services
                   </span>
                 </li>
@@ -553,7 +553,7 @@ const TandC: React.FC = () => {
             <li className="flex items-start">
               <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
               <span>
-                faujx is not a party to any employment relationship between
+                FaujX is not a party to any employment relationship between
                 candidates and companies
               </span>
             </li>
@@ -567,7 +567,7 @@ const TandC: React.FC = () => {
             <li className="flex items-start">
               <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
               <span>
-                faujx is not responsible for employment disputes or issues
+                FaujX is not responsible for employment disputes or issues
               </span>
             </li>
           </ul>
@@ -602,13 +602,13 @@ const TandC: React.FC = () => {
             </div>
             <div>
               <h3 className="text-xl font-medium text-gray-700 mb-3">
-                12.2 faujx Termination Rights
+                12.2 FaujX Termination Rights
               </h3>
               <ul className="space-y-3 text-gray-600 leading-relaxed">
                 <li className="flex items-start">
                   <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
                   <span>
-                    faujx may suspend or terminate accounts for violations of
+                    FaujX may suspend or terminate accounts for violations of
                     these Terms
                   </span>
                 </li>
@@ -637,7 +637,7 @@ const TandC: React.FC = () => {
           <ul className="space-y-3 text-gray-600 leading-relaxed">
             <li className="flex items-start">
               <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
-              <span>faujx may update these Terms from time to time</span>
+              <span>FaujX may update these Terms from time to time</span>
             </li>
             <li className="flex items-start">
               <span className="inline-block w-2 h-2 bg-gray-400 rounded-full mt-3 mr-4 flex-shrink-0"></span>
@@ -664,14 +664,14 @@ const TandC: React.FC = () => {
             For questions about these Terms, please contact us at:
           </p>
           <div className="bg-gray-50 p-6 rounded-lg">
-            <p className="text-gray-800 font-medium mb-2">faujx</p>
+            <p className="text-gray-800 font-medium mb-2">FaujX</p>
             <p className="text-gray-600">
               LinkedIn:{' '}
               <a
-                href="https://www.linkedin.com/company/faujx/"
+                href="https://www.linkedin.com/company/FaujX/"
                 className="text-blue-600 hover:text-blue-700 underline"
               >
-                https://www.linkedin.com/company/faujx/
+                https://www.linkedin.com/company/FaujX/
               </a>
             </p>
           </div>
@@ -680,7 +680,7 @@ const TandC: React.FC = () => {
         {/* Footer Note */}
         <div className="text-center pt-12 border-t border-gray-200">
           <p className="text-gray-500 italic">
-            By using faujx services, you acknowledge that you have read,
+            By using FaujX services, you acknowledge that you have read,
             understood, and agree to be bound by these Terms and Conditions.
           </p>
         </div>

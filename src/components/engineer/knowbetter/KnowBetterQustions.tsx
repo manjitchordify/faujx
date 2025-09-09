@@ -80,8 +80,12 @@ const KnowBetterQuestions: React.FC = () => {
       const profileData: UpdateEngineerProfileParams = updatedProfile;
       const response = await updateEngineerProfileApi(userId, profileData);
       console.log('Profile updated successfully:', response);
-      if (currentStep < 8) {
-        setCurrentStep(currentStep + 1);
+      let nextStep = currentStep + 1;
+      if (currentStep === 6 && formData.relocateOutsideCountry === 'NO') {
+        nextStep = 8; // Skip step 7 if relocateOutsideCountry is 'NO'
+      }
+      if (nextStep <= 8) {
+        setCurrentStep(nextStep);
       } else {
         console.log('Form completed:', formData);
         router.push('/engineer/upload-resume');
@@ -662,7 +666,16 @@ const KnowBetterQuestions: React.FC = () => {
         {currentStep > 1 && !isLoading && (
           <div className="text-center">
             <button
-              onClick={() => setCurrentStep(currentStep - 1)}
+              onClick={() => {
+                if (
+                  currentStep === 8 &&
+                  formData.relocateOutsideCountry === 'NO'
+                ) {
+                  setCurrentStep(6);
+                } else {
+                  setCurrentStep(currentStep - 1);
+                }
+              }}
               className="text-[#1F514C] hover:text-emerald-800 font-medium transition-colors duration-200 text-xl"
             >
               ← Go Back

@@ -1,8 +1,13 @@
 'use client';
+import Button from '@/components/ui/Button';
+import { useAppSelector } from '@/store/store';
+import { ChevronDown, Menu, X } from 'lucide-react';
 import React, { useState } from 'react';
-import Image from 'next/image';
-import { ChevronDown, Menu, X, Users } from 'lucide-react';
-import Link from 'next/link';
+import Candidates from './Candidates';
+import Favourites from './Favourites';
+import SelectionModal from './modals/SelectionModal';
+import MyInterviews from './MyInterviews';
+import ShortListed from './ShortListed';
 
 interface Candidate {
   id: number;
@@ -15,11 +20,22 @@ interface Candidate {
 }
 
 const Dashboard: React.FC = () => {
+  const CustomerTabs = [
+    'Candidates',
+    'Favourites',
+    'Shortlisted',
+    'My Interviews',
+  ];
+  const [showSelectionModal, setShowSelectionModal] = useState(true);
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [selectedSkills, setSelectedSkills] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [compensationRange, setCompensationRange] = useState<number>(150);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
+  const [selectedTab, setSelectedTab] = useState('Candidates');
+  const { CustomerFavourites, CustomerShortlisted, CustomerMyInterviews } =
+    useAppSelector(store => store.customer);
+  console.log('CUSTOMER FAV : ', CustomerFavourites);
 
   // Sample candidate data
   const candidates: Candidate[] = [
@@ -33,7 +49,7 @@ const Dashboard: React.FC = () => {
       ],
       salary: '$95,000 - $120,000',
       location: 'New York',
-      profileImage: '/images/internee.png',
+      profileImage: '/images/blurPic.png',
     },
     {
       id: 2,
@@ -45,7 +61,7 @@ const Dashboard: React.FC = () => {
       ],
       salary: '$85,000 - $100,000',
       location: 'London',
-      profileImage: '/images/internee.png',
+      profileImage: '/images/blurPic.png',
     },
     {
       id: 3,
@@ -57,7 +73,7 @@ const Dashboard: React.FC = () => {
       ],
       salary: '$90,000 - $115,000',
       location: 'Remote',
-      profileImage: '/images/internee.png',
+      profileImage: '/images/blurPic.png',
     },
     {
       id: 4,
@@ -69,7 +85,7 @@ const Dashboard: React.FC = () => {
       ],
       salary: '$100,000 - $130,000',
       location: 'New York',
-      profileImage: '/images/internee.png',
+      profileImage: '/images/blurPic.png',
     },
     {
       id: 5,
@@ -81,7 +97,7 @@ const Dashboard: React.FC = () => {
       ],
       salary: '$75,000 - $95,000',
       location: 'London',
-      profileImage: '/images/internee.png',
+      profileImage: '/images/blurPic.png',
     },
     {
       id: 6,
@@ -93,7 +109,7 @@ const Dashboard: React.FC = () => {
       ],
       salary: '$80,000 - $95,000',
       location: 'Remote',
-      profileImage: '/images/internee.png',
+      profileImage: '/images/blurPic.png',
     },
     {
       id: 7,
@@ -105,7 +121,7 @@ const Dashboard: React.FC = () => {
       ],
       salary: '$105,000 - $140,000',
       location: 'New York',
-      profileImage: '/images/internee.png',
+      profileImage: '/images/blurPic.png',
     },
     {
       id: 8,
@@ -117,7 +133,7 @@ const Dashboard: React.FC = () => {
       ],
       salary: '$90,000 - $110,000',
       location: 'London',
-      profileImage: '/images/internee.png',
+      profileImage: '/images/blurPic.png',
     },
     {
       id: 9,
@@ -129,7 +145,7 @@ const Dashboard: React.FC = () => {
       ],
       salary: '$110,000 - $135,000',
       location: 'Remote',
-      profileImage: '/images/internee.png',
+      profileImage: '/images/blurPic.png',
     },
     {
       id: 10,
@@ -141,7 +157,7 @@ const Dashboard: React.FC = () => {
       ],
       salary: '$105,000 - $125,000',
       location: 'New York',
-      profileImage: '/images/internee.png',
+      profileImage: '/images/blurPic.png',
     },
   ];
 
@@ -206,110 +222,6 @@ const Dashboard: React.FC = () => {
 
       return true;
     });
-  };
-
-  const CandidateCard: React.FC<{ candidate: Candidate }> = ({ candidate }) => {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex gap-4 hover:shadow-md transition-shadow duration-200">
-        {/* Left Side - Profile Image */}
-        <div className="w-24 flex-shrink-0 flex items-center justify-center">
-          <div className="w-32 h-32 rounded-lg relative overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
-            {candidate.profileImage ? (
-              <Image
-                src={candidate.profileImage}
-                alt={`${candidate.role} profile`}
-                width={96}
-                height={96}
-                className="w-full h-full object-cover rounded-lg blur-sm"
-                onError={e => {
-                  // Fallback to gradient background if image fails to load
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            ) : (
-              <div className="w-full h-full rounded-lg bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-                <Users className="w-8 h-8 text-gray-500" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Side - Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Role Badge */}
-          <div className="mb-2">
-            <span className="inline-block bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-              {candidate.role}
-            </span>
-          </div>
-
-          {/* Skills Section */}
-          <div className="mb-2">
-            <h4 className="text-xs font-semibold text-gray-900 mb-1">Skills</h4>
-            <div className="flex flex-wrap gap-1">
-              {candidate.skills.map((skill: string, index: number) => (
-                <span
-                  key={index}
-                  className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded font-medium"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Capabilities Section */}
-          <div className="mb-3 flex-1">
-            <h4 className="text-xs font-semibold text-gray-900 mb-1">
-              Capabilities
-            </h4>
-            <ul className="text-xs text-gray-600 space-y-0.5">
-              {candidate.capabilities.map(
-                (capability: string, index: number) => (
-                  <li key={index} className="flex items-start">
-                    <span className="text-green-500 mr-1 font-bold text-xs">
-                      •
-                    </span>
-                    <span className="leading-tight text-xs">{capability}</span>
-                  </li>
-                )
-              )}
-            </ul>
-          </div>
-
-          {/* Bottom Section - Salary, Location and Button */}
-          <div className="mt-auto">
-            {/* Salary */}
-            <div className="mb-2">
-              <span className="text-sm font-bold text-green-600">
-                {candidate.salary}
-              </span>
-            </div>
-
-            {/* Location */}
-            <div className="mb-3">
-              <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium">
-                {candidate.location}
-              </span>
-              <span className="ml-1 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium">
-                Remote
-              </span>
-            </div>
-
-            {/* Action Button */}
-            <Link
-              // href="/customer/browse-engineers/sign-in"
-              href="/profile/slug"
-              className="block w-full"
-            >
-              <button className="w-full py-2 px-3 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 transition-colors">
-                View Profile
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
   };
 
   // Get unique skills for the skills dropdown
@@ -557,28 +469,59 @@ const Dashboard: React.FC = () => {
               <div className="w-10"></div> {/* Spacer for centering */}
             </div>
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-8 flex flex-row justify-between items-center">
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                 <div>
-                  <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2">
-                    Candidates
+                  <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2 capitalize">
+                    {selectedTab}
                   </h1>
                   <p className="text-gray-600">
                     Discover talented professionals for your team
                   </p>
                 </div>
               </div>
+              <div className="flex flex-row gap-5 justify-center items-center">
+                {CustomerTabs.map(item => (
+                  <Button
+                    text={item}
+                    onClick={() => setSelectedTab(item)}
+                    showBadge={true}
+                    badgeCount={
+                      item == 'Favourites'
+                        ? CustomerFavourites.length
+                        : item == 'Shortlisted'
+                          ? CustomerShortlisted.length
+                          : item == 'My Interview'
+                            ? CustomerMyInterviews.length
+                            : 0
+                    }
+                    key={item}
+                    className="capitalize px-10 py-2 border-1 border-[#D3F5C6] rounded-2xl bg-white cursor-pointer font-semibold text-[12px]"
+                    textColor="text-black"
+                  />
+                ))}
+              </div>
             </div>
 
             {/* Candidate Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {getFilteredCandidates().map((candidate: Candidate) => (
-                <CandidateCard key={candidate.id} candidate={candidate} />
-              ))}
+            <div className="flex flex-row flex-wrap gap-6">
+              {selectedTab == 'Candidates' ? (
+                <Candidates candidates={getFilteredCandidates()} />
+              ) : selectedTab == 'Favourites' ? (
+                <Favourites />
+              ) : selectedTab == 'Shortlisted' ? (
+                <ShortListed />
+              ) : (
+                <MyInterviews />
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {showSelectionModal && (
+        <SelectionModal onClose={() => setShowSelectionModal(false)} />
+      )}
 
       {/* Custom Styles */}
       <style jsx>{`

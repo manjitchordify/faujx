@@ -19,7 +19,7 @@ const PrivacyPolicy = () => {
             1. Introduction
           </h2>
           <p className="text-gray-600 leading-relaxed text-lg">
-            faujx (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects
+            FaujX (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects
             your privacy and is committed to protecting your personal
             information. This Privacy Policy explains how we collect, use,
             disclose, and safeguard your information when you use our
@@ -549,10 +549,10 @@ const PrivacyPolicy = () => {
           </p>
           <div className="mt-4">
             <a
-              href="https://www.linkedin.com/company/faujx/"
+              href="https://www.linkedin.com/company/FaujX/"
               className="text-blue-600 hover:text-blue-700 underline"
             >
-              https://www.linkedin.com/company/faujx/
+              https://www.linkedin.com/company/FaujX/
             </a>
           </div>
         </div>

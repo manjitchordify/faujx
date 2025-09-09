@@ -77,7 +77,8 @@ export default function VettingProcess() {
                   variants={cardVariants}
                   className="flex flex-col items-center w-full max-w-[280px] lg:max-w-[200px] xl:max-w-[240px]"
                 >
-                  <div className="mb-6 flex justify-center w-24 h-24 lg:w-32 lg:h-32 xl:w-42 xl:h-52">
+                  {/* Image hidden */}
+                  {/* <div className="mb-6 flex justify-center w-24 h-24 lg:w-32 lg:h-32 xl:w-42 xl:h-52">
                     <Image
                       src={step.image}
                       alt={step.title}
@@ -85,7 +86,7 @@ export default function VettingProcess() {
                       height={300}
                       className="object-contain w-full h-full"
                     />
-                  </div>
+                  </div> */}
                   <p className="text-center text-base lg:text-lg text-gray-700 leading-tight px-2">
                     {step.title}
                   </p>

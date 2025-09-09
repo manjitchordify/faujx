@@ -197,7 +197,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
         id: 'settings',
         label: 'Settings',
         icon: Settings,
-        route: '#settings',
+        route: '/engineer/dashboard/settings',
         active: false,
         hideOnBrowseMentors: isBrowseMentorsPage || !isUserVetted,
       },
