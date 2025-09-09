@@ -35,23 +35,8 @@ export default function GuidanceCard() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-white font-medium">Career Advice</span>
-                </div>
-
-                <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
-                  <svg
-                    className="size-[1.125em] text-black flex-shrink-0 bg-white rounded-full p-1"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
                   <span className="text-white font-medium">
-                    Mock Interviews
+                    Career Advice & Roadmap planning
                   </span>
                 </div>
 
@@ -67,7 +52,9 @@ export default function GuidanceCard() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <span className="text-white font-medium">debugging</span>
+                  <span className="text-white font-medium">
+                    Mock Interviews & Project Reviews
+                  </span>
                 </div>
 
                 <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
@@ -83,7 +70,24 @@ export default function GuidanceCard() {
                     />
                   </svg>
                   <span className="text-white font-medium">
-                    Code & Project Reviews
+                    Debugging & Code Reviews
+                  </span>
+                </div>
+
+                <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
+                  <svg
+                    className="size-[1.125em] text-black flex-shrink-0 bg-white rounded-full p-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-white font-medium">
+                    Tech Stack & System Design guidance
                   </span>
                 </div>
               </div>

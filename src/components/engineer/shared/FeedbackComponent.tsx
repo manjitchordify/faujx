@@ -30,7 +30,7 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
   description = 'After reviewing your performance, it appears you could benefit from further development in the following React skills:',
   reportItems,
   supportText = 'To support your learning, I recommend exploring Chordify Ed, a platform with resources and exercises specifically tailored to building and improving React skills. Engaging with their guided tutorials and real-world projects can help bridge these skill gaps.',
-  buttonText = 'Upskill with ChordifyEd',
+  buttonText = 'Upskill with FaujX LMS',
   buttonLink,
   onButtonClick,
   type,

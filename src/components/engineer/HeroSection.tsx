@@ -30,7 +30,7 @@ export default function HeroSection() {
         </Link>
 
         <p className="text-xl font-semibold md:text-2xl 2xl:text-3xl text-white">
-          Skills First | Integration LMS | Mentor Support
+          Skills First Approach | Integrated LMS | Mentor Support
         </p>
       </div>
     </section>

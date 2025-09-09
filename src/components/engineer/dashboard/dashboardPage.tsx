@@ -25,7 +25,7 @@ const services: Service[] = [
     path: '#',
   },
   {
-    title: 'Upskill with ChordifyEd',
+    title: 'Upskill with FaujX LMS',
     description: 'Boost your career with curated courses',
     icon: <Sparkles className="w-8 h-8 text-yellow-500" />,
     path: 'https://www.chordifyed.com/',

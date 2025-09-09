@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Image from 'next/image';
 import SectionHeader from './SectionHeader';
 
 const steps = [

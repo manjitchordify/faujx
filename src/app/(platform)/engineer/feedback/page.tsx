@@ -330,7 +330,7 @@ const FeedbackContent: React.FC = () => {
       description={getDescription()}
       reportItems={reportItems}
       supportText={getSupportText()}
-      buttonText="Upskill with ChordifyEd"
+      buttonText="Upskill with FaujX LMS"
       onButtonClick={handleUpskillClick}
       type={type || null}
       score={score || 0}

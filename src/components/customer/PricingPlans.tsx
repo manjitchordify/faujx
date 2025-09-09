@@ -1,13 +1,12 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Button from '@/components/customer/shared/Button';
-import Image from 'next/image';
 
 const pricingCards = [
   {
     type: 'pricing',
-    title: ['Get', 'Started'],
-    items: ['Radical Simple Pricing'],
+    title: ['Radical', 'Simple Pricing'],
+    items: ['Pay once to unlock Profiles and to hire '],
     buttonText: 'Unlock profiles',
     buttonAction: () => console.log('Unlock profiles clicked'),
   },

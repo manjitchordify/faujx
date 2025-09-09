@@ -9,7 +9,7 @@ export default function SkillBasedLearning() {
         {/* <div className="text-center mb-[max(1rem,5vh)] lg:mb-[max(3rem,15vh)]"> */}
         <div className="text-center mb-[max(1rem,5vh)] lg:mb-[max(3rem,10vh)]">
           <h2 className="text-3xl lg:text-4xl 2xl:text-5xl font-semibold text-[#1F514C] mb-2">
-            Upskill with ChordifyED
+            Upskill with FaujX LMS
           </h2>
         </div>
 

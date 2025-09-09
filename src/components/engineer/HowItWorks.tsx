@@ -1,4 +1,3 @@
-import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import React from 'react';
 import { Poly } from 'next/font/google';
@@ -85,110 +84,142 @@ export default function HowItWorks() {
           How it works?
         </h2>
 
-        <div className="w-[88%] mx-auto flex flex-col max-md:gap-[max(1vw,1rem)] gap-[3vw] mb-12">
-          <div className="flex max-md:flex-col justify-center gap-[max(1vw,1rem)]">
-            {stepsRow1.map((step, index) => (
-              <React.Fragment key={step.number}>
-                <div className="relative rounded-lg basis-[min(100%,15rem)] md:basis-[calc(50%-3vw)] lg:basis-[25%] flex flex-col items-start border border-[#DCDCDC]">
-                  <div
-                    className={`${poly.className} leading-none absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-[#6C63FF] text-white font-bold rounded-full size-12 flex items-center justify-center text-2xl`}
-                  >
-                    {step.number}
-                  </div>
-                  <div className="bg-[#1F514C] rounded-t-lg text-[#6CC04A] font-semibold text-lg w-full text-center py-5">
-                    {step.title}
-                  </div>
-                  <div className="bg-white w-full p-4 text-black space-y-2 text-xs -mt-1 rounded-lg flex-1">
-                    <div className="relative aspect-square mx-auto h-[4rem]">
-                      {step.img && (
-                        <Image
-                          src={step.img}
-                          // className="h-full object-contain mx-auto"
-                          fill
-                          alt={step.title}
-                        />
-                      )}
+        <div className="w-[88%] mx-auto flex flex-col gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {stepsRow1.map(step => (
+              <div
+                key={step.number}
+                className="relative rounded-xl flex flex-col items-start border border-[#DCDCDC] shadow-sm hover:shadow-lg transition-all duration-300 bg-white overflow-hidden"
+              >
+                {/* Header with integrated number */}
+                <div className="bg-[#1F514C] w-full px-6 py-4 relative">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`${poly.className} bg-[#54A044] text-white font-bold rounded-full size-10 flex items-center justify-center text-lg shadow-md flex-shrink-0`}
+                    >
+                      {step.number}
                     </div>
+                    <h3 className="text-[#6CC04A] font-semibold text-lg leading-tight">
+                      {step.title}
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="w-full p-6 space-y-4 flex-1">
+                  <div className="relative aspect-square mx-auto h-[5rem]">
+                    {step.img && (
+                      <Image
+                        src={step.img}
+                        fill
+                        alt={step.title}
+                        className="object-contain"
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
                     <div>
-                      <h3 className="text-sm font-bold text-[#3b6e27]">
+                      <h4 className="text-sm font-bold text-[#1F514C] mb-2 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[#54A044] rounded-full"></div>
                         What it is:
-                      </h3>
-                      <p>{step.whatItIs}</p>
+                      </h4>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {step.whatItIs}
+                      </p>
                     </div>
+
                     <div>
-                      <h3 className="text-sm font-bold text-[#3b6e27]">
+                      <h4 className="text-sm font-bold text-[#1F514C] mb-2 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[#54A044] rounded-full"></div>
                         Focus:
-                      </h3>
-                      <p>{step.focus}</p>
+                      </h4>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {step.focus}
+                      </p>
                     </div>
+
                     <div>
-                      <h3 className="text-sm font-bold text-[#3b6e27]">
+                      <h4 className="text-sm font-bold text-[#1F514C] mb-2 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[#54A044] rounded-full"></div>
                         Outcome:
-                      </h3>
-                      <p>{step.outcome}</p>
+                      </h4>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {step.outcome}
+                      </p>
                     </div>
                   </div>
                 </div>
-                {index !== stepsRow1.length - 1 && (
-                  <div className="self-center flex">
-                    <ArrowRight className="m-auto size-[max(3rem,5vw)] max-md:rotate-90 text-[#1F514C]" />
-                  </div>
-                )}
-              </React.Fragment>
+              </div>
             ))}
           </div>
-          <div className="md:hidden self-center flex">
-            <ArrowRight className="m-auto size-[max(3rem,5vw)] max-md:rotate-90 text-[#1F514C]" />
-          </div>
-          <div className="flex max-md:flex-col justify-center gap-[max(1vw,1rem)]">
-            {stepsRow2.map((step, index) => (
-              <React.Fragment key={step.number}>
-                <div className="relative rounded-lg basis-[min(100%,15rem)] md:basis-[calc(50%-3vw)] lg:basis-[25%] flex flex-col items-start border border-[#DCDCDC]">
-                  <div
-                    className={`${poly.className} leading-none absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-[#6C63FF] text-white font-bold rounded-full size-12 flex items-center justify-center text-2xl`}
-                  >
-                    {step.number}
-                  </div>
-                  <div className="bg-[#1F514C] rounded-t-lg text-[#6CC04A] font-semibold text-lg w-full text-center py-5">
-                    {step.title}
-                  </div>
-                  <div className="bg-white w-full p-4 text-black space-y-2 text-xs -mt-1 rounded-lg flex-1">
-                    <div className="relative aspect-square mx-auto h-[4rem]">
-                      {step.img && (
-                        <Image
-                          src={step.img}
-                          // className="h-full object-contain mx-auto"
-                          fill
-                          alt={step.title}
-                        />
-                      )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {stepsRow2.map(step => (
+              <div
+                key={step.number}
+                className="relative rounded-xl flex flex-col items-start border border-[#DCDCDC] shadow-sm hover:shadow-lg transition-all duration-300 bg-white overflow-hidden"
+              >
+                {/* Header with integrated number */}
+                <div className="bg-[#1F514C] w-full px-6 py-4 relative">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`${poly.className} bg-[#54A044] text-white font-bold rounded-full size-10 flex items-center justify-center text-lg shadow-md flex-shrink-0`}
+                    >
+                      {step.number}
                     </div>
+                    <h3 className="text-[#6CC04A] font-semibold text-lg leading-tight">
+                      {step.title}
+                    </h3>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="w-full p-6 space-y-4 flex-1">
+                  <div className="relative aspect-square mx-auto h-[5rem]">
+                    {step.img && (
+                      <Image
+                        src={step.img}
+                        fill
+                        alt={step.title}
+                        className="object-contain"
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
                     <div>
-                      <h3 className="text-sm font-bold text-[#3b6e27]">
+                      <h4 className="text-sm font-bold text-[#1F514C] mb-2 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[#54A044] rounded-full"></div>
                         What it is:
-                      </h3>
-                      <p>{step.whatItIs}</p>
+                      </h4>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {step.whatItIs}
+                      </p>
                     </div>
+
                     <div>
-                      <h3 className="text-sm font-bold text-[#3b6e27]">
+                      <h4 className="text-sm font-bold text-[#1F514C] mb-2 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[#54A044] rounded-full"></div>
                         Focus:
-                      </h3>
-                      <p>{step.focus}</p>
+                      </h4>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {step.focus}
+                      </p>
                     </div>
+
                     <div>
-                      <h3 className="text-sm font-bold text-[#3b6e27]">
+                      <h4 className="text-sm font-bold text-[#1F514C] mb-2 flex items-center gap-2">
+                        <div className="w-2 h-2 bg-[#54A044] rounded-full"></div>
                         Outcome:
-                      </h3>
-                      <p>{step.outcome}</p>
+                      </h4>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {step.outcome}
+                      </p>
                     </div>
                   </div>
                 </div>
-                {index !== stepsRow2.length - 1 && (
-                  <div className="self-center flex">
-                    <ArrowRight className="m-auto size-[max(3rem,5vw)] max-md:rotate-90 text-[#1F514C]" />
-                  </div>
-                )}
-              </React.Fragment>
+              </div>
             ))}
           </div>
         </div>
