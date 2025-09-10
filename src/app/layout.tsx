@@ -1,6 +1,7 @@
 import Providers from '@/store/Providers';
 import './globals.css';
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AuthGuard from '@/components/AuthGuard';
@@ -156,6 +157,7 @@ export default function RootLayout({
         <Providers>
           <AuthGuard>{children}</AuthGuard>
           <GoogleAnalytics gaId="G-5SNKDVPJ9M" />
+          <SpeedInsights />
           <ToastContainer
             position="top-right"
             autoClose={3000}
