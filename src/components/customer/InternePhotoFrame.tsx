@@ -164,13 +164,13 @@ const InternePhotoFrame: React.FC = () => {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'developer':
-        return 'bg-[#418B3D]';
+        return 'bg-gradient-to-r from-[#2A6B65] to-[#1F514C]';
       case 'expert':
         return 'bg-[#3B82F6]';
       case 'mentor':
         return 'bg-[#8B5CF6]';
       default:
-        return 'bg-[#418B3D]';
+        return 'bg-gradient-to-r from-[#2A6B65] to-[#1F514C]';
     }
   };
 
@@ -218,7 +218,7 @@ const InternePhotoFrame: React.FC = () => {
             {/* Profile Card */}
             <motion.div
               key={currentProfile}
-              className="bg-[#1F514C] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-sm sm:max-w-2xl lg:max-w-4xl w-full flex-shrink-0"
+              className="bg-gradient-to-br from-[#2A6B65] to-[#1F514C] rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 max-w-sm sm:max-w-2xl lg:max-w-4xl w-full flex-shrink-0"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
@@ -321,7 +321,7 @@ const InternePhotoFrame: React.FC = () => {
               onClick={() => setCurrentProfile(index)}
               className={`h-2 rounded-full transition-all duration-300 ${
                 index === currentProfile
-                  ? 'bg-[#1F514C] w-6 sm:w-8'
+                  ? 'bg-gradient-to-r from-[#2A6B65] to-[#1F514C] w-6 sm:w-8'
                   : 'bg-gray-300 hover:bg-gray-400 w-2'
               }`}
               type="button"

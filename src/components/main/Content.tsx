@@ -123,12 +123,18 @@ const Content = () => {
               {/* Content Card */}
               <div className="bg-[#1F514C] rounded-2xl p-6 shadow-2xl mb-6">
                 <div className="text-white space-y-4">
-                  <p className="text-lg leading-relaxed">
-                    {currentContent.text}
-                  </p>
-                  <p className="text-sm font-light leading-relaxed opacity-90">
-                    {currentContent.subText}
-                  </p>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
+                    <p className="text-lg leading-relaxed font-medium">
+                      {currentContent.text}
+                    </p>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
+                    <p className="text-lg leading-relaxed font-medium">
+                      {currentContent.subText}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -143,16 +149,16 @@ const Content = () => {
                 />
               </div>
 
-              {/* Simple Slide Indicators */}
-              <div className="flex justify-center space-x-2 mt-6">
+              {/* Slide Indicators */}
+              <div className="flex justify-center space-x-3 mt-6">
                 {contentSlides.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => handleSlideChange(index)}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    className={`w-4 h-4 rounded-full transition-all duration-300 ${
                       index === currentSlide
                         ? 'bg-[#1F514C] scale-110'
-                        : 'bg-gray-300 hover:bg-gray-400'
+                        : 'bg-gray-400 hover:bg-gray-500'
                     }`}
                     aria-label={`Go to slide ${index + 1}`}
                   />

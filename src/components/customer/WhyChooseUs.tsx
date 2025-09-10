@@ -177,10 +177,10 @@ function WhyChooseUs() {
               >
                 {/* Title with Icon */}
                 <div className="flex items-center gap-4 mb-4 lg:mb-6">
-                  <div className="text-[#41873F] flex items-center justify-center flex-shrink-0">
+                  <div className="text-[#1F514C] flex items-center justify-center flex-shrink-0">
                     <IconComponent />
                   </div>
-                  <h3 className="text-xl lg:text-2xl font-semibold text-[#41873F]">
+                  <h3 className="text-xl lg:text-2xl font-semibold text-[#1F514C]">
                     {benefit.title}
                   </h3>
                 </div>

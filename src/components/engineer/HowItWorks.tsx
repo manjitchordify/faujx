@@ -92,7 +92,7 @@ export default function HowItWorks() {
                 className="relative rounded-xl flex flex-col items-start border border-[#DCDCDC] shadow-sm hover:shadow-lg transition-all duration-300 bg-white overflow-hidden"
               >
                 {/* Header with integrated number */}
-                <div className="bg-[#1F514C] w-full px-6 py-4 relative">
+                <div className="bg-gradient-to-r from-[#2A6B65] to-[#1F514C] w-full px-6 py-4 relative">
                   <div className="flex items-center gap-4">
                     <div
                       className={`${poly.className} bg-[#54A044] text-white font-bold rounded-full size-10 flex items-center justify-center text-lg shadow-md flex-shrink-0`}
@@ -161,7 +161,7 @@ export default function HowItWorks() {
                 className="relative rounded-xl flex flex-col items-start border border-[#DCDCDC] shadow-sm hover:shadow-lg transition-all duration-300 bg-white overflow-hidden"
               >
                 {/* Header with integrated number */}
-                <div className="bg-[#1F514C] w-full px-6 py-4 relative">
+                <div className="bg-gradient-to-r from-[#2A6B65] to-[#1F514C] w-full px-6 py-4 relative">
                   <div className="flex items-center gap-4">
                     <div
                       className={`${poly.className} bg-[#54A044] text-white font-bold rounded-full size-10 flex items-center justify-center text-lg shadow-md flex-shrink-0`}

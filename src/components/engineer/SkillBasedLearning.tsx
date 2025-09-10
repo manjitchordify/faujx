@@ -98,7 +98,7 @@ export default function SkillBasedLearning() {
                 href="https://www.chordifyed.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="self-start cursor-pointer bg-[#1F514C] hover:bg-[#1F514C]/70 text-[#EAEAE2] font-semibold py-3 px-8 rounded-3xl text-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                className="self-start cursor-pointer bg-gradient-to-r from-[#2A6B65] to-[#1F514C] hover:from-[#1F514C] hover:to-[#1a433f] text-[#EAEAE2] font-semibold py-3 px-8 rounded-3xl text-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 Learn More
               </Link>

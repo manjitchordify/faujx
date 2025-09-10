@@ -15,7 +15,7 @@ export default function GuidanceCard() {
           />
         </div>
 
-        <div className="order-1 lg:order-2 bg-[#1F514C] p-6 lg:p-12 flex flex-col justify-center">
+        <div className="order-1 lg:order-2 bg-gradient-to-br from-[#2A6B65] to-[#1F514C] p-6 lg:p-12 flex flex-col justify-center">
           <div className="flex flex-col gap-4 w-full lg:max-w-[90%] mx-auto">
             <div className="flex-1 flex flex-col gap-4">
               <h2 className="text-white text-3xl md:text-4xl 2xl:text-5xl font-semibold leading-tight mb-4 lg:mb-6 xl:mb-8">

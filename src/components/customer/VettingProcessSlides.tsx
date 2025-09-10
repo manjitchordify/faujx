@@ -94,7 +94,7 @@ export default function VettingProcessSlides() {
             className={`absolute left-0 sm:left-2 lg:left-0 z-10 p-2 sm:p-3 lg:p-4 rounded-full transition-all duration-200 ${
               currentStep === 0
                 ? 'text-gray-300 cursor-not-allowed'
-                : 'text-gray-600 hover:text-green-600 hover:bg-white hover:shadow-lg'
+                : 'text-gray-600 hover:text-[#1F514C] hover:bg-white hover:shadow-lg'
             }`}
           >
             <ChevronLeft size={24} className="sm:w-8 sm:h-8 lg:w-12 lg:h-12" />
@@ -134,7 +134,7 @@ export default function VettingProcessSlides() {
                 {/* Content */}
                 <div className="text-center">
                   {/* Step Badge */}
-                  <div className="inline-block bg-green-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 rounded-full text-sm sm:text-base lg:text-lg font-semibold mb-4 sm:mb-6 lg:mb-8">
+                  <div className="inline-block bg-gradient-to-r from-[#2A6B65] to-[#1F514C] text-white px-4 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 rounded-full text-sm sm:text-base lg:text-lg font-semibold mb-4 sm:mb-6 lg:mb-8">
                     Step {currentStep + 1}
                   </div>
 
@@ -159,7 +159,7 @@ export default function VettingProcessSlides() {
             className={`absolute right-0 sm:right-2 lg:right-0 z-10 p-2 sm:p-3 lg:p-4 rounded-full transition-all duration-200 ${
               currentStep === steps.length - 1
                 ? 'text-gray-300 cursor-not-allowed'
-                : 'text-gray-600 hover:text-green-600 hover:bg-white hover:shadow-lg'
+                : 'text-gray-600 hover:text-[#1F514C] hover:bg-white hover:shadow-lg'
             }`}
           >
             <ChevronRight size={24} className="sm:w-8 sm:h-8 lg:w-12 lg:h-12" />
@@ -174,9 +174,9 @@ export default function VettingProcessSlides() {
               onClick={() => goToStep(idx)}
               className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full transition-all duration-300 ${
                 idx === currentStep
-                  ? 'bg-green-600 scale-125'
+                  ? 'bg-gradient-to-r from-[#2A6B65] to-[#1F514C] scale-125'
                   : idx < currentStep
-                    ? 'bg-green-400'
+                    ? 'bg-gradient-to-r from-[#2A6B65]/70 to-[#1F514C]/70'
                     : 'bg-gray-300 hover:bg-gray-400'
               }`}
             />

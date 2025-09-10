@@ -149,13 +149,13 @@ export default function UserStories() {
       <div className="w-full py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center ">
-            <p className="text-3xl sm:text-4xl md:text-6xl leading-tight font-light text-[#5d6b64] tracking-tight">
-              <span className="text-[#242424] font-medium mt-3 tracking-tight">
+            <p className="text-3xl sm:text-4xl md:text-6xl leading-tight font-light text-[#1F514C] tracking-tight">
+              <span className="text-[#1F514C] font-medium mt-3 tracking-tight">
                 What Our Users Say
               </span>
             </p>
           </div>
-          <p className="text-3xl text-center font-light text-[#242424] mb-5 md:mt-8 md:mb-3">
+          <p className="text-3xl text-center font-light text-[#1F514C] mb-5 md:mt-8 md:mb-3">
             Hear from businesses who&apos;ve transformed their workflows with
             our solutions.
           </p>

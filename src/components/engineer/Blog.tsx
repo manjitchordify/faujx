@@ -309,7 +309,7 @@ export default function Blog() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   activeTab === tab.key
-                    ? 'bg-[#1F514C] text-white shadow-lg'
+                    ? 'bg-gradient-to-r from-[#2A6B65] to-[#1F514C] text-white shadow-lg'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -324,14 +324,14 @@ export default function Blog() {
         <div className="relative">
           <button
             ref={prevRef}
-            className="absolute cursor-pointer left-0 top-1/2 -translate-y-1/2 -translate-x-[calc(100%+1rem)] z-10 p-2 bg-[#1F514C] text-white shadow rounded-full hover:bg-[#1a4641] transition-colors"
+            className="absolute cursor-pointer left-0 top-1/2 -translate-y-1/2 -translate-x-[calc(100%+1rem)] z-10 p-2 bg-gradient-to-r from-[#2A6B65] to-[#1F514C] text-white shadow rounded-full hover:from-[#1F514C] hover:to-[#1a433f] transition-all duration-300"
             aria-label="Previous Slide"
           >
             <ChevronLeft className="w-6 h-6 text-inherit" />
           </button>
           <button
             ref={nextRef}
-            className="absolute cursor-pointer right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+1rem)] z-10 p-2 bg-[#1F514C] text-white shadow rounded-full hover:bg-[#1a4641] transition-colors"
+            className="absolute cursor-pointer right-0 top-1/2 -translate-y-1/2 translate-x-[calc(100%+1rem)] z-10 p-2 bg-gradient-to-r from-[#2A6B65] to-[#1F514C] text-white shadow rounded-full hover:from-[#1F514C] hover:to-[#1a433f] transition-all duration-300"
             aria-label="Next Slide"
           >
             <ChevronRight className="w-6 h-6 text-inherit" />
@@ -392,7 +392,7 @@ export default function Blog() {
                     </p>
 
                     <button
-                      className="w-full mt-4 px-6 py-3 bg-[#1F514C] text-white font-semibold rounded-xl hover:bg-[#1a4641] transition-colors duration-200 shadow-md hover:shadow-lg"
+                      className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-[#2A6B65] to-[#1F514C] text-white font-semibold rounded-xl hover:from-[#1F514C] hover:to-[#1a433f] transition-all duration-300 shadow-md hover:shadow-lg"
                       onClick={() => (window.location.href = blog.ctaLink)}
                     >
                       {blog.cta}

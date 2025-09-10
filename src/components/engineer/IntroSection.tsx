@@ -97,7 +97,7 @@ export default function IntroSection() {
                 className="relative rounded-2xl p-4 sm:p-5 lg:p-6 transition-all duration-200 border border-[#c0c0c0] border-b-0 bg-gradient-to-t from-[#f0f0f0] to-[#ffffff] hover:shadow-lg"
               >
                 {/* Icon */}
-                <div className="size-8 sm:size-10 lg:size-12 bg-[#1F514C] rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+                <div className="size-8 sm:size-10 lg:size-12 bg-gradient-to-br from-[#2A6B65] to-[#1F514C] rounded-xl flex items-center justify-center mb-3 sm:mb-4">
                   <IconComponent
                     size={20}
                     className="sm:w-6 sm:h-6 lg:w-7 lg:h-7"

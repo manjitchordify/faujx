@@ -87,7 +87,7 @@ export default function PricingPlans() {
                   <Button
                     text={card.buttonText}
                     onClick={card.buttonAction}
-                    className="w-full py-4 bg-[#1F514C] hover:bg-[#1a433f] text-white font-medium transition-colors text-base lg:text-lg rounded-2xl"
+                    className="w-full py-4 bg-gradient-to-r from-[#2A6B65] to-[#1F514C] hover:from-[#1F514C] hover:to-[#1a433f] text-white font-medium transition-all duration-300 text-base lg:text-lg rounded-2xl"
                   />
                 </div>
               </div>

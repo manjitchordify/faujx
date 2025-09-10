@@ -70,7 +70,7 @@ const HowItWorks: React.FC = () => {
                   <div className="flex justify-start mb-4">
                     <div
                       className="w-9 h-9 rounded-md flex items-center justify-center shadow"
-                      style={{ backgroundColor: '#418B3D' }}
+                      style={{ backgroundColor: '#1F514C' }}
                     >
                       <span className="text-white font-bold">{step.id}</span>
                     </div>

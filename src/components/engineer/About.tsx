@@ -22,7 +22,7 @@ export default function AboutSection() {
             <p className="font-semibold md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl text-[#3F3D56] mb-8">
               Students | Bootcamp Grads | Self-Taught Coders
             </p>
-            <button className="bg-[#54A044] cursor-pointer hover:bg-[#54A044]/75 text-white font-semibold py-4 px-8 lg:px-12 2xl:px-16 mb-10 rounded-3xl max-md:text-sm xl:text-lg transition-all duration-200 transform hover:-translate-y-0.5">
+            <button className="bg-gradient-to-r from-[#2A6B65] to-[#1F514C] cursor-pointer hover:from-[#1F514C] hover:to-[#1a433f] text-white font-semibold py-4 px-8 lg:px-12 2xl:px-16 mb-10 rounded-3xl max-md:text-sm xl:text-lg transition-all duration-300 transform hover:-translate-y-0.5">
               Explore Skills in Demand
             </button>
           </div>
