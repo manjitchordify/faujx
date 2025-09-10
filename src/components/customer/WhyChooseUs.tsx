@@ -109,7 +109,7 @@ function WhyChooseUs() {
   const benefits = [
     {
       icon: UsersIcon,
-      title: 'Pre-Vetted Engineers',
+      title: 'Pre-vetted Engineers',
       description: 'Pre-vetted talent across top tech skills.',
     },
     {
