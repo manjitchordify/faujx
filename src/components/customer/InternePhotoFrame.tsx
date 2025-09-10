@@ -276,19 +276,23 @@ const InternePhotoFrame: React.FC = () => {
                       <h3 className="text-white mb-2 font-semibold text-base sm:text-lg md:text-lg leading-tight">
                         Capabilities
                       </h3>
-                      <ul className="space-y-1.5">
+                      <ul className="space-y-2">
                         {profile.capabilities.map(
                           (capability: string, index: number) => (
                             <li
                               key={index}
-                              className="text-white text-sm flex items-start"
+                              className="text-white text-sm leading-relaxed"
                             >
-                              <span
-                                className={`${getRoleColor(profile.role).replace('bg-', 'text-')} mr-2 mt-1 flex-shrink-0`}
-                              >
-                                •
-                              </span>
-                              <span>{capability}</span>
+                              <div className="flex items-start gap-2">
+                                <span
+                                  className={`${getRoleColor(profile.role).replace('bg-', 'text-')} flex-shrink-0 mt-0.5`}
+                                >
+                                  •
+                                </span>
+                                <span className="flex-1 text-left leading-relaxed">
+                                  {capability}
+                                </span>
+                              </div>
                             </li>
                           )
                         )}
