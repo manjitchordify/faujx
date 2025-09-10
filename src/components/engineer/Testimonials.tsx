@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import { StackedCarousel } from 'react-stacked-center-carousel';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 interface Testimonial {
   id: number;
@@ -195,11 +196,17 @@ export default function Testimonials() {
       />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
-        <div className="text-center mb-4 md:mb-8 lg:mb-12">
+        <motion.div
+          className="text-center mb-4 md:mb-8 lg:mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <h2 className="text-3xl lg:text-4xl 2xl:text-5xl font-medium text-[#1F514C] mb-4">
             Voices of FaujX
           </h2>
-        </div>
+        </motion.div>
 
         <div
           style={{ width: '100%', position: 'relative', minHeight: '500px' }}

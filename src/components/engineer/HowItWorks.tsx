@@ -1,5 +1,7 @@
+'use client';
 import Image from 'next/image';
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Poly } from 'next/font/google';
 
 const poly = Poly({
@@ -80,16 +82,26 @@ export default function HowItWorks() {
     // <section className="bg-white py-6 md:pt-8 md:pb-16 w-full relative">
     <section className="bg-white py-6 md:pt-6 md:pb-12 w-full relative">
       <div className="container mx-auto px-6 lg:px-8">
-        <h2 className="mb-14 text-[#1F514C] text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl max-w-[22ch] mx-auto text-center font-semibold leading-tight sm:leading-tight md:leading-tight">
+        <motion.h2
+          className="mb-14 text-[#1F514C] text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl max-w-[22ch] mx-auto text-center font-semibold leading-tight sm:leading-tight md:leading-tight"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           How It Works
-        </h2>
+        </motion.h2>
 
         <div className="w-[88%] mx-auto flex flex-col gap-8 mb-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {stepsRow1.map(step => (
-              <div
+            {stepsRow1.map((step, index) => (
+              <motion.div
                 key={step.number}
                 className="relative rounded-xl flex flex-col items-start border border-[#DCDCDC] shadow-sm hover:shadow-lg transition-all duration-300 bg-white overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
               >
                 {/* Header with integrated number */}
                 <div className="bg-gradient-to-r from-[#2A6B65] to-[#1F514C] w-full px-6 py-4 relative">
@@ -150,15 +162,19 @@ export default function HowItWorks() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {stepsRow2.map(step => (
-              <div
+            {stepsRow2.map((step, index) => (
+              <motion.div
                 key={step.number}
                 className="relative rounded-xl flex flex-col items-start border border-[#DCDCDC] shadow-sm hover:shadow-lg transition-all duration-300 bg-white overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: (index + 3) * 0.1 }}
               >
                 {/* Header with integrated number */}
                 <div className="bg-gradient-to-r from-[#2A6B65] to-[#1F514C] w-full px-6 py-4 relative">
@@ -219,7 +235,7 @@ export default function HowItWorks() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

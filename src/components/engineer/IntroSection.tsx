@@ -1,5 +1,7 @@
+'use client';
 import Image from 'next/image';
 import React from 'react';
+import { motion } from 'framer-motion';
 import {
   PiGraduationCapFill,
   PiBookOpenFill,
@@ -77,7 +79,13 @@ export default function IntroSection() {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Top Section */}
-        <div className="text-center mb-12 sm:mb-16">
+        <motion.div
+          className="text-center mb-12 sm:mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-semibold text-[#1F514C] mb-6 sm:mb-8 lg:mb-10 leading-tight sm:leading-tight md:leading-tight">
             Why FaujX?
           </h2>
@@ -85,16 +93,20 @@ export default function IntroSection() {
             A mission-driven platform transforming engineers into job-ready
             talent.
           </p>
-        </div>
+        </motion.div>
 
         {/* Cards Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-6 max-w-7xl mx-auto">
-          {featureCards.map(card => {
+          {featureCards.map((card, index) => {
             const IconComponent = card.icon;
             return (
-              <div
+              <motion.div
                 key={card.id}
                 className="relative rounded-2xl p-4 sm:p-5 lg:p-6 transition-all duration-200 border border-[#c0c0c0] border-b-0 bg-gradient-to-t from-[#f0f0f0] to-[#ffffff] hover:shadow-lg"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
               >
                 {/* Icon */}
                 <div className="size-8 sm:size-10 lg:size-12 bg-gradient-to-br from-[#2A6B65] to-[#1F514C] rounded-xl flex items-center justify-center mb-3 sm:mb-4">
@@ -114,7 +126,7 @@ export default function IntroSection() {
                 <p className="text-xs sm:text-sm md:text-base lg:text-base 2xl:text-lg text-[#1F514C] font-normal leading-relaxed sm:leading-relaxed md:leading-relaxed">
                   {card.description}
                 </p>
-              </div>
+              </motion.div>
             );
           })}
         </div>
