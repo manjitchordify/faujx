@@ -139,12 +139,12 @@ export default function VettingProcessSlides() {
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-medium text-gray-900 mb-4 sm:mb-5 lg:mb-6 leading-tight">
+                  <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold text-gray-900 mb-4 sm:mb-5 lg:mb-6 leading-tight sm:leading-tight md:leading-tight lg:leading-tight">
                     {steps[currentStep].title}
                   </h3>
 
                   {/* Description */}
-                  <p className="text-sm sm:text-base lg:text-lg text-gray-600 leading-relaxed max-w-lg mx-auto">
+                  <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 leading-relaxed sm:leading-relaxed md:leading-relaxed max-w-lg mx-auto">
                     {steps[currentStep].description}
                   </p>
                 </div>

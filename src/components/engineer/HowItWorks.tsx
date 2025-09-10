@@ -80,8 +80,8 @@ export default function HowItWorks() {
     // <section className="bg-white py-6 md:pt-8 md:pb-16 w-full relative">
     <section className="bg-white py-6 md:pt-6 md:pb-12 w-full relative">
       <div className="container mx-auto px-6 lg:px-8">
-        <h2 className="mb-14 text-[#1F514C] text-3xl max-w-[22ch] mx-auto text-center font-semibold">
-          How it works?
+        <h2 className="mb-14 text-[#1F514C] text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl max-w-[22ch] mx-auto text-center font-semibold leading-tight sm:leading-tight md:leading-tight">
+          How It Works
         </h2>
 
         <div className="w-[88%] mx-auto flex flex-col gap-8 mb-12">

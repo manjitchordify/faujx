@@ -7,19 +7,19 @@ export default function AboutSection() {
       <div className="container mx-auto px-6 lg:px-8 relative z-10">
         {/* Top Section */}
         <div className="text-center mb-8 lg:mb-12 2xl:mb-16">
-          <h2 className="text-2xl lg:text-3xl 2xl:text-4xl font-semibold text-[#1F514C] mb-10">
-            What is FaujX?
+          <h2 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-semibold text-[#1F514C] mb-8 sm:mb-10 leading-tight sm:leading-tight md:leading-tight">
+            What Is FaujX?
           </h2>
         </div>
 
         {/* Cards Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <p className="text-2xl sm:text-3xl md:text-4xl lg:leading-tight lg:text-5xl 2xl:text-5xl max-w-[28ch] min-[1728px]:text-6xl font-semibold text-[#1F514C] mb-6">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl max-w-[28ch] font-semibold text-[#1F514C] mb-6 leading-tight sm:leading-tight md:leading-tight lg:leading-tight">
               FaujX is your gateway to global tech careers
-            </p>
+            </h1>
             {/* <p className="text-xl md:text-2xl lg:text-3xl 2xl:text-4xl text-[#3F3D56] mb-8"> */}
-            <p className="font-semibold md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl text-[#3F3D56] mb-8">
+            <p className="font-normal text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-[#3F3D56] mb-8 leading-relaxed sm:leading-relaxed md:leading-relaxed">
               Students | Bootcamp Grads | Self-Taught Coders
             </p>
             <button className="bg-gradient-to-r from-[#2A6B65] to-[#1F514C] cursor-pointer hover:from-[#1F514C] hover:to-[#1a433f] text-white font-semibold py-4 px-8 lg:px-12 2xl:px-16 mb-10 rounded-3xl max-md:text-sm xl:text-lg transition-all duration-300 transform hover:-translate-y-0.5">

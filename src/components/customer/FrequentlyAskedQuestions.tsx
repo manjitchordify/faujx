@@ -37,13 +37,11 @@ export default function FrequentlyAskedQuestions() {
     <section id="frequently-asked-questions" className="py-16 md:py-20">
       <div className="w-full max-w-4xl mx-auto px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center ">
-          <p className="text-3xl sm:text-4xl md:text-6xl leading-tight font-light text-[#1F514C] tracking-tight">
-            <span className="text-[#1F514C] font-medium mt-3 tracking-tight">
-              Frequently Asked Questions
-            </span>
-          </p>
+          <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight sm:leading-tight md:leading-tight lg:leading-tight font-semibold text-[#1F514C] tracking-tight">
+            Frequently Asked Questions
+          </h2>
         </div>
-        <p className="text-3xl text-center font-light text-[25px] text-[#1F514C] mb-5 md:mt-8 md:mb-3">
+        <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-center font-normal text-[#1F514C] mb-4 sm:mb-5 md:mt-6 lg:mt-8 md:mb-3 leading-relaxed sm:leading-relaxed md:leading-relaxed">
           Here are the top questions our clients ask before getting started.
         </p>
 

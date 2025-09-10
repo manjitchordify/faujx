@@ -8,8 +8,8 @@ export default function SkillBasedLearning() {
       <div className="container w-11/12 mx-auto px-6 lg:px-8 lg:w-4/5">
         {/* <div className="text-center mb-[max(1rem,5vh)] lg:mb-[max(3rem,15vh)]"> */}
         <div className="text-center mb-[max(1rem,5vh)] lg:mb-[max(3rem,10vh)]">
-          <h2 className="text-3xl lg:text-4xl 2xl:text-5xl font-semibold text-[#1F514C] mb-2">
-            Upskill with FaujX LMS
+          <h2 className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-semibold text-[#1F514C] mb-2 leading-tight sm:leading-tight md:leading-tight">
+            Upskill With FaujX LMS
           </h2>
         </div>
 
@@ -29,7 +29,7 @@ export default function SkillBasedLearning() {
           <div className="flex-1 w-full lg:w-1/3 lg:pl-12">
             <div className="flex flex-col lg:max-w-[90%] mx-auto h-full">
               <div className="space-y-5 mb-8 text-black">
-                <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
+                <div className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl leading-relaxed sm:leading-relaxed md:leading-relaxed flex items-center space-x-3">
                   <svg
                     className="size-[1.125em] text-white flex-shrink-0 bg-black rounded-[.35em] p-1"
                     fill="currentColor"
@@ -46,7 +46,7 @@ export default function SkillBasedLearning() {
                   </span>
                 </div>
 
-                <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
+                <div className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl leading-relaxed sm:leading-relaxed md:leading-relaxed flex items-center space-x-3">
                   <svg
                     className="size-[1.125em] text-white flex-shrink-0 bg-black rounded-[.35em] p-1"
                     fill="currentColor"
@@ -61,7 +61,7 @@ export default function SkillBasedLearning() {
                   <span className="font-medium">Live Collaboration</span>
                 </div>
 
-                <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
+                <div className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl leading-relaxed sm:leading-relaxed md:leading-relaxed flex items-center space-x-3">
                   <svg
                     className="size-[1.125em] text-white flex-shrink-0 bg-black rounded-[.35em] p-1"
                     fill="currentColor"
@@ -76,7 +76,7 @@ export default function SkillBasedLearning() {
                   <span className="font-medium">Scalable Solutions</span>
                 </div>
 
-                <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
+                <div className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl leading-relaxed sm:leading-relaxed md:leading-relaxed flex items-center space-x-3">
                   <svg
                     className="size-[1.125em] text-white flex-shrink-0 bg-black rounded-[.35em] p-1"
                     fill="currentColor"

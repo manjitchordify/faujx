@@ -40,10 +40,10 @@ export default function Faq() {
       <div className="w-full max-w-3xl mx-auto px-6 lg:px-8">
         {/* Heading */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-normal text-gray-900 mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold text-gray-900 mb-4 leading-tight sm:leading-tight md:leading-tight">
             Frequently Asked Questions
           </h2>
-          <p className="text-gray-600 font-light max-w-xl mx-auto">
+          <p className="text-gray-600 font-normal text-base sm:text-lg md:text-xl max-w-xl mx-auto leading-relaxed sm:leading-relaxed md:leading-relaxed">
             Here are the top questions our community asks before getting
             started.
           </p>

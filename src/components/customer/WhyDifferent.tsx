@@ -138,10 +138,7 @@ function WhyDifferent() {
       <div className="max-w-7xl mx-auto px-4 lg:px-6 relative z-10">
         {/* Section Header */}
         <div className="mb-16 lg:mb-20">
-          <SectionHeader
-            mainText="Why FaujX is different from other Job Boards & Recruiting Agencies?"
-            aboutSection=""
-          />
+          <SectionHeader mainText="Why FaujX?" aboutSection="" />
         </div>
 
         {/* Differentiators Grid */}
@@ -169,7 +166,7 @@ function WhyDifferent() {
 
                   {/* Content */}
                   <div className="space-y-4">
-                    <h3 className="text-xl lg:text-2xl font-bold text-gray-900 group-hover:text-[#1F514C] transition-colors duration-300">
+                    <h3 className="text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-3xl font-semibold leading-tight sm:leading-tight md:leading-tight text-gray-900 group-hover:text-[#1F514C] transition-colors duration-300">
                       {item.title}
                     </h3>
                     <p className="text-gray-600 text-base lg:text-lg leading-relaxed">
@@ -208,7 +205,7 @@ function WhyDifferent() {
 
                     {/* Content */}
                     <div className="space-y-4">
-                      <h3 className="text-xl lg:text-2xl font-bold text-gray-900 group-hover:text-[#1F514C] transition-colors duration-300">
+                      <h3 className="text-lg sm:text-xl md:text-xl lg:text-2xl xl:text-3xl font-semibold text-gray-900 group-hover:text-[#1F514C] transition-colors duration-300 leading-tight sm:leading-tight md:leading-tight">
                         {item.title}
                       </h3>
                       <p className="text-gray-600 text-base lg:text-lg leading-relaxed">
@@ -228,7 +225,7 @@ function WhyDifferent() {
         {/* Bottom CTA Section */}
         <div className="mt-16 lg:mt-20 text-center">
           <div className="bg-gradient-to-r from-[#2A6B65] to-[#1F514C] rounded-3xl p-8 lg:p-12 text-white">
-            <h3 className="text-2xl lg:text-3xl font-bold mb-4">
+            <h3 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold mb-4 leading-tight sm:leading-tight md:leading-tight">
               Ready to Experience the Difference?
             </h3>
             <p className="text-lg lg:text-xl opacity-90 mb-6 max-w-2xl mx-auto">

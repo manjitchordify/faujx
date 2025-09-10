@@ -295,7 +295,7 @@ export default function Blog() {
   return (
     <section className="py-6 md:py-8 lg:py-12 xl:py-16" id="blog">
       <div className="container w-4/5 lg:max-w-[90%] mx-auto px-6 lg:px-8">
-        <h2 className="text-3xl lg:text-4xl text-center 2xl:text-5xl font-semibold text-[#1F514C] mb-[max(1rem,5vh)] lg:mb-[max(3rem,10vh)]">
+        <h2 className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl text-center font-semibold text-[#1F514C] mb-[max(1rem,5vh)] lg:mb-[max(3rem,10vh)] leading-tight sm:leading-tight md:leading-tight">
           Blog
         </h2>
 

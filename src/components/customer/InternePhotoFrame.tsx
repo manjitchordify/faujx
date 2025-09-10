@@ -242,7 +242,7 @@ const InternePhotoFrame: React.FC = () => {
                 <div className="flex-1 w-full text-center lg:text-left">
                   {/* Header with Name and Role */}
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4">
-                    <div className="text-white text-xl sm:text-2xl lg:text-3xl font-bold">
+                    <div className="text-white text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold leading-tight sm:leading-tight md:leading-tight">
                       {profile.name}
                     </div>
                     <span
@@ -256,7 +256,7 @@ const InternePhotoFrame: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Skills Section */}
                     <div>
-                      <h3 className="text-white mb-2 font-bold text-lg">
+                      <h3 className="text-white mb-2 font-semibold text-base sm:text-lg md:text-lg leading-tight">
                         Skills
                       </h3>
                       <div className="flex flex-wrap gap-2">
@@ -273,7 +273,7 @@ const InternePhotoFrame: React.FC = () => {
 
                     {/* Capabilities Section */}
                     <div>
-                      <h3 className="text-white mb-2 font-bold text-lg">
+                      <h3 className="text-white mb-2 font-semibold text-base sm:text-lg md:text-lg leading-tight">
                         Capabilities
                       </h3>
                       <ul className="space-y-1.5">

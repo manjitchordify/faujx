@@ -18,7 +18,7 @@ function HeroSection() {
           {/* Updated content with 3 lines and smaller font */}
           <div className="overflow-hidden">
             <div
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl text-gray-900 leading-tight flex flex-col"
+              className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl text-gray-900 leading-tight sm:leading-tight md:leading-tight lg:leading-tight xl:leading-tight flex flex-col"
               style={{
                 transform: loaded ? 'translateY(0)' : 'translateY(20px)',
                 opacity: loaded ? 1 : 0,
@@ -49,7 +49,7 @@ function HeroSection() {
                 'transform 0.5s ease-out 0.3s, opacity 0.5s ease-out 0.3s',
             }}
           >
-            <div className="text-lg sm:text-xl md:text-2xl text-[#1F514C] font-light leading-relaxed">
+            <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-[#1F514C] font-normal leading-relaxed sm:leading-relaxed md:leading-relaxed">
               Deploy vetted engineers, consult experts, or vet your own
               candidates.
             </div>

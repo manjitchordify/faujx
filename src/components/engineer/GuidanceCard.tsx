@@ -18,12 +18,12 @@ export default function GuidanceCard() {
         <div className="order-1 lg:order-2 bg-gradient-to-br from-[#2A6B65] to-[#1F514C] p-6 lg:p-12 flex flex-col justify-center">
           <div className="flex flex-col gap-4 w-full lg:max-w-[90%] mx-auto">
             <div className="flex-1 flex flex-col gap-4">
-              <h2 className="text-white text-3xl md:text-4xl 2xl:text-5xl font-semibold leading-tight mb-4 lg:mb-6 xl:mb-8">
+              <h2 className="text-white text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-semibold leading-tight sm:leading-tight md:leading-tight mb-4 lg:mb-6 xl:mb-8">
                 Book-a-Mentor
               </h2>
 
               <div className="space-y-4">
-                <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
+                <div className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl leading-relaxed sm:leading-relaxed md:leading-relaxed flex items-center space-x-3">
                   <svg
                     className="size-[1.125em] text-black flex-shrink-0 bg-white rounded-full p-1"
                     fill="currentColor"
@@ -40,7 +40,7 @@ export default function GuidanceCard() {
                   </span>
                 </div>
 
-                <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
+                <div className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl leading-relaxed sm:leading-relaxed md:leading-relaxed flex items-center space-x-3">
                   <svg
                     className="size-[1.125em] text-black flex-shrink-0 bg-white rounded-full p-1"
                     fill="currentColor"
@@ -57,7 +57,7 @@ export default function GuidanceCard() {
                   </span>
                 </div>
 
-                <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
+                <div className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl leading-relaxed sm:leading-relaxed md:leading-relaxed flex items-center space-x-3">
                   <svg
                     className="size-[1.125em] text-black flex-shrink-0 bg-white rounded-full p-1"
                     fill="currentColor"
@@ -74,7 +74,7 @@ export default function GuidanceCard() {
                   </span>
                 </div>
 
-                <div className="text-lg lg:text-xl 2xl:text-2xl flex items-center space-x-3">
+                <div className="text-base sm:text-lg md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl leading-relaxed sm:leading-relaxed md:leading-relaxed flex items-center space-x-3">
                   <svg
                     className="size-[1.125em] text-black flex-shrink-0 bg-white rounded-full p-1"
                     fill="currentColor"

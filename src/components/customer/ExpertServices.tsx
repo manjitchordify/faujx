@@ -41,9 +41,9 @@ export default function ExpertServices() {
           className="bg-gradient-to-br from-[#2A6B65] to-[#1F514C] flex flex-col justify-center items-start text-white relative p-4 sm:p-6 md:p-8 lg:p-10 xl:p-12 order-2 min-h-[250px] sm:min-h-[300px] md:min-h-[350px] lg:h-[400px] xl:h-[450px]"
         >
           <div className="w-full flex flex-col justify-center h-full">
-            <div className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-semibold mb-3 sm:mb-4 md:mb-6 lg:mb-8 xl:mb-10 text-white leading-tight">
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold mb-3 sm:mb-4 md:mb-6 lg:mb-8 xl:mb-10 text-white leading-tight sm:leading-tight md:leading-tight lg:leading-tight">
               Expert and their Services
-            </div>
+            </h2>
 
             <div className="space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-5 mb-4 sm:mb-6 lg:mb-0">
               {services.map((service, index) => (

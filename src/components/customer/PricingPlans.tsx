@@ -37,6 +37,12 @@ export default function PricingPlans() {
     <section id="pricing" className="w-full">
       <div className="w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
         <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-12">
+            <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight sm:leading-tight md:leading-tight lg:leading-tight font-semibold text-[#1F514C] tracking-tight">
+              Pricing Plans
+            </h2>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {pricingCards.map((card, index) => (
               <div
@@ -50,7 +56,7 @@ export default function PricingPlans() {
               >
                 {/* Content area */}
                 <div className="flex-grow flex flex-col">
-                  <h3 className="text-2xl lg:text-3xl xl:text-4xl font-medium text-gray-900 mb-6 leading-tight">
+                  <h3 className="text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl font-semibold text-gray-900 mb-6 leading-tight sm:leading-tight md:leading-tight lg:leading-tight">
                     {Array.isArray(card.title) ? (
                       <>
                         {card.title[0]}

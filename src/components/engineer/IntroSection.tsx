@@ -78,10 +78,10 @@ export default function IntroSection() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Top Section */}
         <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl 2xl:text-4xl font-semibold text-[#1F514C] mb-6 sm:mb-8 lg:mb-10">
+          <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-semibold text-[#1F514C] mb-6 sm:mb-8 lg:mb-10 leading-tight sm:leading-tight md:leading-tight">
             Why FaujX?
           </h2>
-          <p className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-semibold text-[#1F514C] mb-4 sm:mb-6 leading-tight sm:leading-normal">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl 2xl:text-4xl font-normal text-[#1F514C] mb-4 sm:mb-6 leading-relaxed sm:leading-relaxed md:leading-relaxed">
             A mission-driven platform transforming engineers into job-ready
             talent.
           </p>
@@ -106,12 +106,12 @@ export default function IntroSection() {
                 </div>
 
                 {/* Title */}
-                <h3 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-semibold text-[#1F514C] mb-3 sm:mb-4 lg:mb-6 leading-tight">
+                <h3 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl font-semibold text-[#1F514C] mb-3 sm:mb-4 lg:mb-6 leading-tight sm:leading-tight md:leading-tight">
                   {card.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-xs sm:text-sm md:text-base lg:text-base 2xl:text-lg text-[#1F514C] font-semibold leading-relaxed">
+                <p className="text-xs sm:text-sm md:text-base lg:text-base 2xl:text-lg text-[#1F514C] font-normal leading-relaxed sm:leading-relaxed md:leading-relaxed">
                   {card.description}
                 </p>
               </div>

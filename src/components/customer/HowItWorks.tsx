@@ -47,7 +47,7 @@ const HowItWorks: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div className="text-center mb-12">
-          <SectionHeader mainText="How it Works ?" aboutSection="" />
+          <SectionHeader mainText="How It Works" aboutSection="" />
         </div>
 
         {/* Steps Container */}
@@ -78,12 +78,12 @@ const HowItWorks: React.FC = () => {
 
                   {/* Content at Bottom */}
                   <div className="flex-1 flex flex-col justify-end">
-                    <div className="text-lg font-semibold text-gray-800 mb-3 text-left">
+                    <h3 className="text-base sm:text-lg md:text-lg lg:text-xl font-semibold text-gray-800 mb-3 text-left leading-tight">
                       {step.title}
-                    </div>
-                    <div className="text-sm text-gray-600 leading-relaxed text-left">
+                    </h3>
+                    <p className="text-sm sm:text-sm md:text-base text-gray-600 leading-relaxed sm:leading-relaxed text-left">
                       {step.description}
-                    </div>
+                    </p>
                   </div>
                 </div>
               </div>
