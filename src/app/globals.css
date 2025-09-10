@@ -25,6 +25,10 @@ body {
 }
 
 /* Prevent horizontal scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
 html,
 body {
   --swiper-pagination-color: #1f514c !important;

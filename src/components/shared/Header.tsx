@@ -93,6 +93,25 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
     router.push('/');
   };
 
+  const handleSmoothScroll = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string
+  ) => {
+    // Check if it's a hash link (starts with #)
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const targetId = href.substring(1);
+      const targetElement = document.getElementById(targetId);
+
+      if (targetElement) {
+        targetElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }
+    }
+  };
+
   const closeDropdowns = () => {
     setProfileDropdownOpen(false);
   };
@@ -145,6 +164,9 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
                           // Dispatch action to show advisor section
                           dispatch(setMainContent('advisor'));
                           // setMenuOpen(false);
+                        } else {
+                          // Handle smooth scrolling for hash links
+                          handleSmoothScroll(e, item.href);
                         }
                       }}
                       className={`px-1 py-2 text-sm font-medium transition-colors duration-200  ${
@@ -425,6 +447,9 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
                     e.preventDefault();
                     // Dispatch action to show advisor section
                     dispatch(setMainContent('advisor'));
+                  } else {
+                    // Handle smooth scrolling for hash links
+                    handleSmoothScroll(e, item.href);
                   }
                   setMenuOpen(false);
                 }}
