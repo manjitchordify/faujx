@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AuthGuard from '@/components/AuthGuard';
+import ScrollToTopButton from '@/components/ui/ScrollToTopButton';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 
 const jakarta = Plus_Jakarta_Sans({
@@ -156,6 +157,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col font-sans bg-background text-foreground w-full">
         <Providers>
           <AuthGuard>{children}</AuthGuard>
+          <ScrollToTopButton />
           <GoogleAnalytics gaId="G-5SNKDVPJ9M" />
           <SpeedInsights />
           <ToastContainer
