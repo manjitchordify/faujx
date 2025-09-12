@@ -475,14 +475,14 @@ export const rejectCandidate = async (
 export const publishCandidate = async (
   candidateId: string
 ): Promise<Candidate> => {
-  return updateCandidatePublishStatus(candidateId, true);
+  return updateCandidatePublishStatus(candidateId);
 };
 
 // PATCH unpublish candidate profile
 export const unpublishCandidate = async (
   candidateId: string
 ): Promise<Candidate> => {
-  return updateCandidatePublishStatus(candidateId, false);
+  return updateCandidatePublishStatus(candidateId);
 };
 
 // GET published candidates only

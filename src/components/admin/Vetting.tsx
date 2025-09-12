@@ -519,7 +519,7 @@ function Vetting() {
       );
 
       // API call to publish
-      await updateCandidatePublishStatus(candidateToPublish.id, true);
+      await updateCandidatePublishStatus(candidateToPublish.id);
 
       // Refresh all data from server - NO LOCAL STATE UPDATES
       await Promise.all([
