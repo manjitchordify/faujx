@@ -116,7 +116,7 @@ const StepIntoLearning = () => {
   };
 
   return (
-    <section id="HowitWorksfaujx" className="bg-[#262039] py-20 px-6">
+    <section id="HowitWorksfaujx" className="bg-[#1F514C] py-20 px-6">
       <div className="max-w-6xl mx-auto">
         <motion.div
           className="grid lg:grid-cols-3 gap-12 items-center"
@@ -131,7 +131,7 @@ const StepIntoLearning = () => {
             variants={leftContentVariants}
           >
             <motion.p
-              className="text-purple-400 font-medium mb-4"
+              className="text-whitefont-medium mb-4"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -169,7 +169,7 @@ const StepIntoLearning = () => {
             <div className="bg-white rounded-2xl p-6 shadow-xl min-h-[280px] flex flex-col justify-center overflow-hidden relative">
               {/* Step Badge (STATIC, no animation) */}
               <div className="absolute top-4 left-4">
-                <div className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-sm font-medium border border-purple-200">
+                <div className="bg-[#d0dfde] text-[#1F514C] px-3 py-1 rounded-full text-sm font-medium border border-purple-200">
                   {carouselData[currentSlide].step}
                 </div>
               </div>
@@ -186,7 +186,7 @@ const StepIntoLearning = () => {
                   >
                     {/* Icon */}
                     <motion.div
-                      className="w-24 h-24 bg-gradient-to-br from-[#E6DAF5] via-[#BFA7DF] to-[#9874C8] rounded-xl flex items-center justify-center text-white mb-5 mx-auto"
+                      className="w-24 h-24 bg-gradient-to-br from-[#6c9490] via-[#457671] to-[#1F514C] rounded-xl flex items-center justify-center text-white mb-5 mx-auto"
                       variants={iconVariants}
                       initial="initial"
                       animate="animate"
@@ -252,7 +252,7 @@ const StepIntoLearning = () => {
                   onClick={() => setCurrentSlide(index)}
                   className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
                     currentSlide === index
-                      ? 'bg-purple-400 w-6'
+                      ? 'bg-[#ffffff] w-6'
                       : 'bg-white/40 hover:bg-white/60'
                   }`}
                   whileHover={{ scale: 1.2 }}

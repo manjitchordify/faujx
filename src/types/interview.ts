@@ -47,6 +47,7 @@ export interface SuccessInterviewScheduleResponse {
 export interface FailedInterviewResponse {
   success: false;
   message: string;
+  alternativeSlots: InterviewSlot[];
   data: {
     candidateId: string;
     userId: string;

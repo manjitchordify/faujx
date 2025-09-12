@@ -140,7 +140,7 @@ function WhyChooseUs() {
   ];
 
   return (
-    <section className="w-full min-h-screen py-2 relative overflow-hidden">
+    <section className="w-full  py-5 pb-20 relative overflow-hidden">
       {/* Left Side Decorative Background */}
       <Image
         src="/images/candidate-intro.png"

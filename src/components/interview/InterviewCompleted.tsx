@@ -2,9 +2,11 @@
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/store/store';
 
 const InterviewCompleted = () => {
   const router = useRouter();
+  const { enginnerRole } = useAppSelector(state => state.persist);
   return (
     <div className="w-full flex items-center justify-center p-4">
       <div className="w-full md:w-2/3 lg:w-1/2 mx-auto">
@@ -44,7 +46,11 @@ const InterviewCompleted = () => {
           {/* Interview Details */}
           <div className="space-y-2">
             <p className="text-gray-500 text-sm">Interview</p>
-            <h2 className="text-lg font-medium text-gray-900">Round 1</h2>
+            <h2 className="text-lg font-medium text-gray-900">
+              {enginnerRole &&
+                enginnerRole[0].toUpperCase() + enginnerRole.slice(1)}{' '}
+              - Round 1
+            </h2>
             {/* <p className="text-gray-500 text-sm">Interviewer: Jane Doe</p> */}
           </div>
         </div>

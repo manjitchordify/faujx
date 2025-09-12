@@ -58,6 +58,7 @@ const SessionCompleted = () => {
                 onChange={e => setFeedback(e.target.value)}
                 placeholder="Please take a moment to rate your experience and provide feedback."
                 rows={6}
+                required
                 className="w-full p-4 border border-gray-200 rounded-lg resize-none focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all duration-200 text-gray-700 placeholder-gray-400"
               />
             </div>

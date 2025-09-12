@@ -7,6 +7,8 @@ import { loginApi } from '@/services/authService';
 import { showToast } from '@/utils/toast/Toast';
 import { clearAuthCookies } from '@/services/authService';
 import { getNextRouteFromStages } from '@/utils/profileStageRouting';
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface LoginData {
   email: string;
@@ -135,7 +137,7 @@ export default function SignInPage() {
           Panelist: '/panelist/dashboard',
           interview_panel: '/panelist/dashboard',
           Admin: '/admin/dashboard',
-          expert: '/expert/dashboard',
+          expert: '/expert/knowbetter',
         };
 
         showToast('Logged in successfully!', 'success');
@@ -190,9 +192,34 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col lg:flex-row">
+    <div className="w-full min-h-screen flex flex-col lg:flex-row relative">
+      {/* Logo at top-left */}
+      <div className="absolute top-4 left-4 z-10">
+        <Link
+          href="/"
+          className="flex items-center"
+          onClick={() => {
+            // Reset main content to show home page when logo is clicked
+          }}
+        >
+          <Image
+            src="/applogo2.png"
+            alt="Faujx Logo"
+            height={80}
+            width={80}
+            className="h-12 lg:h-14 w-auto"
+            priority
+            quality={100}
+            style={{ objectFit: 'contain' }}
+          />
+        </Link>
+      </div>
+
+      {/* Left Panel */}
       <div className="flex-1 bg-[#1F514C] flex items-center justify-center p-4 sm:p-6 lg:p-8 relative order-1 lg:order-1">
-        <div className="w-full max-w-sm lg:max-w-md">
+        <div className="w-full max-w-sm lg:max-w-md pt-12">
+          {' '}
+          {/* Added pt-12 to give space below the logo */}
           <div className="text-center mb-8 lg:mb-12">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-light text-white mb-3 lg:mb-4">
               Welcome
@@ -201,7 +228,6 @@ export default function SignInPage() {
               Log in to manage your account and access your dashboard.
             </p>
           </div>
-
           <div className="flex justify-center">
             <button
               onClick={handleSignupRedirect}

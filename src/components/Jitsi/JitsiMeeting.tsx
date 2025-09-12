@@ -189,10 +189,11 @@ export default function JitsiMeetingPage() {
 
       apiRef.current = new window.JitsiMeetExternalAPI(domain, options);
       apiRef.current?.addEventListener('readyToClose', async () => {
-        if (loggedInUser?.userType == 'candidate') {
-          // Mark interview stage as passed before navigating
+        if (loggedInUser?.userType === 'candidate') {
           await updateProfileStage('interview', 'passed');
           router.push(`/engineer/interview/${interviewId}/session-completed`);
+        } else if (loggedInUser?.userType === 'expert') {
+          router.push(`/expert/interview/${interviewId}/session-completed`);
         } else {
           // Show feedback modal for panelist
           setShowFeedbackModal(true);

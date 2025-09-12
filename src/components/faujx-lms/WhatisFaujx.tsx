@@ -103,7 +103,7 @@ export default function WhatisFaujx() {
             >
               {/* Number Badge and Title in same row */}
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#E6DAF5] via-[#BFA7DF] to-[#9874C8] rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#558d88] via-[#1F514C] to-[#1F514C] rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                   {feature.id}
                 </div>
                 <h3 className="text-xl font-semibold text-gray-800">

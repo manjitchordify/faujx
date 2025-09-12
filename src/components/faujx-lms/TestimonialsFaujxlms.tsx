@@ -58,7 +58,7 @@ const TestimonialsFaujxlms = () => {
         key={index}
         className={`w-5 h-5 ${
           index < rating
-            ? 'fill-[#B299E1] text-purple-400'
+            ? 'fill-[#1F514C] text-[#1F514C]'
             : 'fill-gray-200 text-gray-200'
         }`}
       />
@@ -70,9 +70,7 @@ const TestimonialsFaujxlms = () => {
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <p className="text-purple-500 font-medium mb-4 text-lg">
-            Testimonials
-          </p>
+          <p className="text-[1F514C] font-medium mb-4 text-lg">Testimonials</p>
           <h2 className="text-4xl md:text-5xl font-medium text-gray-800">
             What our students are saying
           </h2>
@@ -102,7 +100,7 @@ const TestimonialsFaujxlms = () => {
                   </div>
 
                   <div className="h-8 flex items-center">
-                    <p className="text-2xl font-semibold text-[#B299E1]">
+                    <p className="text-2xl font-semibold text-[#1F514C]">
                       {testimonials[currentSlide].name}
                     </p>
                   </div>
@@ -153,7 +151,7 @@ const TestimonialsFaujxlms = () => {
                 onClick={() => setCurrentSlide(index)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   currentSlide === index
-                    ? 'bg-[#B299E1] w-8'
+                    ? 'bg-[#1F514C] w-8'
                     : 'bg-gray-300 hover:bg-gray-400'
                 }`}
               />

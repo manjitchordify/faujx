@@ -61,6 +61,7 @@ export const fake_slotBookingResponse: SuccessInterviewScheduleResponse = {
 export const fake_slotBookingAlternative: FailedInterviewResponse = {
   success: false,
   message: 'No interviewers available for the requested time slots',
+  alternativeSlots: [],
   data: {
     candidateId: '4e6d7c95-f3ac-4381-923c-d52e00f00728',
     userId: '29df8bdb-5cc2-4e74-bd64-042096386b84',

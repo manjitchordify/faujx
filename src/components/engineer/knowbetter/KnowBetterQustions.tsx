@@ -80,7 +80,7 @@ const KnowBetterQuestions: React.FC = () => {
       // Create API payload using the updated Redux state
       const profileData: UpdateEngineerProfileParams = updatedProfile;
       const response = await updateEngineerProfileApi(userId, profileData);
-      console.log('Profile updated successfully:', response);
+      console.log(response, 'Profile updated successfully');
       let nextStep = currentStep + 1;
       if (currentStep === 6 && formData.relocateOutsideCountry === 'NO') {
         nextStep = 8; // Skip step 7 if relocateOutsideCountry is 'NO'
@@ -139,20 +139,20 @@ const KnowBetterQuestions: React.FC = () => {
           );
         }
         break;
-      case 4: // Relocate within country
-        if (formData.relocateWithinCountry) {
-          dispatch(
-            setRelocationData({
-              isWillingToRelocate: formData.relocateWithinCountry === 'YES',
-            })
-          );
-        }
-        break;
-      case 5: // Start timing
+      case 4: // Start timing
         if (formData.startTiming) {
           dispatch(
             setJoiningPeriodData({
               joiningPeriod: formData.startTiming,
+            })
+          );
+        }
+        break;
+      case 5: // Relocate within country
+        if (formData.relocateWithinCountry) {
+          dispatch(
+            setRelocationData({
+              isWillingToRelocate: formData.relocateWithinCountry === 'YES',
             })
           );
         }
@@ -207,15 +207,15 @@ const KnowBetterQuestions: React.FC = () => {
           profile.workMode = formData.workArrangement;
         }
         break;
-      case 4: // Relocate within country
+      case 4: // Start timing
+        if (formData.startTiming) {
+          profile.joiningPeriod = formData.startTiming;
+        }
+        break;
+      case 5: // Relocate within country
         if (formData.relocateWithinCountry) {
           profile.isWillingToRelocate =
             formData.relocateWithinCountry === 'YES';
-        }
-        break;
-      case 5: // Start timing
-        if (formData.startTiming) {
-          profile.joiningPeriod = formData.startTiming;
         }
         break;
       case 6: // Relocate outside country
@@ -246,14 +246,14 @@ const KnowBetterQuestions: React.FC = () => {
         return (
           formData.monthlyCompensation.trim() !== '' &&
           salary > 0 &&
-          salary <= 999
+          salary <= 99999
         );
       case 3:
         return formData.workArrangement.length > 0;
       case 4:
-        return formData.relocateWithinCountry !== '';
-      case 5:
         return formData.startTiming !== '';
+      case 5:
+        return formData.relocateWithinCountry !== '';
       case 6:
         return formData.relocateOutsideCountry !== '';
       case 7:
@@ -389,13 +389,15 @@ const KnowBetterQuestions: React.FC = () => {
                     const input = e.target as HTMLInputElement;
                     let value = input.value.replace(/[^0-9]/g, '');
 
-                    // Since backend stores in thousands, limit input to 999 (meaning 999k)
-                    const MAX_SALARY_K = 999;
+                    // Allow up to 5 digits for salary
+                    const MAX_SALARY = 99999;
                     const numValue = parseInt(value || '0');
 
-                    if (numValue > MAX_SALARY_K) {
-                      value = MAX_SALARY_K.toString();
-                      setError(`Maximum salary is ${MAX_SALARY_K}k`);
+                    if (numValue > MAX_SALARY) {
+                      value = MAX_SALARY.toString();
+                      setError(
+                        `Maximum salary is ${MAX_SALARY.toLocaleString()}`
+                      );
                     } else {
                       setError('');
                     }
@@ -403,37 +405,27 @@ const KnowBetterQuestions: React.FC = () => {
                     updateFormData('monthlyCompensation', value);
                   }}
                   min="0"
-                  max="999"
-                  placeholder="Enter amount (e.g., 25)"
+                  max="99999"
+                  placeholder="Enter amount (e.g., 25000)"
                   className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:border-[#1F514C] focus:outline-none transition-colors duration-200 text-lg"
                   autoFocus
                   disabled={isLoading}
                 />
               </div>
               <div className="relative min-w-[100px]">
-                <select
-                  value={formData.currency}
-                  onChange={e => updateFormData('currency', e.target.value)}
-                  className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:border-[#1F514C] focus:outline-none appearance-none bg-white text-lg pr-10"
-                  disabled={isLoading}
-                >
-                  <option value="CAD">CAD</option>
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="INR">INR</option>
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5 pointer-events-none" />
+                <div className="w-full px-4 py-4 border border-gray-300 rounded-xl bg-gray-100 text-lg text-gray-700">
+                  {formData.currency}
+                </div>
               </div>
             </div>
 
             {/* Show current value in full format */}
             {formData.monthlyCompensation && (
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-green-800 text-sm">
+                <p className="text-green-800 text-sm font-bold">
                   Monthly salary:{' '}
                   <strong>
-                    {parseInt(formData.monthlyCompensation).toLocaleString()}k{' '}
+                    {parseInt(formData.monthlyCompensation).toLocaleString()}{' '}
                     {formData.currency}
                   </strong>
                 </p>
@@ -473,6 +465,31 @@ const KnowBetterQuestions: React.FC = () => {
       case 4:
         return (
           <div className="text-center mb-8">
+            <h2 className="text-2xl font-medium text-gray-900 mb-8">
+              When can you start working?
+            </h2>
+            <div className="space-y-4">
+              {['Immediate', '1-month', '2-months', '3-months'].map(option => (
+                <button
+                  key={option}
+                  onClick={() => updateFormData('startTiming', option)}
+                  disabled={isLoading}
+                  className={`w-full py-4 px-6 rounded-full text-lg font-medium transition-all duration-200 ${
+                    formData.startTiming === option
+                      ? 'bg-[#1F514C] text-white shadow-lg'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="text-center mb-8">
             <h2 className="text-xl font-medium text-gray-900 mb-8">
               Are you open to relocating within your country?
             </h2>
@@ -493,31 +510,6 @@ const KnowBetterQuestions: React.FC = () => {
                 <option value="NO">No</option>
               </select>
               <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5 pointer-events-none" />
-            </div>
-          </div>
-        );
-
-      case 5:
-        return (
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-medium text-gray-900 mb-8">
-              When can you start working?
-            </h2>
-            <div className="space-y-4">
-              {['Immediate', '1-month', '2-months', '3-months'].map(option => (
-                <button
-                  key={option}
-                  onClick={() => updateFormData('startTiming', option)}
-                  disabled={isLoading}
-                  className={`w-full py-4 px-6 rounded-full text-lg font-medium transition-all duration-200 ${
-                    formData.startTiming === option
-                      ? 'bg-[#1F514C] text-white shadow-lg'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {option}
-                </button>
-              ))}
             </div>
           </div>
         );

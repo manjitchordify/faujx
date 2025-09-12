@@ -32,11 +32,21 @@ function handleApiError(error: unknown): never {
   };
 }
 
-export const submitInterviewSlots = async (payload: InterviewSlot[]) => {
+// Helper function to get the correct endpoint base
+const getEndpointBase = (userType: string): string => {
+  return userType === 'expert' ? 'experts' : 'candidates';
+};
+
+export const submitInterviewSlots = async (
+  payload: InterviewSlot[],
+  userType: string
+) => {
   try {
     const config = getAuthAxiosConfig();
+    const endpointBase = getEndpointBase(userType);
+
     const res = await axios.post(
-      `/candidates/submit-interview-slots`,
+      `/${endpointBase}/submit-interview-slots`,
       {
         slots: payload,
         interviewType: 'technical',
@@ -67,10 +77,12 @@ export const submitInterviewCandidateFeedback = async (payload: {
   }
 };
 
-export const getAllInterviewsCandidate = async () => {
+export const getAllInterviewsCandidate = async (userType: string) => {
   try {
     const config = getAuthAxiosConfig();
-    const res = await axios.get(`/candidates/interviews`, config);
+    const endpointBase = getEndpointBase(userType);
+
+    const res = await axios.get(`/${endpointBase}/interviews`, config);
     return res.data;
   } catch (error: unknown) {
     handleApiError(error);

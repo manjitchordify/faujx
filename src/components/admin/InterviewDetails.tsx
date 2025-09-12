@@ -442,10 +442,9 @@ function InterviewDetails() {
   const hasMeetingLink =
     interviewData?.meetingLink && interviewData.meetingLink.trim() !== '';
 
-  // Check if transfer is allowed (when myAction is pending OR confirmed)
-  const isTransferAllowed = interviewData?.myAction?.toLowerCase()
-    ? ['pending', 'confirmed'].includes(interviewData.myAction.toLowerCase())
-    : false;
+  // Check if transfer is allowed (only when myAction is pending)
+  const isTransferAllowed =
+    interviewData?.myAction?.toLowerCase() === 'pending';
 
   // Debug logging
   console.log('Enhanced Button Logic Debug:', {
@@ -455,7 +454,7 @@ function InterviewDetails() {
     isPendingConfirmation,
     isMeetingEnabled: `Interview status: ${interviewStatus} - Meeting enabled: ${isMeetingEnabled}`,
     hasMeetingLink,
-    isTransferAllowed: `MyAction: ${interviewData?.myAction} - Transfer allowed: ${isTransferAllowed}`,
+    isTransferAllowed: `MyAction: ${interviewData?.myAction} - Transfer allowed: ${isTransferAllowed} (only for pending)`,
     allPanelistActions: interviewData?.attendees.map(a => a.status?.action),
   });
 
@@ -653,13 +652,17 @@ function InterviewDetails() {
               </div>
             </div>
 
-            {/* Attendees Information */}
+            {/* Panelist Evaluations & Feedback */}
             <div className="bg-white shadow rounded-lg">
               <div className="px-6 py-5 border-b border-gray-200">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 flex items-center">
                   <FiUserCheck className="mr-2 h-5 w-5" />
-                  Interview Panelist
+                  Panelist Evaluations & Feedback
                 </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Review panelist responses, ratings, and detailed feedback
+                  scores
+                </p>
               </div>
               <div className="px-6 py-5">
                 <div className="space-y-4">
@@ -736,17 +739,18 @@ function InterviewDetails() {
                               <div className="text-sm text-gray-500">
                                 {typedAttendeeInfo.email}
                               </div>
-                              {status.rating && (
+                              {(status.rating || averageScore) && (
                                 <div className="flex items-center text-sm text-gray-600 mt-1">
                                   <FiStar className="w-4 h-4 mr-1 fill-current text-yellow-400" />
-                                  <span className="font-medium">
-                                    {status.rating}/10
-                                  </span>
-                                  {averageScore && (
-                                    <span className="ml-2 text-xs text-gray-500">
-                                      (Avg: {averageScore})
+                                  {averageScore ? (
+                                    <span className="font-medium">
+                                      {averageScore}/10
                                     </span>
-                                  )}
+                                  ) : status.rating ? (
+                                    <span className="font-medium">
+                                      {status.rating}/10
+                                    </span>
+                                  ) : null}
                                 </div>
                               )}
                             </div>
@@ -954,8 +958,7 @@ function InterviewDetails() {
                       Transfer Not Available
                     </div>
                     <p className="text-xs text-gray-500">
-                      Transfer only available when your status is pending or
-                      confirmed
+                      Transfer only available when your status is pending{' '}
                     </p>
                   </div>
                 )}

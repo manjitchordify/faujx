@@ -145,7 +145,7 @@ const StudentTestimonials = () => {
           <h3 className="font-semibold text-base sm:text-lg md:text-xl text-[#1F514C] mb-1">
             {testimonial.name}
           </h3>
-          <p className="text-[#66B848] font-medium text-sm sm:text-base mb-3">
+          <p className="text-[#1F514C] font-medium text-sm sm:text-base mb-3">
             {testimonial.role}
           </p>
           <div className="flex mb-4">{renderStars(testimonial.rating)}</div>
@@ -224,8 +224,8 @@ const StudentTestimonials = () => {
                 }}
                 className={`h-2 sm:h-3 rounded-full transition-all duration-300 ${
                   currentIndex === index
-                    ? 'bg-[#66B848] w-6 sm:w-8'
-                    : 'bg-gray-300 hover:bg-[#66B848]/50 w-2 sm:w-3'
+                    ? 'bg-[#1F514C] w-6 sm:w-8'
+                    : 'bg-gray-300 hover:bg-[#1F514C]/50 w-2 sm:w-3'
                 }`}
                 aria-label={`Go to testimonial ${index + 1}`}
               />

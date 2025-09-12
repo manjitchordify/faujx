@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import courseDataJson from '../../constants/courseData.json';
-import { CourseData, CourseDataMap, Technology } from '../../types/course';
+import { CourseData, CourseDataMap } from '../../types/course';
 import Image from 'next/image';
 import { useAppSelector } from '@/store/store';
 
@@ -30,10 +30,10 @@ const CourseDetails: React.FC = () => {
   }
 
   // Define color classes for technologies based on course type
-  const getTechColor = (index: number): string => {
-    const colors = ['bg-[#854DCD]'];
-    return colors[index % colors.length];
-  };
+  // const getTechColor = (index: number): string => {
+  //   const colors = ['bg-[#854DCD]'];
+  //   return colors[index % colors.length];
+  // };
 
   return (
     <div className="min-h-screen ">
@@ -55,7 +55,7 @@ const CourseDetails: React.FC = () => {
             <button className="bg-gray-800 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700">
               Pay {currentCourse.price.global}
             </button>
-            <div className="flex flex-wrap gap-3">
+            {/* <div className="flex flex-wrap gap-3">
               {currentCourse.technologies.map(
                 (tech: Technology, index: number) => (
                   <span
@@ -66,7 +66,7 @@ const CourseDetails: React.FC = () => {
                   </span>
                 )
               )}
-            </div>
+            </div> */}
           </div>
 
           <div className="flex justify-center mb-10">

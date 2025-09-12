@@ -14,6 +14,7 @@ const Interview = () => {
     InterviewDetails[] | null
   >(null);
   const { loggedInUser } = useAppSelector(state => state.user);
+  const userType = loggedInUser?.userType as string;
   const [loader, setLoader] = useState<boolean>(false);
 
   function formatTimeWithDuration(
@@ -87,12 +88,13 @@ const Interview = () => {
       const response = await jitsiLiveUrl({
         userId: loggedInUser?.id as string,
         sessionId: item?.meetingId as string,
-        role: 'candidate',
+        role: userType,
       });
       if (response?.url) {
-        window.open(
-          `/engineer/interview/${item.id}/meeting?room=${item.meetingId}`
-        );
+        const basePath =
+          userType === 'expert' ? '/expert/interview' : '/engineer/interview';
+
+        window.open(`${basePath}/${item.id}/meeting?room=${item.meetingId}`);
       }
     } catch (error: unknown) {
       const message = (error as Error)?.message || 'An error occurred';
@@ -103,7 +105,7 @@ const Interview = () => {
   const getUserInterview = async () => {
     try {
       setLoader(true);
-      const res = await getAllInterviewsCandidate();
+      const res = await getAllInterviewsCandidate(userType);
       setUserInterviews(res);
       console.log('INTERVIEW OF USER : ', res);
     } catch (error) {

@@ -1,6 +1,3 @@
-import { getProfileApi } from '@/services/profileSettingsService';
-import { ProfilePicUploadResponse } from '@/services/profileSetupService';
-import { ResumeUploadResponse } from '@/types/resume.types';
 import React, { useState, useEffect } from 'react';
 import countriesData from '@/constants/countries-cities.json';
 import ProfileVideoModal from './ProfileVideoModal';
@@ -9,6 +6,9 @@ import ProfilePictureUploadModal from './ProfilePictureUploadModal';
 import ResumeUploadModal from './ResumeUploadModal';
 import SettingsVideoUploadModal from './SettingsVideoUploadModal';
 import CustomerServiceModal from './CustomerServiceModal';
+import { getProfileApi } from '@/services/profileSettingsService';
+import { ProfilePicUploadResponse } from '@/services/profileSetupService';
+import { ResumeUploadResponse } from '@/types/resume.types';
 import {
   updateEngineerProfileApi,
   type UpdateEngineerProfileParams,
@@ -16,12 +16,16 @@ import {
 
 interface FormData {
   salary: string;
+  currencyType: string;
   country: string;
   city: string;
   firstName: string;
   lastName: string;
   email: string;
   phoneNumber: string;
+  linkedinUrl: string;
+  githubUrl: string;
+  portfolioUrl: string;
 }
 
 type FormField = keyof FormData;
@@ -36,10 +40,13 @@ interface CountryCityData {
   countries: Country[];
 }
 
-// Define the API response types
 interface CandidateData {
   expectedSalary?: number;
   preferredLocations?: string[];
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+  currencyType?: string;
 }
 
 interface ProfileApiResponse {
@@ -57,7 +64,6 @@ interface ApiResponse {
   data?: ProfileApiResponse;
 }
 
-// Video upload response type
 interface VideoUploadResponse {
   data?: {
     videoUrl: string;
@@ -67,19 +73,25 @@ interface VideoUploadResponse {
 const Settings: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     salary: '',
+    currencyType: '',
     country: '',
     city: '',
     firstName: '',
     lastName: '',
     email: '',
     phoneNumber: '',
+    linkedinUrl: '',
+    githubUrl: '',
+    portfolioUrl: '',
   });
 
   const [updateStatus, setUpdateStatus] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [availableCities, setAvailableCities] = useState<string[]>([]);
-  const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [updatingFields, setUpdatingFields] = useState<
+    Partial<Record<FormField, boolean>>
+  >({});
 
   // Modal states
   const [isVideoModalOpen, setIsVideoModalOpen] = useState<boolean>(false);
@@ -121,12 +133,16 @@ const Settings: React.FC = () => {
 
           setFormData({
             salary: data.candidate?.expectedSalary?.toString() || '',
+            currencyType: data.candidate?.currencyType || '',
             country,
             city,
             firstName: data.firstName || '',
             lastName: data.lastName || '',
             email: data.email || '',
             phoneNumber: data.phone || '',
+            linkedinUrl: data.candidate?.linkedinUrl || '',
+            githubUrl: data.candidate?.githubUrl || '',
+            portfolioUrl: data.candidate?.portfolioUrl || '',
           });
 
           // Set media URLs
@@ -179,9 +195,9 @@ const Settings: React.FC = () => {
   };
 
   const handleUpdate = async (field: FormField): Promise<void> => {
-    if (isUpdating) return;
+    if (updatingFields[field]) return;
 
-    setIsUpdating(true);
+    setUpdatingFields(prev => ({ ...prev, [field]: true }));
     setError('');
 
     try {
@@ -192,11 +208,9 @@ const Settings: React.FC = () => {
         }
 
         const preferredLocations = [formData.city, formData.country];
-
         await updateEngineerProfileApi('', {
           preferredLocations,
         } as UpdateEngineerProfileParams);
-
         setUpdateStatus('Location updated successfully!');
       } else if (field === 'salary') {
         const expectedSalary = parseFloat(formData.salary);
@@ -208,10 +222,23 @@ const Settings: React.FC = () => {
         await updateEngineerProfileApi('', {
           expectedSalary,
         } as UpdateEngineerProfileParams);
-
         setUpdateStatus('Salary updated successfully!');
+      } else if (field === 'linkedinUrl') {
+        await updateEngineerProfileApi('', {
+          linkedinUrl: formData.linkedinUrl,
+        } as UpdateEngineerProfileParams);
+        setUpdateStatus('LinkedIn URL updated successfully!');
+      } else if (field === 'githubUrl') {
+        await updateEngineerProfileApi('', {
+          githubUrl: formData.githubUrl,
+        } as UpdateEngineerProfileParams);
+        setUpdateStatus('GitHub URL updated successfully!');
+      } else if (field === 'portfolioUrl') {
+        await updateEngineerProfileApi('', {
+          portfolioUrl: formData.portfolioUrl,
+        } as UpdateEngineerProfileParams);
+        setUpdateStatus('Portfolio URL updated successfully!');
       } else {
-        // Non-editable fields (firstName, lastName, email, phoneNumber)
         setIsCustomerServiceModalOpen(true);
       }
 
@@ -224,7 +251,7 @@ const Settings: React.FC = () => {
           : `Failed to update ${String(field)}`;
       setError(errorMessage);
     } finally {
-      setIsUpdating(false);
+      setUpdatingFields(prev => ({ ...prev, [field]: false }));
     }
   };
 
@@ -339,7 +366,8 @@ const Settings: React.FC = () => {
                 {/* Salary Section */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-2">
-                    Salary Expectation
+                    Salary Expectation{' '}
+                    {formData.currencyType ? `(${formData.currencyType})` : ''}
                   </label>
                   <div className="flex gap-3">
                     <input
@@ -353,10 +381,13 @@ const Settings: React.FC = () => {
                     />
                     <button
                       onClick={() => handleUpdate('salary')}
-                      disabled={!formData.salary.trim() || isUpdating}
-                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                      disabled={
+                        !formData.salary.trim() || updatingFields.salary
+                      }
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 
+             disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
                     >
-                      {isUpdating ? 'Updating...' : 'Update'}
+                      {updatingFields.salary ? 'Updating...' : 'Update'}
                     </button>
                   </div>
                 </div>
@@ -409,10 +440,15 @@ const Settings: React.FC = () => {
                   {/* Update Button for Location */}
                   <button
                     onClick={() => handleUpdate('country')}
-                    disabled={!formData.country || !formData.city || isUpdating}
-                    className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                    disabled={
+                      !formData.country ||
+                      !formData.city ||
+                      updatingFields.country
+                    }
+                    className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 
+             disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
                   >
-                    {isUpdating ? 'Updating...' : 'Update Location'}
+                    {updatingFields.country ? 'Updating...' : 'Update Location'}
                   </button>
                 </div>
 
@@ -633,6 +669,84 @@ const Settings: React.FC = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* LinkedIn URL Section - Now Editable */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                    LinkedIn URL
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      type="url"
+                      value={formData.linkedinUrl}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleInputChange('linkedinUrl', e.target.value)
+                      }
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-black"
+                      placeholder="https://linkedin.com/in/yourprofile"
+                    />
+                    <button
+                      onClick={() => handleUpdate('linkedinUrl')}
+                      disabled={updatingFields.linkedinUrl}
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 
+             disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                    >
+                      {updatingFields.linkedinUrl ? 'Updating...' : 'Update'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* GitHub URL Section - Now Editable */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                    GitHub URL
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      type="url"
+                      value={formData.githubUrl}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleInputChange('githubUrl', e.target.value)
+                      }
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-black"
+                      placeholder="https://github.com/yourusername"
+                    />
+                    <button
+                      onClick={() => handleUpdate('githubUrl')}
+                      disabled={updatingFields.githubUrl}
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 
+             disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                    >
+                      {updatingFields.githubUrl ? 'Updating...' : 'Update'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Portfolio URL Section - Now Editable */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                    Portfolio URL
+                  </label>
+                  <div className="flex gap-3">
+                    <input
+                      type="url"
+                      value={formData.portfolioUrl}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleInputChange('portfolioUrl', e.target.value)
+                      }
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-black"
+                      placeholder="https://yourportfolio.com"
+                    />
+                    <button
+                      onClick={() => handleUpdate('portfolioUrl')}
+                      disabled={updatingFields.portfolioUrl}
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 
+             disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                    >
+                      {updatingFields.portfolioUrl ? 'Updating...' : 'Update'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -669,6 +783,7 @@ const Settings: React.FC = () => {
           onClose={() => setIsVideoUploadModalOpen(false)}
           onUploadSuccess={handleVideoUploadSuccess}
         />
+
         <CustomerServiceModal
           isOpen={isCustomerServiceModalOpen}
           onClose={() => setIsCustomerServiceModalOpen(false)}

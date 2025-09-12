@@ -257,7 +257,7 @@ const FeedbackContent: React.FC = () => {
 
   const getSupportText = () => {
     if (type === 'mcq') {
-      return 'To support your learning, I recommend exploring Chordify Ed, a platform with resources and exercises specifically tailored to building and improving React skills. Engaging with their guided tutorials and real-world projects can help bridge these skill gaps.';
+      return 'To support your learning, I recommend exploring Faujx LMS, a platform with resources and exercises specifically tailored to building and improving skills. Engaging with their guided tutorials and real-world projects can help bridge these skill gaps.';
     }
 
     if (type === 'coding') {
@@ -269,7 +269,7 @@ const FeedbackContent: React.FC = () => {
         return 'Keep up the excellent work! Continue practicing coding challenges and stay updated with the latest development practices.';
       } else {
         let supportText =
-          'To improve your coding skills, I recommend exploring Chordify Ed, a platform with resources and exercises specifically tailored to building programming expertise.';
+          'To improve your coding skills, I recommend exploring Faujx LMS, a platform with resources and exercises specifically tailored to building programming expertise.';
 
         if (evaluationResult) {
           supportText += ' Focus on areas like:';

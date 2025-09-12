@@ -64,10 +64,9 @@ const SelectSlot = () => {
   const handleCalendar = () => {
     setShowCalendar(true);
   };
-  const { enginnerRole } = useSelector((store: RootState) => store.persist);
   const dispatch = useAppDispatch();
-
-  console.log(enginnerRole);
+  const { loggedInUser } = useSelector((store: RootState) => store.user);
+  const userType = loggedInUser?.userType as string;
 
   const CalendarDateSelect = (data: CalendarType) => {
     setSelectedDate(data.dateObject);
@@ -85,7 +84,7 @@ const SelectSlot = () => {
     try {
       setLoader(true);
       const res: FailedInterviewResponse | SuccessInterviewScheduleResponse =
-        await submitInterviewSlots(slots);
+        await submitInterviewSlots(slots, userType);
       console.log('INTERCIEW BOOKING DATA : ', res);
       // const res: InterviewResponse = await delayReturn(
       //   fake_slotBookingAlternative,
@@ -94,12 +93,18 @@ const SelectSlot = () => {
       if (res.success) {
         dispatch(setInterviewSlots(res));
         setShowAlternateSlots(false);
-        router.push('/engineer/interview');
+        const redirectPath =
+          userType === 'expert' ? '/expert/interview' : '/engineer/interview';
+        router.push(redirectPath);
       } else {
         showToast('Select Slot', 'success');
         setSlots([]);
         setShowAlternateSlots(true);
-        setAlternateSlots(res.data.alternativeSlots);
+        if (userType === 'expert') {
+          setAlternateSlots(res.alternativeSlots);
+        } else {
+          setAlternateSlots(res.data.alternativeSlots);
+        }
       }
     } catch (error) {
       console.log(error);

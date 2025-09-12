@@ -65,14 +65,22 @@ const MentorCard: React.FC<{ mentor: Mentor; onBook: () => void }> = ({
     <div className="bg-white rounded-xl p-5 shadow-xl hover:shadow-2xl transition-all duration-300 w-full max-w-sm mx-auto">
       <div className="flex items-start justify-between mb-4">
         <div className="mr-2 sm:mr-4">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden relative">
-            <Image
-              src={mentor.avatar || '/default-avatar.png'}
-              alt={mentor.name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
-            />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden relative flex items-center justify-center">
+            {mentor.avatar ? (
+              <Image
+                src={mentor.avatar}
+                alt={mentor.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
+              />
+            ) : (
+              <div className="w-full h-full rounded-full bg-gray-400 flex items-center justify-center">
+                <span className="text-white text-xl md:text-2xl font-bold">
+                  {mentor.name?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex-1 text-center">

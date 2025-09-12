@@ -97,7 +97,7 @@ function PlatformHighlights() {
   return (
     <div
       id="features"
-      className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-purple-50 via-indigo-50 to-white"
+      className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#e1ead7] via-[#e5ecec] to-[#cad9d8]"
     >
       <div className="max-w-7xl mx-auto">
         <motion.div
@@ -111,7 +111,7 @@ function PlatformHighlights() {
             Platform Highlights
           </h2>
           <motion.div
-            className="mt-4 h-1 bg-gradient-to-r from-purple-500 to-indigo-500 mx-auto rounded-full"
+            className="mt-4 h-1 bg-gradient-to-r from-[#1F514C] to-[#27534e] mx-auto rounded-full"
             variants={underlineVariants}
             initial="hidden"
             whileInView="visible"
@@ -135,11 +135,11 @@ function PlatformHighlights() {
               viewport={{ once: true }}
               variants={cardVariants}
               whileHover="hover"
-              className="group bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-shadow duration-300 border-2 border-purple-100 hover:border-purple-300 "
+              className="group bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-shadow duration-300 border-2 border-[#8eaba8] hover:border-[#639e98] "
             >
               <div className="flex justify-center mb-6">
                 <motion.div
-                  className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-500 text-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                  className="w-16 h-16 bg-gradient-to-br from-[#1F514C] to-[#1F514C] text-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
                   variants={iconVariants}
                 >
                   <svg
@@ -172,7 +172,7 @@ function PlatformHighlights() {
               </div>
 
               <motion.h3
-                className="text-xl font-bold text-gray-900 mb-4 text-center group-hover:text-purple-700 transition-colors duration-300"
+                className="text-xl font-bold text-gray-900 mb-4 text-center group-hover:text-[#1F514C] transition-colors duration-300"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}

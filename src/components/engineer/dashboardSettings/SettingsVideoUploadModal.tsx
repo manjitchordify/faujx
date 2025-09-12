@@ -77,6 +77,7 @@ const SettingsVideoUploadModal: React.FC<SettingsVideoUploadModalProps> = ({
   }, []);
 
   // Reset modal - now memoized with useCallback
+  // Reset modal - now memoized with useCallback
   const resetModal = useCallback((): void => {
     cleanup();
     setCurrentView('initial');
@@ -86,11 +87,12 @@ const SettingsVideoUploadModal: React.FC<SettingsVideoUploadModalProps> = ({
     setUploadedVideo(null);
     setIsDragOver(false);
     setIsUploading(false);
-    // Clear the recorded blob when resetting
+
     recordedBlobRef.current = null;
+
     // Reset script states
     setScript('');
-    setIsLoadingScript(true);
+    setIsLoadingScript(true); // ✅ keep this
     setScriptError('');
   }, [cleanup]);
 
@@ -118,12 +120,12 @@ const SettingsVideoUploadModal: React.FC<SettingsVideoUploadModalProps> = ({
   };
 
   // Load script when modal opens
+  // Load script when modal opens
   useEffect(() => {
-    if (isOpen && !script && !scriptError && !isLoadingScript) {
-      setIsLoadingScript(true);
+    if (isOpen) {
       fetchVideoScript();
     }
-  }, [isOpen, script, scriptError, isLoadingScript]);
+  }, [isOpen]);
 
   // Start camera - FIXED VERSION
   const startCamera = async (): Promise<void> => {

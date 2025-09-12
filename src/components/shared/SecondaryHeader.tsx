@@ -18,29 +18,31 @@ const SecondaryHeader = () => {
   const getLinkClasses = (href: string): string => {
     const baseClasses =
       'transition-colors duration-200 font-medium text-sm xl:text-base';
-    const activeClasses = 'text-purple-300 font-semibold';
-    const inactiveClasses = 'text-white hover:text-purple-300';
+    const activeClasses = 'text-[#36f3e0] font-semibold';
+    const inactiveClasses = 'text-white hover:text-[#36f3e0]';
 
     return `${baseClasses} ${isActive(href) ? activeClasses : inactiveClasses}`;
   };
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 lg:mt-10">
-      <div className="bg-gray-800 rounded-2xl px-4 sm:px-8 lg:px-16 py-4 lg:py-6">
+      <div className="bg-[#1F514C] rounded-2xl px-4 sm:px-8 lg:px-16 py-4 lg:py-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
             <div className="relative">
-              <Image
-                src="/applogo2.png"
-                alt="Faujx Logo"
-                height={80}
-                width={80}
-                className="h-12 lg:h-14 w-auto mr-2"
-                priority
-                quality={100}
-                style={{ objectFit: 'contain' }}
-              />
+              <Link href="/" className="block">
+                <Image
+                  src="/applogo2.png"
+                  alt="Faujx Logo"
+                  height={80}
+                  width={80}
+                  className="h-12 lg:h-14 w-auto mr-2"
+                  priority
+                  quality={100}
+                  style={{ objectFit: 'contain' }}
+                />
+              </Link>
             </div>
           </div>
 
@@ -51,25 +53,25 @@ const SecondaryHeader = () => {
             </Link>
             <Link
               href="/faujx-lms#HowitWorksfaujx"
-              className="text-white hover:text-purple-300 transition-colors duration-200 font-medium text-sm xl:text-base"
+              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium text-sm xl:text-base"
             >
               How it Works
             </Link>
             <Link
               href="/faujx-lms#explore-courses"
-              className="text-white hover:text-purple-300 transition-colors duration-200 font-medium text-sm xl:text-base"
+              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium text-sm xl:text-base"
             >
               Explore Courses
             </Link>
             <Link
               href="/faujx-lms#our-students"
-              className="text-white hover:text-purple-300 transition-colors duration-200 font-medium text-sm xl:text-base"
+              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium text-sm xl:text-base"
             >
               Our Students
             </Link>
             <Link
               href="/faujx-lms#faq-faujxlms"
-              className="text-white hover:text-purple-300 transition-colors duration-200 font-medium text-sm xl:text-base"
+              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium text-sm xl:text-base"
             >
               FAQ
             </Link>
@@ -111,33 +113,33 @@ const SecondaryHeader = () => {
               href="/faujx-lms"
               className={`font-medium transition-colors duration-200 ${
                 isActive('/faujx-lms')
-                  ? 'text-purple-300 font-semibold'
-                  : 'text-white hover:text-purple-300'
+                  ? 'text-[#36f3e0] font-semibold'
+                  : 'text-white hover:text-[#36f3e0]'
               }`}
             >
               Home
             </Link>
             <Link
               href="#how-it-works"
-              className="text-white hover:text-purple-300 transition-colors duration-200 font-medium"
+              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium"
             >
               How it Works
             </Link>
             <Link
               href="#explore-courses"
-              className="text-white hover:text-purple-300 transition-colors duration-200 font-medium"
+              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium"
             >
               Explore Courses
             </Link>
             <Link
               href="#our-students"
-              className="text-white hover:text-purple-300 transition-colors duration-200 font-medium"
+              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium"
             >
               Our students
             </Link>
             <Link
               href="#faq"
-              className="text-white hover:text-purple-300 transition-colors duration-200 font-medium"
+              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium"
             >
               FAQ
             </Link>

@@ -113,7 +113,7 @@ const LearningPlatform = () => {
             className="flex gap-4 justify-center mb-12 mt-15"
             variants={buttonContainerVariants}
           >
-            <motion.a
+            {/* <motion.a
               href="https://www.chordifyed.com/"
               target="_blank"
               rel="noopener noreferrer"
@@ -127,11 +127,11 @@ const LearningPlatform = () => {
               whileTap={{ scale: 0.95 }}
             >
               Start Learning
-            </motion.a>
+            </motion.a> */}
 
             <motion.a
               href="#explore-courses"
-              className="px-4 py-2 bg-gradient-to-r from-[#9692F8] to-[#CDABF8] text-white rounded-2xl hover:opacity-90 transition-all duration-300 flex items-center justify-between shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg font-medium min-w-[200px]"
+              className="px-4 py-2 bg-gradient-to-r from-[#1F514C] to-[#2a837a] text-white rounded-2xl hover:opacity-90 transition-all duration-300 flex items-center justify-between shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg font-medium min-w-[200px]"
               variants={buttonVariants}
               whileHover={{
                 scale: 1.05,
@@ -145,7 +145,7 @@ const LearningPlatform = () => {
             >
               <span>Explore Courses</span>
               <motion.div
-                className="w-12 h-12 bg-[#CEABFA] bg-opacity-20 rounded-lg flex items-center justify-center text-white ml-4"
+                className="w-12 h-12 bg-[#2a837a] bg-opacity-20 rounded-lg flex items-center justify-center text-white ml-4"
                 variants={arrowVariants}
                 whileHover="hover"
               >

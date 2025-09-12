@@ -4,6 +4,8 @@ import Image from 'next/image';
 import {
   FiSearch,
   FiEye,
+  FiEdit,
+  FiTrash2,
   FiRefreshCw,
   FiUser,
   FiX,
@@ -17,11 +19,9 @@ import {
   FiAlertTriangle,
   FiTool,
   FiAward,
-  FiStar,
   FiMapPin,
   FiLoader,
   FiPlus,
-  FiTrash2,
 } from 'react-icons/fi';
 
 // Import the service functions
@@ -50,9 +50,15 @@ export default function PanelistPage() {
     null
   );
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [addingPanelist, setAddingPanelist] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [panelistToDelete, setPanelistToDelete] = useState<Panelist | null>(
+    null
+  );
+  const [editForm, setEditForm] = useState<Panelist | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -261,6 +267,84 @@ export default function PanelistPage() {
   const handleViewPanelist = (panelist: Panelist) => {
     setSelectedPanelist(panelist);
     setIsViewModalOpen(true);
+  };
+
+  const handleEditPanelist = (panelist: Panelist) => {
+    setSelectedPanelist(panelist);
+    setEditForm({ ...panelist });
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeletePanelist = (panelist: Panelist) => {
+    setPanelistToDelete(panelist);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDeletePanelist = async () => {
+    if (!panelistToDelete) return;
+
+    try {
+      // Here you would call your delete panelist API
+      // await deletePanelist(panelistToDelete.id);
+
+      // For now, just remove from local state
+      setPanelists(prev => prev.filter(p => p.id !== panelistToDelete.id));
+
+      setIsDeleteModalOpen(false);
+      setPanelistToDelete(null);
+      setError(null);
+    } catch (err) {
+      console.error('Error deleting panelist:', err);
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to delete panelist';
+      setError(errorMessage);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editForm) return;
+
+    try {
+      // Here you would call your update panelist API
+      // const updatedPanelist = await updatePanelist(editForm.id, editForm);
+
+      // For now, just update local state
+      setPanelists(prev =>
+        prev.map(panelist =>
+          panelist.id === editForm.id ? editForm : panelist
+        )
+      );
+
+      setIsEditModalOpen(false);
+      setEditForm(null);
+      setSelectedPanelist(null);
+      setError(null);
+    } catch (err) {
+      console.error('Error updating panelist:', err);
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to update panelist';
+      setError(errorMessage);
+    }
+  };
+
+  const handleToggleStatus = async (panelist: Panelist) => {
+    try {
+      // Here you would call your update panelist status API
+      // const updatedPanelist = await updatePanelistStatus(panelist.id, !panelist.is_active);
+
+      // For now, just update local state
+      const updatedPanelist = { ...panelist, is_active: !panelist.is_active };
+      setPanelists(prev =>
+        prev.map(p => (p.id === panelist.id ? updatedPanelist : p))
+      );
+
+      setError(null);
+    } catch (err) {
+      console.error('Error updating panelist status:', err);
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to update panelist status';
+      setError(errorMessage);
+    }
   };
 
   const handleSearchChange = (value: string) => {
@@ -617,9 +701,6 @@ export default function PanelistPage() {
                       <div>
                         <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                           {panelist.name}
-                          {panelist.rating && panelist.rating > 4.5 && (
-                            <FiStar className="w-4 h-4 text-yellow-500" />
-                          )}
                         </div>
                         <div className="text-sm text-gray-500">
                           {panelist.designation}
@@ -673,24 +754,47 @@ export default function PanelistPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        panelist.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {panelist.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                    {/* Toggle Switch for Status */}
+                    <div className="flex items-center justify-center">
+                      <button
+                        onClick={() => handleToggleStatus(panelist)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                          panelist.is_active ? 'bg-green-600' : 'bg-gray-300'
+                        }`}
+                        title={`Click to ${panelist.is_active ? 'deactivate' : 'activate'}`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            panelist.is_active
+                              ? 'translate-x-6'
+                              : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleViewPanelist(panelist)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 transition-colors"
                         title="View Panelist Details"
                       >
                         <FiEye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleEditPanelist(panelist)}
+                        className="text-green-600 hover:text-green-900 transition-colors"
+                        title="Edit Panelist"
+                      >
+                        <FiEdit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeletePanelist(panelist)}
+                        className="text-red-600 hover:text-red-900 transition-colors"
+                        title="Delete Panelist"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -807,7 +911,236 @@ export default function PanelistPage() {
         )}
       </div>
 
-      {/* Add Panelist Modal */}
+      {/* Edit Panelist Modal */}
+      {isEditModalOpen && editForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Edit Panelist
+                </h2>
+                <button
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <FiX className="w-6 h-6" />
+                </button>
+              </div>
+
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                  handleSaveEdit();
+                }}
+                className="space-y-4"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.name || ''}
+                      onChange={e =>
+                        setEditForm(prev =>
+                          prev ? { ...prev, name: e.target.value } : null
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={editForm.email || ''}
+                      onChange={e =>
+                        setEditForm(prev =>
+                          prev ? { ...prev, email: e.target.value } : null
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Designation
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={editForm.designation || ''}
+                      onChange={e =>
+                        setEditForm(prev =>
+                          prev ? { ...prev, designation: e.target.value } : null
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Department
+                    </label>
+                    <select
+                      required
+                      value={editForm.department || ''}
+                      onChange={e =>
+                        setEditForm(prev =>
+                          prev ? { ...prev, department: e.target.value } : null
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Engineering">Engineering</option>
+                      <option value="Product">Product</option>
+                      <option value="Design">Design</option>
+                      <option value="Platform">Platform</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Seniority Level
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Max Interviews Per Day
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      max="10"
+                      value={editForm.max_interviews_per_day || 3}
+                      onChange={e =>
+                        setEditForm(prev =>
+                          prev
+                            ? {
+                                ...prev,
+                                max_interviews_per_day: parseInt(
+                                  e.target.value
+                                ),
+                              }
+                            : null
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="editIsActive"
+                    checked={editForm.is_active}
+                    onChange={e =>
+                      setEditForm(prev =>
+                        prev ? { ...prev, is_active: e.target.checked } : null
+                      )
+                    }
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="editIsActive"
+                    className="text-sm text-gray-700"
+                  >
+                    Active Status
+                  </label>
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Panelist Modal */}
+      {isDeleteModalOpen && panelistToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-2xl border border-gray-200">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <FiTrash2 className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Delete Panelist
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Are you sure you want to delete{' '}
+                    <span className="font-medium">{panelistToDelete.name}</span>
+                    ? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  <FiAlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-red-800">
+                    <p className="font-medium">This action will permanently:</p>
+                    <ul className="mt-1 list-disc list-inside space-y-1">
+                      <li>Remove panelist from all future interviews</li>
+                      <li>Delete all availability schedules</li>
+                      <li>Remove from all interview panels</li>
+                      <li>This cannot be reversed</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                    setPanelistToDelete(null);
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeletePanelist}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Delete Panelist
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Panelist Modal - Keep existing implementation */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
@@ -1207,7 +1540,7 @@ export default function PanelistPage() {
         </div>
       )}
 
-      {/* View Panelist Modal */}
+      {/* View Panelist Modal - Keep existing implementation */}
       {isViewModalOpen && selectedPanelist && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
@@ -1252,10 +1585,6 @@ export default function PanelistPage() {
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
                       {selectedPanelist.name}
-                      {selectedPanelist.rating &&
-                        selectedPanelist.rating > 4.5 && (
-                          <FiStar className="w-5 h-5 text-yellow-500" />
-                        )}
                     </h3>
                     <p className="text-gray-600">
                       {selectedPanelist.designation}

@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 const PricingFaujxlms = () => {
   return (
-    <div className="min-h-screen bg-[#262039] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#1F514C] flex items-center justify-center p-6">
       <div className="max-w-2xl mx-auto text-center">
         {/* Header */}
         <div className="mb-12">
@@ -74,7 +74,7 @@ const PricingFaujxlms = () => {
 
           {/* CTA Button */}
           <Link href="#explore-courses" passHref>
-            <button className="w-full bg-gradient-to-r from-[#873AEB] to-[#2A0061] hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg cursor-pointer">
+            <button className="w-full bg-gradient-to-r from-[#1F514C] to-[#2a837a] hover:bg-[#207068] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg cursor-pointer">
               Start Learning
             </button>
           </Link>

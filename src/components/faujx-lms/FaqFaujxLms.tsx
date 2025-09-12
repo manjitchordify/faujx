@@ -89,7 +89,7 @@ const FaqFaujxLms: React.FC = () => {
                   transition={{ duration: 0.2 }}
                   className="flex-shrink-0"
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#BC90F4] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-[#1F514C] flex items-center justify-center">
                     <Plus className="w-4 h-4 text-white" />
                   </div>
                 </motion.div>

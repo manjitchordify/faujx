@@ -201,9 +201,7 @@ const transformPanelistForUI = (apiPanelist: PanelistFromAPI): Panelist => {
     created_at: apiPanelist.createdAt,
     updated_at: apiPanelist.updatedAt,
     // Transform user data for display
-    name:
-      apiPanelist.user.fullName ||
-      `${apiPanelist.user.firstName} ${apiPanelist.user.lastName}`,
+    name: `${apiPanelist.user.firstName} ${apiPanelist.user.lastName}`,
     email: apiPanelist.user.email,
     total_interviews: 0, // This would come from another API call if available
     rating: 0, // This would come from another API call if available
@@ -451,5 +449,132 @@ export const addPanelist = async (
       message:
         error instanceof Error ? error.message : 'Failed to add panelist',
     };
+  }
+};
+
+// Update panelist information
+export const updatePanelist = async (
+  panelistId: string,
+  formData: AddPanelistFormData
+): Promise<CreatePanelistResponse> => {
+  try {
+    const config = getAuthAxiosConfig();
+    const token = getAuthToken();
+
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+
+    // Prepare update data for panelist
+    const panelistUpdateData = {
+      designation: formData.designation,
+      department: formData.department,
+      seniorityLevel: formData.seniorityLevel,
+      availableTimings: formData.availableTimings,
+      interviewTypes: formData.interviewTypes,
+      skills: formData.skills,
+      maxInterviewsPerDay: formData.maxInterviewsPerDay,
+      isActive: formData.isActive,
+      timezone: formData.timezone,
+    };
+
+    // Prepare user data if we need to update user information
+    const userUpdateData: {
+      firstName: string;
+      lastName: string;
+      fullName: string;
+      email: string;
+      password?: string;
+    } = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      fullName: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+    };
+
+    // Only include password if it's provided (not empty)
+    if (formData.password && formData.password.trim() !== '') {
+      userUpdateData.password = formData.password;
+    }
+
+    // Step 1: Update panelist profile
+    const panelistResponse = await axios.put(
+      `https://devapi.faujx.com/api/interview-panel/${panelistId}`,
+      panelistUpdateData,
+      config
+    );
+
+    // Step 2: Update user information (if we have the user ID)
+    // Note: You might need to get the userId from the panelist record first
+    // or include it in the update request. This is a simplified version.
+    try {
+      // Get current panelist to find userId
+      const currentPanelistResponse = await axios.get(
+        `https://devapi.faujx.com/api/interview-panel/${panelistId}`,
+        config
+      );
+
+      const userId = currentPanelistResponse.data.userId;
+
+      if (userId) {
+        await axios.put(
+          `https://devapi.faujx.com/api/users/${userId}`,
+          userUpdateData,
+          config
+        );
+      }
+    } catch (userUpdateError) {
+      // Log user update error but don't fail the entire operation
+      console.warn('Failed to update user information:', userUpdateError);
+    }
+
+    return panelistResponse.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+// Update panelist status (activate/deactivate)
+export const updatePanelistStatus = async (
+  panelistId: string,
+  isActive: boolean
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const config = getAuthAxiosConfig();
+    const token = getAuthToken();
+
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+
+    await axios.patch(
+      `https://devapi.faujx.com/api/interview-panel/${panelistId}/status`,
+      { isActive },
+      config
+    );
+
+    return {
+      success: true,
+      message: `Panelist ${isActive ? 'activated' : 'deactivated'} successfully`,
+    };
+  } catch (error: unknown) {
+    // If PATCH to /status endpoint fails, try alternative approach
+    try {
+      await axios.put(
+        `https://devapi.faujx.com/api/interview-panel/${panelistId}`,
+        { isActive }
+      );
+
+      return {
+        success: true,
+        message: `Panelist ${isActive ? 'activated' : 'deactivated'} successfully`,
+      };
+    } catch {
+      handleApiError(error);
+    }
   }
 };

@@ -6,6 +6,8 @@ import { signupApi } from '@/services/authService';
 import { showToast } from '@/utils/toast/Toast';
 import { Eye, EyeOff, Search, ChevronDown } from 'lucide-react';
 import { countries } from '@/data/countries';
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface SignupData {
   fullName: string;
@@ -300,10 +302,32 @@ export default function SignUpPage() {
   );
 
   return (
-    <div className="w-full min-h-screen flex flex-col lg:flex-row">
-      {/* Left Side - Welcome/Sign In (Top on mobile) */}
+    <div className="w-full min-h-screen flex flex-col lg:flex-row relative">
+      {/* Logo at top-left */}
+      <div className="absolute top-4 left-4 z-10">
+        <Link
+          href="/"
+          className="flex items-center"
+          onClick={() => {
+            // Reset main content to show home page when logo is clicked
+          }}
+        >
+          <Image
+            src="/applogo2.png"
+            alt="Faujx Logo"
+            height={80}
+            width={80}
+            className="h-12 lg:h-14 w-auto"
+            priority
+            quality={100}
+            style={{ objectFit: 'contain' }}
+          />
+        </Link>
+      </div>
+
+      {/* Left Side - Welcome/Sign In */}
       <div className="flex-1 bg-[#1F514C] flex items-center justify-center p-4 sm:p-6 lg:p-8 relative order-1 lg:order-1">
-        <div className="w-full max-w-sm lg:max-w-md">
+        <div className="w-full max-w-sm lg:max-w-md pt-12">
           <div className="text-center mb-8 lg:mb-12">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-light text-white mb-3 lg:mb-4">
               Welcome
@@ -324,9 +348,9 @@ export default function SignUpPage() {
         </div>
       </div>
 
-      {/* Right Side - Sign Up (Bottom on mobile) */}
+      {/* Right Side - Sign Up */}
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 order-2 lg:order-2 bg-[#f6f6f6]">
-        <div className="w-full max-w-sm lg:max-w-md">
+        <div className="w-full max-w-sm lg:max-w-md pt-12">
           <div className="text-center mb-6 lg:mb-8">
             <h2 className="text-2xl sm:text-3xl font-normal text-gray-900 mb-6 lg:mb-8">
               Create Account

@@ -48,6 +48,7 @@ const publicPaths: (string | RegExp)[] = [
   '/faujx-lms/aiml',
   '/faujx-lms/devops',
   '/faujx-lms/fullstack',
+  '/faujx-lms/courses',
   '/engineer/book-mentor',
   '/engineer/blog',
   '/engineer/testimonials',

@@ -29,7 +29,7 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
   subtitle = 'Thank you for participating in the recent assessment. Unfortunately, you did not achieve the required cutoff mark this time.',
   description = 'After reviewing your performance, it appears you could benefit from further development in the following React skills:',
   reportItems,
-  supportText = 'To support your learning, I recommend exploring Chordify Ed, a platform with resources and exercises specifically tailored to building and improving React skills. Engaging with their guided tutorials and real-world projects can help bridge these skill gaps.',
+  supportText = 'To support your learning, I recommend exploring Chordify Ed, a platform with resources and exercises specifically tailored to building and improving skills. Engaging with their guided tutorials and real-world projects can help bridge these skill gaps.',
   buttonText = 'Upskill with FaujX LMS',
   buttonLink,
   onButtonClick,
@@ -75,9 +75,8 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
               <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl shadow-sm">
                 <XCircle className="w-6 h-6" />
                 <p>
-                  Thank you for participating! Your score{' '}
-                  <strong>{score}</strong> did not meet the cutoff{' '}
-                  <strong>{60}</strong>. Unfortunately, you are not qualified
+                  Thank you for participating! Your score is{' '}
+                  <strong>{score}</strong> Unfortunately, you are not qualified
                   for the next process.
                 </p>
               </div>
@@ -85,32 +84,32 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
               reportItems.map((item, index) => (
                 <div
                   key={item?.text || index}
-                  className="flex flex-row justify-between items-center gap-2  text-red-700"
+                  className="flex flex-row justify-between items-center gap-2 text-red-700"
                 >
                   <p className="text-sm sm:text-base lg:text-lg">
                     {item?.text}
                   </p>
                   <div
-                    className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex justify-center items-center p-1 ${
+                    className={`w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 rounded-full flex justify-center items-center flex-shrink-0 ${
                       item?.isPassed ? 'bg-[#0E0596]' : 'bg-[#960505]'
                     }`}
                   >
                     {item?.isPassed ? (
                       <Image
-                        src="/common/tick.png"
+                        src="/images/charm_tick.svg"
                         alt="tick"
-                        height={15}
-                        width={15}
-                        className="w-2 h-2 sm:w-3 sm:h-3"
+                        height={20}
+                        width={20}
+                        className="w-3 h-3 sm:w-4 sm:h-4 lg:w-4 lg:h-4 font-bold"
                         priority
                       />
                     ) : (
                       <Image
-                        src="/common/close.png"
+                        src="/images/basil_cross-outline.svg"
                         alt="close"
-                        height={9}
-                        width={9}
-                        className="w-1.5 h-1.5 sm:w-2 sm:h-2"
+                        height={20}
+                        width={20}
+                        className="w-6 h-6 font-bold"
                         priority
                       />
                     )}

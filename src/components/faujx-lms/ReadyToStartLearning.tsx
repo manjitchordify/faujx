@@ -49,13 +49,13 @@ const ReadyToStartLearning: React.FC = () => {
           >
             <motion.button
               onClick={handleStartLearning}
-              className="px-4 py-2 bg-gradient-to-r cursor-pointer from-[#9692F8] to-[#CDABF8] text-white rounded-2xl hover:opacity-90 transition-all duration-300 flex items-center justify-between shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg font-medium min-w-[200px]"
+              className="px-4 py-2 bg-gradient-to-r cursor-pointer from-[#1F514C] to-[#2a837a] text-white rounded-2xl hover:opacity-90 transition-all duration-300 flex items-center justify-between shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-lg font-medium min-w-[200px]"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               Start Learning Today
               <motion.div
-                className="w-12 h-12 bg-[#CEABFA] bg-opacity-20 rounded-lg flex items-center justify-center text-white ml-4"
+                className="w-12 h-12 bg-[#2a837a] bg-opacity-20 rounded-lg flex items-center justify-center text-white ml-4"
                 whileHover={{ x: 2 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 10 }}
               >

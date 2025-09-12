@@ -1,1 +1,1 @@
-export const PASS_SCORE = 60;
+export const PASS_SCORE = 70;
