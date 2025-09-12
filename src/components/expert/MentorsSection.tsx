@@ -123,7 +123,7 @@ const MentorsSection = () => {
     {
       id: 3,
       name: 'Michael Rodriguez',
-      image: '/images/expert/mentor[3].png',
+      image: '/images/expert/mentor[3].jpg',
       alt: 'Michael Rodriguez - Full Stack Developer Mentor',
       role: 'Full Stack Architect',
       company: 'Netflix',
