@@ -9,12 +9,12 @@ const ActionItemsSection = () => {
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12">
         {/* For Companies */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-3xl p-6 sm:p-8">
+        <div className="bg-gradient-to-r from-[#2A6B65] to-[#1F514C] rounded-3xl p-6 sm:p-8">
           <div className="text-center mb-6 sm:mb-8">
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
               For Companies
             </h3>
-            <p className="text-gray-600 text-sm sm:text-base">
+            <p className="text-gray-200 text-sm sm:text-base">
               Help companies find the right talent
             </p>
           </div>
@@ -110,12 +110,12 @@ const ActionItemsSection = () => {
         </div>
 
         {/* For Candidates */}
-        <div className="bg-gradient-to-br from-green-50 to-emerald-100 rounded-3xl p-6 sm:p-8">
+        <div className="bg-gradient-to-r from-[#2A6B65] to-[#1F514C] rounded-3xl p-6 sm:p-8">
           <div className="text-center mb-6 sm:mb-8">
-            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
               For Engineers
             </h3>
-            <p className="text-gray-600 text-sm sm:text-base">
+            <p className="text-gray-200 text-sm sm:text-base">
               Help candidates advance their careers
             </p>
           </div>

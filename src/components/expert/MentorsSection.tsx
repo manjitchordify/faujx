@@ -11,8 +11,8 @@ const MentorsSection = () => {
       id: 1,
       name: 'Mohit Bhure',
       image: '/images/expert/mentor12.jpeg',
-      alt: 'Mohit Bhure - AI & Full-Stack Mentor',
-      role: 'AI Software Engineer',
+      alt: 'Mohit Bhure - AI Expert',
+      role: 'AI Expert',
       company: 'Codingbyts AI-Tech Private Limited',
       bio: 'Mohit is a full-stack development, and knowledge engineering. With deep experience in Python, React, Node.js, and modern frameworks, he builds scalable AI-powered applications and leads innovative tech solutions.',
       expertise: [
@@ -35,10 +35,10 @@ const MentorsSection = () => {
 
     {
       id: 2,
-      name: 'Karthikeyan ',
+      name: 'Karthikeyan',
       image: '/images/expert/mentor[2].jpeg',
-      alt: 'Karthikeyan Dharmalingam - Full-Stack Mentor',
-      role: 'Senior Full-Stack Developer',
+      alt: 'Karthikeyan Dharmalingam - Full-Stack Expert',
+      role: 'Full-Stack Expert',
       company: 'TritonTech & Services Pvt Ltd',
       bio: 'Karthikeyan is a seasoned full-stack developer with expertise in modern frontend frameworks and backend technologies. With professional experience across companies like TritonTech, Chordify, and Juice Media, he specializes in building scalable web applications, API integrations, and enterprise-grade solutions.',
       expertise: [
@@ -61,8 +61,8 @@ const MentorsSection = () => {
       id: 3,
       name: 'Manjit Singh',
       image: '/images/expert/mentor[3].jpg',
-      alt: 'Michael Rodriguez - Full Stack Developer Mentor',
-      role: 'Full Stack Developer',
+      alt: 'Manjit Singh - Full Stack Expert',
+      role: 'Full Stack Expert',
       company: 'Netflix',
       bio: 'Manjit is a full-stack Developer with expertise in building high-scale applications. He mentors developers on system design, database optimization, and cloud architecture.',
       expertise: ['System Design', 'Database', 'Cloud Architecture'],
@@ -71,8 +71,8 @@ const MentorsSection = () => {
       id: 4,
       name: 'Taranjeet Singh',
       image: '/images/expert/mentor[4].jpg',
-      alt: 'Taranjeet Singh - DevOps & Cloud Mentor',
-      role: 'DevOps & Cloud Engineer',
+      alt: 'Taranjeet Singh - Cloud Expert',
+      role: 'Cloud Expert',
       company: 'Amazon Web Services',
       bio: 'Taranjeet specializes in DevOps and cloud application development with strong expertise in database technologies. With years of hands-on experience, he helps teams build scalable, reliable, and efficient cloud-based solutions.',
       expertise: [

@@ -110,7 +110,7 @@ function WhyChooseUs() {
     {
       icon: UsersIcon,
       title: 'Pre-vetted Engineers',
-      description: 'Skills first approach to hiring.',
+      description: 'Skills first approach.',
     },
     {
       icon: ClockIcon,
