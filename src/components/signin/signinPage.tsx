@@ -2,9 +2,11 @@
 
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { Eye, EyeOff } from 'lucide-react';
 import { loginApi } from '@/services/authService';
 import { showToast } from '@/utils/toast/Toast';
 import { clearAuthCookies } from '@/services/authService';
+import { getNextRouteFromStages } from '@/utils/profileStageRouting';
 
 interface LoginData {
   email: string;
@@ -34,6 +36,7 @@ export default function SignInPage() {
   });
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
   const [errors, setErrors] = useState<ValidationErrors>({
     login: {},
   });
@@ -84,6 +87,10 @@ export default function SignInPage() {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(prev => !prev);
+  };
+
   const handleLogin = async () => {
     if (!validateLogin()) {
       return;
@@ -100,6 +107,7 @@ export default function SignInPage() {
       if (response?.data?.user && response?.data?.accessToken) {
         const userType = response.data.user.userType;
         const phase1Completed = response.data.phase1Completed;
+        const profileStages = response.data.profileStages;
 
         // Validate userType matches current route
         const routeUserTypeMapping: Record<string, string[]> = {
@@ -130,6 +138,12 @@ export default function SignInPage() {
           expert: '/expert/dashboard',
         };
 
+        showToast('Logged in successfully!', 'success');
+        if (!response?.data?.user?.isVerified) {
+          const userRole = userType == 'candidate' ? 'engineer' : userType;
+          router.push(`/${userRole}/email-sent`);
+          return;
+        }
         const dashboard = roleDashboards[userType] || '/engineer/dashboard';
 
         // Store updated role in localStorage
@@ -142,12 +156,17 @@ export default function SignInPage() {
           console.error('Error updating role in localStorage:', error);
         }
 
-        showToast('Logged in successfully!', 'success');
-
         // Navigate to appropriate route based on user completion status
         setTimeout(() => {
           if (userType === 'candidate' && !phase1Completed) {
-            router.push('/engineer/knowbetter');
+            const nextRoute = getNextRouteFromStages(profileStages || null);
+            console.log(
+              'Routing candidate to:',
+              nextRoute,
+              'based on stages:',
+              profileStages
+            );
+            router.push(nextRoute);
           } else {
             router.push(dashboard);
           }
@@ -223,9 +242,9 @@ export default function SignInPage() {
               )}
             </div>
 
-            <div>
+            <div className="relative">
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 name="password"
                 placeholder="Password"
                 value={loginData.password}
@@ -233,11 +252,24 @@ export default function SignInPage() {
                 onKeyPress={e =>
                   e.key === 'Enter' && !isLoading && handleLogin()
                 }
-                className={`w-full px-3 sm:px-4 py-3 sm:py-4 rounded-xl border ${
+                className={`w-full px-3 sm:px-4 py-3 sm:py-4 pr-12 rounded-xl border ${
                   errors.login.password ? 'border-red-500' : 'border-[#E6E6E6]'
                 } text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent transition-all text-sm sm:text-base`}
                 disabled={isLoading}
               />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                disabled={isLoading}
+                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors disabled:cursor-not-allowed"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
               {errors.login.password && (
                 <p className="text-red-500 text-xs sm:text-sm mt-1 ml-1">
                   {errors.login.password}

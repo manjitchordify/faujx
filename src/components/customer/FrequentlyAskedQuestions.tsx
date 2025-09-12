@@ -37,7 +37,7 @@ export default function FrequentlyAskedQuestions() {
     <section id="frequently-asked-questions" className="py-16 md:py-20">
       <div className="w-full max-w-4xl mx-auto px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center ">
-          <h2 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight sm:leading-tight md:leading-tight lg:leading-tight font-semibold text-[#1F514C] tracking-tight">
+          <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight sm:leading-tight md:leading-tight lg:leading-tight font-semibold text-[#1F514C] tracking-tight">
             Frequently Asked Questions
           </h2>
         </div>

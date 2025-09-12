@@ -62,11 +62,80 @@ export interface InterviewDetails {
   userId?: string;
 }
 
+// Interface for available panelists - Updated to match actual API response
+export interface AvailablePanelist {
+  id: string;
+  userId: string;
+  designation: string;
+  department: string;
+  seniorityLevel: string;
+  availableTimings: Array<{
+    day: string;
+    endTime: string;
+    timezone: string;
+    startTime: string;
+  }>;
+  interviewTypes: string[];
+  skills: string[];
+  maxInterviewsPerDay: number;
+  isActive: boolean;
+  timezone: string;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    fullName: string | null;
+    phone: string | null;
+    profilePic: string | null;
+    profilePicKey: string | null;
+    profileVideoKey: string | null;
+    profileVideo: string | null;
+    dateOfBirth: string | null;
+    location: string | null;
+    country: string | null;
+    passwordHash: string;
+    userType: string;
+    isVerified: boolean;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    resetToken: string | null;
+    resetTokenExpiry: string | null;
+    googleId: string | null;
+    verificationToken: string | null;
+    verificationTokenExpiry: string | null;
+    isSubscribed: boolean;
+    subscribedAt: string | null;
+    isPremium: boolean;
+    premiumSince: string | null;
+    premiumUntil: string | null;
+    currentSubscriptionId: string | null;
+  };
+}
+
+// Type alias for available panelists response - API returns array directly
+export type AvailablePanelistsResponse = AvailablePanelist[];
+
+// Interface for transfer interview response
+export interface TransferInterviewResponse {
+  message: string;
+  status?: string;
+}
+
 // Query parameters interface for list API
 export interface InterviewListParams {
   page?: number;
   limit?: number;
-  myAction?: 'pending' | 'confirmed' | 'rejected' | 'completed' | string;
+  myAction?:
+    | 'pending'
+    | 'confirmed'
+    | 'rejected'
+    | 'completed'
+    | 'transferred'
+    | string;
   sortBy?: 'candidateName' | 'scheduledAt' | 'createdAt' | string;
   sortOrder?: 'ASC' | 'DESC';
 }
@@ -140,6 +209,63 @@ export const getInterviewDetails = async (
 
     const response = await axios.get(
       `https://devapi.faujx.com/api/interview-panel/interviews/details/${interviewId}`,
+      config
+    );
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+/**
+ * Get available panelists for transfer - NO PARAMETERS
+ */
+export const getAvailablePanelists =
+  async (): Promise<AvailablePanelistsResponse> => {
+    try {
+      const config = getAuthAxiosConfig();
+      const token = getAuthToken();
+
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      };
+
+      const response = await axios.get(
+        'https://devapi.faujx.com/api/interview-panel',
+        config
+      );
+      return response.data;
+    } catch (error: unknown) {
+      handleApiError(error);
+    }
+  };
+
+/**
+ * Transfer interview to another panelist
+ * Updated to match API specification: POST /api/interview-panel/interviews/transfer/{interviewId}
+ * Body: { newPanelId: string }
+ */
+export const transferInterview = async (
+  interviewId: string,
+  panelistId: string
+): Promise<TransferInterviewResponse> => {
+  try {
+    const config = getAuthAxiosConfig();
+    const token = getAuthToken();
+
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+    };
+
+    const payload = {
+      newPanelId: panelistId,
+    };
+
+    const response = await axios.post(
+      `https://devapi.faujx.com/api/interview-panel/interviews/transfer/${interviewId}`,
+      payload,
       config
     );
     return response.data;
@@ -236,6 +362,8 @@ export const submitInterviewFeedback = async (
 export const interviewPanelService = {
   getInterviewPanelInterviews,
   getInterviewDetails,
+  getAvailablePanelists,
+  transferInterview,
   confirmInterview,
   rejectInterview,
   submitInterviewFeedback,

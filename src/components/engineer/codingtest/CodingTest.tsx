@@ -213,7 +213,7 @@ const CodingTest: React.FC<CodingTestProps> = ({ onNext }) => {
                       <span className="font-medium text-gray-900">
                         Category:{' '}
                       </span>
-                      <span className="text-gray-600">
+                      <span className="text-gray-600 capitalize">
                         {assignment.category}
                       </span>
                     </div>
@@ -226,7 +226,7 @@ const CodingTest: React.FC<CodingTestProps> = ({ onNext }) => {
                         {assignment.skills_tested.map((skill, skillIndex) => (
                           <span
                             key={skillIndex}
-                            className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
+                            className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs capitalize"
                           >
                             {skill}
                           </span>

@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import {
+  completeKnowBetterStage,
   updateEngineerProfileApi,
   UpdateEngineerProfileParams,
 } from '@/services/engineerService';
@@ -87,6 +88,8 @@ const KnowBetterQuestions: React.FC = () => {
       if (nextStep <= 8) {
         setCurrentStep(nextStep);
       } else {
+        // Only call stage tracking when completely finished (after step 8)
+        await completeKnowBetterStage(profileData);
         console.log('Form completed:', formData);
         router.push('/engineer/upload-resume');
       }

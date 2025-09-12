@@ -1,0 +1,83 @@
+{
+  "devops": {
+    "title": "DevOps Engineer",
+    "description": "A DevOps Engineer bridges the gap between development and operations teams, focusing on automation, continuous integration/deployment, infrastructure management, and system reliability. They streamline the software development lifecycle and ensure scalable, reliable deployments.",
+    "price": {
+      "india": "₹20000",
+      "apac": "$250",
+      "global": "$350"
+    },
+    "technologies": [
+      { "name": "CI/CD Tools (Jenkins)" },
+      { "name": "Compute Services" },
+      { "name": "Storage" },
+      { "name": "Containerization" }
+    ],
+    "image": "/images/faujxlms/courseDetails/DevOps.svg"
+  },
+  "backend": {
+    "title": "Backend Developer (Node.js/Django)",
+    "description": "A Backend Developer focuses on server-side development, working with databases, APIs, server logic, and authentication systems. They build robust, scalable applications that handle data processing, user authentication, and system integration with proper testing and deployment strategies.",
+    "price": {
+      "india": "₹20000",
+      "apac": "$200",
+      "global": "$250"
+    },
+    "technologies": [
+      { "name": "JavaScript" },
+      { "name": "Node.js" },
+      { "name": "SQL vs. NoSQL" },
+      { "name": "Authentication and Authorization" }
+    ],
+    "image": "/images/faujxlms/courseDetails/Backend.svg"
+  },
+  "aiml": {
+    "title": "AI/ML Engineer",
+    "description": "An AI/ML Engineer specializes in creating intelligent systems using machine learning algorithms, neural networks, and deep learning techniques. They build predictive models, work with data processing pipelines, and deploy machine learning models using modern frameworks and deployment strategies.",
+    "price": {
+      "india": "₹30000",
+      "apac": "$350",
+      "global": "$500"
+    },
+    "technologies": [
+      { "name": "Python Programming" },
+      { "name": "Flask" },
+      { "name": "Docker" }
+    ],
+    "image": "/images/faujxlms/courseDetails/aiml.svg"
+  },
+  "fullstack": {
+    "title": "Fullstack Developer",
+    "description": "A Full-Stack Developer is a software engineer skilled in both frontend (client-side) and backend (server-side) development. They design and build complete web or mobile applications, handling everything from user interfaces, databases, APIs, and server logic to deployment and maintenance.",
+    "price": {
+      "india": "₹25000",
+      "apac": "$250",
+      "global": "$400"
+    },
+    "technologies": [
+      { "name": "HTML/CSS" },
+      { "name": "JavaScript" },
+      { "name": "React" },
+      { "name": "Node.js" },
+      { "name": "Express.js" },
+      { "name": "MongoDB" }
+    ],
+    "image": "/images/faujxlms/courseDetails/fullstack.svg"
+  },
+  "frontend": {
+    "title": "Frontend Developer",
+    "description": "A Frontend Developer specializes in creating user interfaces and user experiences for web applications. They work with HTML, CSS, JavaScript, and modern frameworks to build responsive, interactive, and visually appealing websites and web applications.",
+    "price": {
+      "india": "₹15000",
+      "apac": "$149",
+      "global": "$200"
+    },
+    "technologies": [
+      { "name": "React" },
+      { "name": "Vue.js" },
+      { "name": "Angular" },
+      { "name": "TypeScript" }
+    ],
+    "image": "/images/faujxlms/courseDetails/Frontend.jpeg"
+  }
+}

@@ -20,10 +20,17 @@ import {
   FiStar,
   FiMapPin,
   FiLoader,
+  FiPlus,
+  FiTrash2,
 } from 'react-icons/fi';
 
 // Import the service functions
 import { getAllPanelists, Panelist } from '@/services/panelistService';
+import {
+  addPanelist,
+  AddPanelistFormData,
+  AvailableTiming,
+} from '@/services/panelistService';
 
 // Define proper error types
 interface ApiError {
@@ -43,12 +50,41 @@ export default function PanelistPage() {
     null
   );
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addingPanelist, setAddingPanelist] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+
+  // Add panelist form state
+  const [formData, setFormData] = useState<AddPanelistFormData>({
+    email: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    designation: '',
+    department: 'Engineering',
+    seniorityLevel: 'junior',
+    availableTimings: [],
+    interviewTypes: [],
+    skills: [],
+    maxInterviewsPerDay: 3,
+    isActive: true,
+    timezone: 'UTC',
+  });
+
+  // Temporary state for adding skills and available timings
+  const [newSkill, setNewSkill] = useState('');
+  const [newTiming, setNewTiming] = useState<AvailableTiming>({
+    day: 'monday',
+    startTime: '09:00',
+    endTime: '17:00',
+    timezone: 'UTC',
+  });
 
   // Memoized loadPanelists function to prevent unnecessary re-renders
   const loadPanelists = useCallback(async () => {
@@ -252,6 +288,121 @@ export default function PanelistPage() {
     loadPanelists();
   };
 
+  // Add panelist handlers
+  const handleAddPanelist = () => {
+    setIsAddModalOpen(true);
+    setAddError(null);
+  };
+
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+    setFormData({
+      email: '',
+      password: '',
+      firstName: '',
+      lastName: '',
+      designation: '',
+      department: 'Engineering',
+      seniorityLevel: 'junior',
+      availableTimings: [],
+      interviewTypes: [],
+      skills: [],
+      maxInterviewsPerDay: 3,
+      isActive: true,
+      timezone: 'UTC',
+    });
+    setNewSkill('');
+    setNewTiming({
+      day: 'monday',
+      startTime: '09:00',
+      endTime: '17:00',
+      timezone: 'UTC',
+    });
+    setAddError(null);
+  };
+
+  const handleFormChange = <K extends keyof AddPanelistFormData>(
+    field: K,
+    value: AddPanelistFormData[K]
+  ) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleAddSkill = () => {
+    if (newSkill.trim() && !formData.skills.includes(newSkill.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()],
+      }));
+      setNewSkill('');
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill !== skillToRemove),
+    }));
+  };
+
+  const handleAddTiming = () => {
+    const existingTiming = formData.availableTimings.find(
+      timing => timing.day === newTiming.day
+    );
+
+    if (!existingTiming) {
+      setFormData(prev => ({
+        ...prev,
+        availableTimings: [...prev.availableTimings, newTiming],
+      }));
+      setNewTiming({
+        day: 'monday',
+        startTime: '09:00',
+        endTime: '17:00',
+        timezone: 'UTC',
+      });
+    }
+  };
+
+  const handleRemoveTiming = (day: string) => {
+    setFormData(prev => ({
+      ...prev,
+      availableTimings: prev.availableTimings.filter(
+        timing => timing.day !== day
+      ),
+    }));
+  };
+
+  const handleInterviewTypeChange = (type: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      interviewTypes: checked
+        ? [...prev.interviewTypes, type]
+        : prev.interviewTypes.filter(t => t !== type),
+    }));
+  };
+
+  const handleSubmitAddPanelist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddingPanelist(true);
+    setAddError(null);
+
+    try {
+      await addPanelist(formData);
+      handleCloseAddModal();
+      await loadPanelists();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to add panelist';
+      setAddError(errorMessage);
+    } finally {
+      setAddingPanelist(false);
+    }
+  };
+
   if (loading && panelists.length === 0) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
@@ -293,6 +444,13 @@ export default function PanelistPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={handleAddPanelist}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <FiPlus className="w-4 h-4" />
+            Add Panelist
+          </button>
           <button
             onClick={handleRefresh}
             disabled={loading}
@@ -465,9 +623,6 @@ export default function PanelistPage() {
                         </div>
                         <div className="text-sm text-gray-500">
                           {panelist.designation}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {panelist.total_interviews || 0} interviews
                         </div>
                       </div>
                     </div>
@@ -651,6 +806,406 @@ export default function PanelistPage() {
           </div>
         )}
       </div>
+
+      {/* Add Panelist Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Add New Panelist
+                </h2>
+                <button
+                  onClick={handleCloseAddModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  disabled={addingPanelist}
+                >
+                  <FiX className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Add Error Display */}
+              {addError && (
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <FiAlertTriangle className="w-5 h-5 text-red-600" />
+                    <span className="text-red-800">{addError}</span>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmitAddPanelist} className="space-y-6">
+                {/* User Information */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    User Account Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        First Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.firstName}
+                        onChange={e =>
+                          handleFormChange('firstName', e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.lastName}
+                        onChange={e =>
+                          handleFormChange('lastName', e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={e =>
+                          handleFormChange('email', e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="example@domain.com"
+                        pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                        title="Please enter a valid email address"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Password *
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={formData.password}
+                        onChange={e =>
+                          handleFormChange('password', e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Panelist Information */}
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Panelist Profile Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Designation *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.designation}
+                        onChange={e =>
+                          handleFormChange('designation', e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="e.g. Senior Software Engineer"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Department *
+                      </label>
+                      <select
+                        required
+                        value={formData.department}
+                        onChange={e =>
+                          handleFormChange('department', e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="Engineering">Engineering</option>
+                        <option value="Product">Product</option>
+                        <option value="Design">Design</option>
+                        <option value="Platform">Platform</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Seniority Level *
+                      </label>
+                      <select
+                        required
+                        value={formData.seniorityLevel}
+                        onChange={e =>
+                          handleFormChange('seniorityLevel', e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="junior">Junior</option>
+                        <option value="mid">Mid Level</option>
+                        <option value="senior">Senior</option>
+                        <option value="principal">Principal</option>
+                        <option value="staff">Staff</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Max Interviews Per Day *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="1"
+                        max="10"
+                        value={formData.maxInterviewsPerDay}
+                        onChange={e =>
+                          handleFormChange(
+                            'maxInterviewsPerDay',
+                            parseInt(e.target.value)
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Timezone *
+                      </label>
+                      <select
+                        required
+                        value={formData.timezone}
+                        onChange={e =>
+                          handleFormChange('timezone', e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="UTC">UTC</option>
+                        <option value="EST">EST</option>
+                        <option value="PST">PST</option>
+                        <option value="IST">IST</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="isActive"
+                        checked={formData.isActive}
+                        onChange={e =>
+                          handleFormChange('isActive', e.target.checked)
+                        }
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                      />
+                      <label
+                        htmlFor="isActive"
+                        className="text-sm text-gray-700"
+                      >
+                        Active Status
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Skills */}
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Skills & Expertise
+                  </h3>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={newSkill}
+                      onChange={e => setNewSkill(e.target.value)}
+                      placeholder="Enter a skill"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      onKeyPress={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddSkill();
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddSkill}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full"
+                      >
+                        {skill}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSkill(skill)}
+                          className="text-purple-600 hover:text-purple-800"
+                        >
+                          <FiX className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Interview Types */}
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Interview Types
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      'technical',
+                      'behavioral',
+                      'system_design',
+                      'cultural_fit',
+                    ].map(type => (
+                      <label
+                        key={type}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.interviewTypes.includes(type)}
+                          onChange={e =>
+                            handleInterviewTypeChange(type, e.target.checked)
+                          }
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700 capitalize">
+                          {type.replace('_', ' ')}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Available Timings */}
+                <div className="bg-yellow-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Available Time Slots
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
+                    <select
+                      value={newTiming.day}
+                      onChange={e =>
+                        setNewTiming(prev => ({ ...prev, day: e.target.value }))
+                      }
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {[
+                        'monday',
+                        'tuesday',
+                        'wednesday',
+                        'thursday',
+                        'friday',
+                        'saturday',
+                        'sunday',
+                      ].map(day => (
+                        <option key={day} value={day}>
+                          {day.charAt(0).toUpperCase() + day.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="time"
+                      value={newTiming.startTime}
+                      onChange={e =>
+                        setNewTiming(prev => ({
+                          ...prev,
+                          startTime: e.target.value,
+                        }))
+                      }
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="time"
+                      value={newTiming.endTime}
+                      onChange={e =>
+                        setNewTiming(prev => ({
+                          ...prev,
+                          endTime: e.target.value,
+                        }))
+                      }
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddTiming}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm"
+                    >
+                      Add Slot
+                    </button>
+                  </div>
+                  <div className="space-y-2">
+                    {formData.availableTimings.map((timing, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-white p-3 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="font-medium capitalize">
+                            {timing.day}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            {timing.startTime} - {timing.endTime}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTiming(timing.day)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={handleCloseAddModal}
+                    disabled={addingPanelist}
+                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={addingPanelist}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {addingPanelist && (
+                      <FiLoader className="w-4 h-4 animate-spin" />
+                    )}
+                    {addingPanelist ? 'Adding...' : 'Add Panelist'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Panelist Modal */}
       {isViewModalOpen && selectedPanelist && (

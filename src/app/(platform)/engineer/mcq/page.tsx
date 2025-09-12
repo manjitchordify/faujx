@@ -1,6 +1,5 @@
 'use client';
 import Mcq from '@/components/engineer/mcq/Mcq';
-import Button from '@/components/ui/Button';
 import Loader from '@/components/ui/Loader';
 import { getUserMCQSubmission } from '@/services/McqService';
 import { RootState } from '@/store/store';
@@ -22,23 +21,12 @@ const Page = () => {
   >([]);
   const [loader, setLoader] = useState<boolean>(true);
 
-  const checkScore = () => {
-    if (mcqSubmissionDetails[0].score < 60) {
-      return router.replace(
-        `/engineer/feedback?score=${mcqSubmissionDetails[0]?.score}&type=mcq`
-      );
-    } else {
-      router.replace('/engineer/coding/coding-intro');
-    }
-  };
-
   const getUserMcqSubmission = useCallback(async () => {
     try {
       setLoader(true);
       const user = getUserFromCookie();
       const userId = user!.id;
       console.log('USED ID : ', userId);
-      //  NNED TO REPLACE STATIC USER ID WITH CURRENT LOGGED IN USER ID
       const res = await getUserMCQSubmission(userId as string);
       console.log('MCQ USER SUBMISSION : ', res);
       setMcqSubmissionDetails(res);
@@ -53,6 +41,18 @@ const Page = () => {
     getUserMcqSubmission();
   }, [getUserMcqSubmission]);
 
+  useEffect(() => {
+    if (mcqSubmissionDetails.length > 0) {
+      if (mcqSubmissionDetails[0].score < 60) {
+        router.replace(
+          `/engineer/feedback?score=${mcqSubmissionDetails[0]?.score}&type=mcq`
+        );
+      } else {
+        router.replace('/engineer/coding/coding-intro');
+      }
+    }
+  }, [mcqSubmissionDetails, router]);
+
   return (
     <>
       {!resumeData || !enginnerRole ? (
@@ -66,17 +66,6 @@ const Page = () => {
       ) : loader ? (
         <div className="w-full min-h-[calc(100vh-14.5625rem)] flex justify-center items-center">
           <Loader text="" />
-        </div>
-      ) : mcqSubmissionDetails.length > 0 ? (
-        <div className="w-full min-h-[calc(100vh-14.5625rem)] flex justify-center items-center">
-          <div className="flex flex-col gap-2">
-            <p className="text-xl font-medium">Test Completed</p>
-            <Button
-              text="Next"
-              onClick={checkScore}
-              className="px-5 py-2 rounded-4xl bg-[#207700]"
-            />
-          </div>
         </div>
       ) : (
         <Mcq

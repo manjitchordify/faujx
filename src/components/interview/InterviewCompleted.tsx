@@ -44,10 +44,8 @@ const InterviewCompleted = () => {
           {/* Interview Details */}
           <div className="space-y-2">
             <p className="text-gray-500 text-sm">Interview</p>
-            <h2 className="text-lg font-medium text-gray-900">
-              Product Designer — Round 1
-            </h2>
-            <p className="text-gray-500 text-sm">Interviewer: Jane Doe</p>
+            <h2 className="text-lg font-medium text-gray-900">Round 1</h2>
+            {/* <p className="text-gray-500 text-sm">Interviewer: Jane Doe</p> */}
           </div>
         </div>
       </div>

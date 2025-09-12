@@ -10,6 +10,7 @@ import CountdownStopwatchExample from './Timer';
 import { normalizeError } from '@/types/error';
 import { PASS_SCORE } from '@/constants/pass_score';
 import { useAppSelector } from '@/store/store';
+import { completeMCQStage, getProfileStages } from '@/services/engineerService';
 
 interface McqAssessmentProps {
   mcqData: MCQData;
@@ -87,21 +88,43 @@ const McqAssessment = ({ mcqData }: McqAssessmentProps) => {
       setSubmitLoader(true);
       const data = await submitMCQs(userResponseList);
       console.log('SUBMIT MCQ API:', data);
+
+      // Update stage tracking after successful API call
+      const passed =
+        typeof data?.score === 'number' ? data.score >= PASS_SCORE : true;
+      await completeMCQStage(data, passed); // Changed: pass data instead of userResponseList
+
       return goNext(data?.score);
     } catch (error: unknown) {
       const normalized = normalizeError(error);
 
       if (normalized.message === 'You have already submitted your answers.') {
         showToast(normalized.message, 'warning');
-        return goNext();
+        try {
+          const stages = await getProfileStages();
+          if (stages?.lastStage === 'mcq' && stages?.lastStatus === 'passed') {
+            return goNext();
+          } else {
+            return goNext();
+          }
+        } catch (stageError) {
+          console.warn('Failed to check profile stages:', stageError);
+          return goNext();
+        }
       }
 
       showToast('Try Again', 'error');
+
+      // Mark MCQ as failed on error
+      try {
+        await completeMCQStage(null, false); // Changed: pass null for failed case
+      } catch (stageError) {
+        console.warn('Failed to update MCQ stage on error:', stageError);
+      }
     } finally {
       setSubmitLoader(false);
     }
   };
-
   useEffect(() => {
     const updatedUserResponseList: McqUserResponse[] = mcqData.questions.map(
       item => {
@@ -144,7 +167,7 @@ const McqAssessment = ({ mcqData }: McqAssessmentProps) => {
             <CountdownStopwatchExample
               initialSeconds={mcqData.total_questions * 60}
               className="text-xs md:text-sm font-medium"
-              onComplete={() => {}}
+              onComplete={handleFinish}
             />
           </div>
 
@@ -186,7 +209,7 @@ const McqAssessment = ({ mcqData }: McqAssessmentProps) => {
             handleChangeQuestion('prev');
           }}
           disabled={Number(selectedQuestion.question_id) == 1}
-          className="w-full sm:w-auto order-2 sm:order-1 px-6 md:px-8 py-2 md:py-3 bg-[#D9D9D9] hover:bg-[#CCCCCC] transition-colors rounded-[5px] text-sm md:text-base font-medium disabled:bg-[#878787]"
+          className="w-full sm:w-auto order-2 sm:order-1 px-6 md:px-8 py-2 md:py-3 bg-[#D9D9D9] hover:bg-[#CCCCCC] transition-colors rounded-[5px] text-sm md:text-base font-medium disabled:bg-[#878787] invisible"
         >
           Previous
         </button>

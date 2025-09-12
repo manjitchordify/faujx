@@ -9,7 +9,7 @@ const Page = () => {
   const router = useRouter();
 
   const details = [
-    'The coding test will take approximately 2 hours to complete.',
+    'The coding test time will be specified in the question.',
     'Please ensure you have a stable internet connection.',
     'Use a laptop or desktop for the best experience.',
     'Once you start, the timer will not pause — complete it in one sitting.',

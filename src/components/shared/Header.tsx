@@ -53,7 +53,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
   const expertNavItems = [
     { href: '/expert', label: 'Home' },
     { href: '#aboutus', label: 'About Us' },
-    { href: '/expert/pricing', label: 'Pricing' },
+    // { href: '/expert/pricing', label: 'Pricing' },
     { href: '#faq', label: 'FAQ' },
   ];
 

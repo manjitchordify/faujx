@@ -17,7 +17,8 @@ function PanelistInterviews() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [myActionFilter, setMyActionFilter] = useState<string>('');
+  // Set default filter to 'pending' instead of empty string
+  const [myActionFilter, setMyActionFilter] = useState<string>('pending');
 
   // Pagination state from API
   const [pagination, setPagination] = useState({
@@ -186,6 +187,8 @@ function PanelistInterviews() {
         return 'bg-red-100 text-red-800';
       case 'completed':
         return 'bg-purple-100 text-purple-800';
+      case 'transferred':
+        return 'bg-orange-100 text-orange-800';
       case 'no_action':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -228,6 +231,8 @@ function PanelistInterviews() {
         return 'REJECTED';
       case 'completed':
         return 'COMPLETED';
+      case 'transferred':
+        return 'TRANSFERRED';
       case 'no_action':
         return 'NO ACTION';
       default:
@@ -325,16 +330,17 @@ function PanelistInterviews() {
             />
           </div>
           <div>
+            {/* Updated filter dropdown - removed "All My Actions", added "Transferred" */}
             <select
               value={myActionFilter}
               onChange={e => handleMyActionFilterChange(e.target.value)}
               className="w-full px-4 py-2.5 md:py-3 border border-gray-300 text-gray-900 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors bg-white"
             >
-              <option value="">All My Actions</option>
               <option value="pending">Pending</option>
               <option value="confirmed">Confirmed</option>
               <option value="completed">Completed</option>
               <option value="rejected">Rejected</option>
+              <option value="transferred">Transferred</option>
             </select>
           </div>
         </div>
@@ -441,9 +447,23 @@ function PanelistInterviews() {
                     <td className="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-1 md:gap-2">
                         <button
-                          onClick={() => handleViewDetails(interview.id)}
-                          className="text-blue-600 hover:text-blue-900 p-1"
-                          title="View Details"
+                          onClick={() =>
+                            interview.myAction?.toLowerCase() !==
+                              'transferred' && handleViewDetails(interview.id)
+                          }
+                          disabled={
+                            interview.myAction?.toLowerCase() === 'transferred'
+                          }
+                          className={`p-1 transition-colors ${
+                            interview.myAction?.toLowerCase() === 'transferred'
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-blue-600 hover:text-blue-900'
+                          }`}
+                          title={
+                            interview.myAction?.toLowerCase() === 'transferred'
+                              ? 'View disabled - Interview transferred'
+                              : 'View Details'
+                          }
                         >
                           <FiEye className="w-4 h-4" />
                         </button>
@@ -488,7 +508,7 @@ function PanelistInterviews() {
                   <button
                     onClick={() => {
                       setSearchTerm('');
-                      setMyActionFilter('');
+                      setMyActionFilter('pending'); // Reset to pending instead of empty
                     }}
                     className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
                   >
@@ -505,7 +525,7 @@ function PanelistInterviews() {
                         d="M6 18L18 6M6 6l12 12"
                       />
                     </svg>
-                    Clear Filters
+                    Clear Search
                   </button>
                 )}
               </div>

@@ -7,32 +7,36 @@ import {
   FiCheckCircle,
   FiUsers,
   FiRefreshCw,
-  FiTrendingUp,
+  FiArrowRight,
 } from 'react-icons/fi';
 
 // Types for the dashboard data
 interface DashboardStats {
   totalInterviews: number;
-  upcomingInterviews: number;
+  pendingInterviews: number;
+  confirmedInterviews: number;
   completedInterviews: number;
+  transferredInterviews: number;
 }
 
-function PanelistDashboard() {
+function PanelistDashboard(): React.JSX.Element {
   const [dashboardData, setDashboardData] = useState<DashboardStats | null>(
     null
   );
   const [loading, setLoading] = useState<boolean>(true);
 
   // Load dummy data
-  const loadDashboardData = () => {
+  const loadDashboardData = (): void => {
     setLoading(true);
 
     // Simulate loading delay
     setTimeout(() => {
       const dummyStats: DashboardStats = {
-        totalInterviews: 24,
-        upcomingInterviews: 5,
-        completedInterviews: 19,
+        totalInterviews: 45,
+        pendingInterviews: 8,
+        confirmedInterviews: 12,
+        completedInterviews: 20,
+        transferredInterviews: 5,
       };
 
       setDashboardData(dummyStats);
@@ -84,66 +88,84 @@ function PanelistDashboard() {
         </div>
 
         {/* Dashboard Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           {/* Total Interviews */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow duration-200">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-slate-600 mb-1">
-                  Total Interviews
-                </p>
-                <p className="text-3xl font-bold text-slate-900 mb-2">
-                  {dashboardData?.totalInterviews || 0}
-                </p>
-                <div className="flex items-center gap-1 text-sm">
-                  <FiTrendingUp className="w-4 h-4 text-emerald-500" />
-                  <span className="text-emerald-600 font-medium">+8%</span>
-                  <span className="text-slate-500">this month</span>
-                </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 transition-colors duration-200">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full mb-3">
+                <FiUsers className="w-5 h-5 text-blue-600" />
               </div>
-              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FiUsers className="w-6 h-6 text-blue-600" />
-              </div>
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                Total Interviews
+              </p>
+              <p className="text-3xl font-bold text-gray-900 mb-2">
+                {dashboardData?.totalInterviews || 0}
+              </p>
+              <p className="text-xs text-gray-500">This month</p>
             </div>
           </div>
 
-          {/* Upcoming Interviews */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow duration-200">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-slate-600 mb-1">
-                  Upcoming Interviews
-                </p>
-                <p className="text-3xl font-bold text-slate-900 mb-2">
-                  {dashboardData?.upcomingInterviews || 0}
-                </p>
-                <p className="text-sm text-slate-500">Next 7 days</p>
+          {/* Pending Interviews */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-orange-300 transition-colors duration-200">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-10 h-10 bg-orange-100 rounded-full mb-3">
+                <FiClock className="w-5 h-5 text-orange-600" />
               </div>
-              <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FiClock className="w-6 h-6 text-orange-600" />
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                Pending Interviews
+              </p>
+              <p className="text-3xl font-bold text-gray-900 mb-2">
+                {dashboardData?.pendingInterviews || 0}
+              </p>
+              <p className="text-xs text-gray-500">Awaiting confirmation</p>
+            </div>
+          </div>
+
+          {/* Confirmed Interviews */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 transition-colors duration-200">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-100 rounded-full mb-3">
+                <FiCalendar className="w-5 h-5 text-blue-600" />
               </div>
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                Confirmed Interviews
+              </p>
+              <p className="text-3xl font-bold text-gray-900 mb-2">
+                {dashboardData?.confirmedInterviews || 0}
+              </p>
+              <p className="text-xs text-gray-500">Ready to conduct</p>
             </div>
           </div>
 
           {/* Completed Interviews */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6 hover:shadow-md transition-shadow duration-200">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-slate-600 mb-1">
-                  Completed Interviews
-                </p>
-                <p className="text-3xl font-bold text-slate-900 mb-2">
-                  {dashboardData?.completedInterviews || 0}
-                </p>
-                <div className="flex items-center gap-1 text-sm">
-                  <FiCheckCircle className="w-4 h-4 text-emerald-500" />
-                  <span className="text-emerald-600 font-medium">79%</span>
-                  <span className="text-slate-500">completion rate</span>
-                </div>
+          <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-green-300 transition-colors duration-200">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-10 h-10 bg-green-100 rounded-full mb-3">
+                <FiCheckCircle className="w-5 h-5 text-green-600" />
               </div>
-              <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FiCheckCircle className="w-6 h-6 text-emerald-600" />
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                Completed Interviews
+              </p>
+              <p className="text-3xl font-bold text-gray-900 mb-2">
+                {dashboardData?.completedInterviews || 0}
+              </p>
+              <p className="text-xs text-gray-500">Successfully finished</p>
+            </div>
+          </div>
+
+          {/* Transferred Interviews */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5 hover:border-purple-300 transition-colors duration-200">
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-10 h-10 bg-purple-100 rounded-full mb-3">
+                <FiArrowRight className="w-5 h-5 text-purple-600" />
               </div>
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                Transferred Interviews
+              </p>
+              <p className="text-3xl font-bold text-gray-900 mb-2">
+                {dashboardData?.transferredInterviews || 0}
+              </p>
+              <p className="text-xs text-gray-500">Moved to other panelists</p>
             </div>
           </div>
         </div>

@@ -11,7 +11,7 @@ import {
   InterviewSlot,
   SuccessInterviewScheduleResponse,
 } from '@/types/interview';
-import { addHoursToISOString, formatDateTime } from '@/utils/helper/Helper';
+import { formatReadableDate } from '@/utils/helper/Helper';
 import { showToast } from '@/utils/toast/Toast';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
@@ -29,6 +29,38 @@ const SelectSlot = () => {
   const [loader, setLoader] = useState<boolean>(false);
   const router = useRouter();
 
+  function convertDateToUTCObject(
+    date: Date,
+    normalize: boolean
+  ): {
+    startTime: string;
+    endTime: string;
+    timezone: string;
+  } {
+    if (normalize) {
+      // Case: normalize to start and end of day UTC
+      const utcYear = date.getUTCFullYear();
+      const utcMonth = date.getUTCMonth();
+      const utcDay = date.getUTCDate();
+
+      const startTime = new Date(Date.UTC(utcYear, utcMonth, utcDay, 0, 0, 0));
+      const endTime = new Date(Date.UTC(utcYear, utcMonth, utcDay, 23, 59, 59));
+
+      return {
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        timezone: 'UTC',
+      };
+    } else {
+      // Case: keep the exact timing from passed date
+      return {
+        startTime: date.toISOString(),
+        endTime: date.toISOString(),
+        timezone: 'UTC',
+      };
+    }
+  }
+
   const handleCalendar = () => {
     setShowCalendar(true);
   };
@@ -39,13 +71,15 @@ const SelectSlot = () => {
 
   const CalendarDateSelect = (data: CalendarType) => {
     setSelectedDate(data.dateObject);
-    setShowClock(true);
+    console.log('data dateobject : ', data.dateObject);
+    setSlots(() => [convertDateToUTCObject(data.dateObject, true)]);
+    // setShowClock(true);
     setShowCalendar(false);
   };
 
   const handleConfirm = async () => {
-    if (slots.length < 2) {
-      return showToast('Please Select Slots', 'warning');
+    if (slots.length < 1) {
+      return showToast('Please Select Slot', 'warning');
     }
 
     try {
@@ -62,7 +96,7 @@ const SelectSlot = () => {
         setShowAlternateSlots(false);
         router.push('/engineer/interview');
       } else {
-        showToast('Preferred Slots Not Available', 'warning');
+        showToast('Select Slot', 'success');
         setSlots([]);
         setShowAlternateSlots(true);
         setAlternateSlots(res.data.alternativeSlots);
@@ -81,18 +115,11 @@ const SelectSlot = () => {
       return null;
     }
 
-    if (slots.length == 2) {
-      return showToast('Two Slots Selected', 'success');
+    if (slots.length == 1) {
+      return showToast('Slot Already Selected', 'success');
     }
 
-    setSlots(prev => [
-      ...prev,
-      {
-        startTime: data.toISOString(),
-        endTime: addHoursToISOString(data.toISOString(), 1),
-        timezone: 'UTC',
-      },
-    ]);
+    setSlots(() => [convertDateToUTCObject(data, false)]);
   };
 
   const handleFilterSlot = (item: InterviewSlot) => {
@@ -128,7 +155,7 @@ const SelectSlot = () => {
                   className="flex flex-row justify-center items-center gap-2 sm:gap-3 bg-[#299b00] px-3 sm:px-4 py-2 text-white rounded-xl sm:rounded-2xl w-full sm:w-auto min-w-fit hover:bg-[#33c000] transition-colors duration-200"
                 >
                   <span className="text-sm sm:text-base whitespace-nowrap">
-                    {formatDateTime(item.startTime)}
+                    {formatReadableDate(new Date(item.startTime), true)}
                   </span>
                   <MdCancel
                     onClick={(e: React.SyntheticEvent) => {
@@ -143,8 +170,8 @@ const SelectSlot = () => {
 
             <Button
               isLoading={loader}
-              onClick={slots.length == 2 ? handleConfirm : handleCalendar}
-              text={slots.length == 2 ? 'Confirm' : 'Select Two Slots'}
+              onClick={slots.length == 1 ? handleConfirm : handleCalendar}
+              text={slots.length == 1 ? 'Confirm' : 'Select Slot'}
               className="px-8 sm:px-12 lg:px-14 py-2.5 sm:py-3 bg-[#1F514C] rounded-md font-medium shadow-[0px_9px_13.2px_0px_#B2BBB8] text-sm sm:text-base w-full sm:w-auto max-w-xs hover:bg-[#2a6660] transition-colors duration-200"
             />
           </>

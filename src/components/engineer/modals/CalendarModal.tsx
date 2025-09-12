@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ModalWrapper from '@/components/ui/ModalWrapper';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface CalendarProps {
   onSelect: (data: {
@@ -16,6 +16,12 @@ interface CalendarProps {
 
 const Calendar: React.FC<CalendarProps> = ({ onSelect, onClose }) => {
   const today = new Date();
+  // Set today to start of day for accurate comparison
+  const todayStartOfDay = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDate, setSelectedDate] = useState(today.getDate());
 
@@ -58,6 +64,12 @@ const Calendar: React.FC<CalendarProps> = ({ onSelect, onClose }) => {
     return getDaysInMonth(prevMonth);
   };
 
+  // Check if a date is in the past
+  const isDateInPast = (year: number, month: number, day: number) => {
+    const dateToCheck = new Date(year, month, day);
+    return dateToCheck < todayStartOfDay;
+  };
+
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentMonth(prev => {
       const newMonth = new Date(prev);
@@ -78,10 +90,20 @@ const Calendar: React.FC<CalendarProps> = ({ onSelect, onClose }) => {
 
     // Previous month's trailing days
     for (let i = firstDay - 1; i >= 0; i--) {
+      const day = prevMonthDays - i;
+      const prevMonth = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() - 1
+      );
       days.push({
-        day: prevMonthDays - i,
+        day,
         isCurrentMonth: false,
         isPreviousMonth: true,
+        isPastDate: isDateInPast(
+          prevMonth.getFullYear(),
+          prevMonth.getMonth(),
+          day
+        ),
       });
     }
 
@@ -91,6 +113,11 @@ const Calendar: React.FC<CalendarProps> = ({ onSelect, onClose }) => {
         day,
         isCurrentMonth: true,
         isPreviousMonth: false,
+        isPastDate: isDateInPast(
+          currentMonth.getFullYear(),
+          currentMonth.getMonth(),
+          day
+        ),
       });
     }
 
@@ -98,10 +125,19 @@ const Calendar: React.FC<CalendarProps> = ({ onSelect, onClose }) => {
     const totalCells = 42; // 6 rows × 7 days
     const remainingCells = totalCells - days.length;
     for (let day = 1; day <= remainingCells; day++) {
+      const nextMonth = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() + 1
+      );
       days.push({
         day,
         isCurrentMonth: false,
         isPreviousMonth: false,
+        isPastDate: isDateInPast(
+          nextMonth.getFullYear(),
+          nextMonth.getMonth(),
+          day
+        ),
       });
     }
 
@@ -210,13 +246,16 @@ const Calendar: React.FC<CalendarProps> = ({ onSelect, onClose }) => {
               const isSelected =
                 dateObj.isCurrentMonth && dateObj.day === selectedDate;
 
+              // Check if the date should be disabled
+              const isDisabled = !dateObj.isCurrentMonth || dateObj.isPastDate;
+
               return (
                 <button
                   key={index}
                   onClick={() => {
-                    if (dateObj.isCurrentMonth) {
+                    if (dateObj.isCurrentMonth && !dateObj.isPastDate) {
                       setSelectedDate(dateObj.day);
-                      const dateData = createDateData(dateObj.day); // ✅ Fixed: Use dateObj.day instead of selectedDate
+                      const dateData = createDateData(dateObj.day);
                       onSelect(dateData);
                     }
                   }}
@@ -226,12 +265,19 @@ const Calendar: React.FC<CalendarProps> = ({ onSelect, onClose }) => {
                     ${
                       !dateObj.isCurrentMonth
                         ? 'text-gray-400 bg-gray-50 cursor-default'
-                        : isSelected
-                          ? 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700'
-                          : 'text-black bg-white hover:bg-gray-50 cursor-pointer'
+                        : dateObj.isPastDate
+                          ? 'text-gray-400 bg-gray-100 cursor-not-allowed opacity-60'
+                          : isSelected
+                            ? 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700'
+                            : 'text-black bg-white hover:bg-gray-50 cursor-pointer'
                     }
                   `}
-                  disabled={!dateObj.isCurrentMonth}
+                  disabled={isDisabled}
+                  aria-label={
+                    dateObj.isPastDate && dateObj.isCurrentMonth
+                      ? `${dateObj.day} (past date, unavailable)`
+                      : `${dateObj.day}`
+                  }
                 >
                   {dateObj.day}
                 </button>

@@ -6,7 +6,7 @@ import { FC, ReactNode } from 'react';
 
 interface CandidateCardProps {
   candidate: Candidate;
-  cardType?: 'favourites' | 'shortlisted' | 'candidates';
+  cardType?: 'favourites' | 'shortlisted' | 'candidates' | 'myInterview';
   handleAdd?: (candidate: Candidate) => void;
   handleRemove?: (candidate: Candidate) => void;
   buttons?: ReactNode;
@@ -113,7 +113,7 @@ const CandidateCard: FC<CandidateCardProps> = ({
           </div>
 
           {/* Action Button */}
-          {cardType == 'candidates' && (
+          {cardType == 'candidates' ? (
             <button
               className="w-full py-2.5 px-4 bg-[#6C63FF] text-white rounded-lg text-sm font-semibold hover:bg-[#564dff] transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer"
               onClick={() => {
@@ -130,9 +130,26 @@ const CandidateCard: FC<CandidateCardProps> = ({
                 fill={`${isSelected ? 'white' : '#6C63FF'}`}
               />
             </button>
+          ) : cardType == 'myInterview' ? (
+            <button
+              className="w-full py-2.5 px-4 bg-[#6C63FF] text-white rounded-lg text-sm font-semibold hover:bg-[#564dff] transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer"
+              onClick={() => {
+                if (isSelected) {
+                  handleRemove(candidate);
+                } else {
+                  handleAdd(candidate);
+                }
+              }}
+            >
+              View Internship Details
+            </button>
+          ) : (
+            ''
           )}
         </div>
       </div>
+
+      {/* BUTTONS ACCORDING TO THE SELECTED TAB */}
       {buttons}
     </div>
   );

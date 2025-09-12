@@ -18,6 +18,7 @@ import { useDispatch } from 'react-redux';
 import { setEvaluationResult } from '@/store/slices/persistSlice';
 import { CodingAssignmentsResponse } from '@/services/codingAssignmentsTypes';
 import { useAppSelector } from '@/store/store';
+import { completeCodingTestStage } from '@/services/engineerService';
 
 const LS_KEY = 'playground:sandpack:files';
 
@@ -33,30 +34,69 @@ interface SandpackFiles {
 
 interface SandpackIDEProps {
   assignments: CodingAssignmentsResponse;
+  disabled?: boolean;
+  readOnly?: boolean;
 }
 
-function useDebouncedSave<T>(value: T, key: string, delay = 400) {
+function useDebouncedSave<T>(
+  value: T,
+  key: string,
+  delay = 400,
+  disabled = false
+) {
   const timer = useRef<NodeJS.Timeout | null>(null);
+  const isInitialMount = useRef(true);
+
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (disabled) {
+      return;
+    }
+
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       try {
         localStorage.setItem(key, JSON.stringify(value));
-      } catch {}
+        console.log('💾 Auto-saved files to localStorage');
+      } catch (error) {
+        console.error('Failed to save to localStorage:', error);
+      }
     }, delay);
+
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [value, key, delay]);
+  }, [value, key, delay, disabled]);
 }
 
-function EditorWithPersistence() {
+function EditorWithPersistence({
+  readOnly = false,
+  disabled = false,
+}: {
+  readOnly?: boolean;
+  disabled?: boolean;
+}) {
   const { sandpack } = useSandpack();
-  useDebouncedSave(sandpack.files, LS_KEY, 400);
-  return <SandpackCodeEditor showTabs showLineNumbers />;
+
+  useDebouncedSave(sandpack.files, LS_KEY, 400, disabled || readOnly);
+
+  return (
+    <SandpackCodeEditor
+      showTabs
+      showLineNumbers
+      readOnly={disabled || readOnly}
+      style={{
+        opacity: disabled ? 0.6 : 1,
+      }}
+    />
+  );
 }
 
-// ✅ now receives assignments properly
+// Submit function
 async function submitToBackend(
   files: SandpackFiles,
   assignments: CodingAssignmentsResponse,
@@ -86,6 +126,7 @@ async function submitToBackend(
       evaluationResult: response,
       totalScore: response?.overall_score,
     };
+
     if (response) {
       await submitCodingTestApi(codingParams);
     }
@@ -97,61 +138,97 @@ async function submitToBackend(
   }
 }
 
-export default function SandpackIDE({ assignments }: SandpackIDEProps) {
-  const [mounted, setMounted] = useState(false);
+// Main SandpackIDE component - wrapped with React.memo to prevent unnecessary re-renders
+const SandpackIDE: React.FC<SandpackIDEProps> = React.memo(
+  ({ assignments, disabled = false, readOnly = false }) => {
+    const [mounted, setMounted] = useState(false);
 
-  const defaultFiles = {
-    '/index.js': {
-      code: [
-        `import React from "react";`,
-        `import { createRoot } from "react-dom/client";`,
-        `import App from "./App";`,
-        `createRoot(document.getElementById("root")).render(<App />);`,
-      ].join('\n'),
-    },
-    '/App.js': {
-      code: `export default function App(){ return <h1>Hello from Faujx!</h1> }`,
-      active: true,
-    },
-  };
+    const defaultFiles = {
+      '/index.js': {
+        code: [
+          `import React from "react";`,
+          `import { createRoot } from "react-dom/client";`,
+          `import App from "./App";`,
+          `createRoot(document.getElementById("root")).render(<App />);`,
+        ].join('\n'),
+      },
+      '/App.js': {
+        code: `export default function App(){ return <h1>Hello from Faujx!</h1> }`,
+        active: true,
+      },
+    };
 
-  const [initialFiles, setInitialFiles] = useState(defaultFiles);
+    const [initialFiles, setInitialFiles] = useState(defaultFiles);
 
-  // Load from localStorage only after mounting
-  useEffect(() => {
-    setMounted(true);
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) {
-        setInitialFiles(JSON.parse(raw));
+    // Load from localStorage only after mounting
+    useEffect(() => {
+      setMounted(true);
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (raw) {
+          const parsedFiles = JSON.parse(raw);
+          console.log('📁 Loaded saved files from localStorage');
+          setInitialFiles(parsedFiles);
+        }
+      } catch (error) {
+        console.error('Error loading from localStorage:', error);
       }
-    } catch {}
-  }, []);
+    }, []);
 
-  // Don't render until mounted to avoid hydration mismatch
-  if (!mounted) {
-    return <div>Loading...</div>;
+    // Don't render until mounted to avoid hydration mismatch
+    if (!mounted) {
+      return (
+        <div className="flex items-center justify-center h-64 bg-gray-50 rounded-lg">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading IDE...</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="w-full">
+        <SandpackProvider
+          template="react"
+          files={initialFiles}
+          customSetup={{
+            dependencies: { react: 'latest', 'react-dom': 'latest' },
+          }}
+        >
+          {/* Toolbar */}
+          <Toolbar assignments={assignments} disabled={disabled || readOnly} />
+
+          <SandpackLayout>
+            <EditorWithPersistence readOnly={readOnly} disabled={disabled} />
+            <SandpackPreview
+              style={{
+                opacity: disabled ? 0.5 : 1,
+              }}
+            />
+          </SandpackLayout>
+
+          <SandpackConsole
+            style={{
+              height: 160,
+              opacity: disabled ? 0.5 : 1,
+            }}
+          />
+        </SandpackProvider>
+      </div>
+    );
   }
+);
 
-  return (
-    <SandpackProvider
-      template="react"
-      files={initialFiles}
-      customSetup={{ dependencies: { react: 'latest', 'react-dom': 'latest' } }}
-    >
-      {/* ✅ pass assignments down */}
-      <Toolbar assignments={assignments} />
-      <SandpackLayout>
-        <EditorWithPersistence />
-        <SandpackPreview />
-      </SandpackLayout>
-      <SandpackConsole style={{ height: 160 }} />
-    </SandpackProvider>
-  );
-}
+SandpackIDE.displayName = 'SandpackIDE';
 
-// ✅ Toolbar now accepts assignments
-function Toolbar({ assignments }: { assignments: CodingAssignmentsResponse }) {
+function Toolbar({
+  assignments,
+  disabled = false,
+}: {
+  assignments: CodingAssignmentsResponse;
+  disabled?: boolean;
+}) {
   const { sandpack } = useSandpack();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sandboxUrl, setSandboxUrl] = useState('');
@@ -161,7 +238,13 @@ function Toolbar({ assignments }: { assignments: CodingAssignmentsResponse }) {
   const { enginnerRole } = useAppSelector(state => state.persist);
 
   const addFile = async () => {
-    const name = prompt('New file (e.g. "/New.jsx")');
+    if (disabled) return;
+
+    const name = prompt('New file (e.g. "/New.js")');
+    if (name === '') {
+      alert('Please enter a file name to create a new file.');
+      return;
+    }
     if (!name) return;
     const path = name.startsWith('/') ? name : `/${name}`;
     const starter =
@@ -175,11 +258,12 @@ function Toolbar({ assignments }: { assignments: CodingAssignmentsResponse }) {
   };
 
   const deleteActive = () => {
+    if (disabled) return;
+
     const activePath = sandpack.activeFile;
     if (!activePath) return;
     if (!confirm(`Delete ${activePath}?`)) return;
     sandpack.deleteFile(activePath);
-    // Sandpack will automatically switch to another file
   };
 
   const generateSandboxUrl = async (): Promise<string> => {
@@ -251,6 +335,10 @@ function Toolbar({ assignments }: { assignments: CodingAssignmentsResponse }) {
         generatedSandboxUrl
       );
 
+      // Update stage tracking after successful API call
+      const passed = result?.passed || false;
+      await completeCodingTestStage(result, passed);
+
       if (result?.passed) {
         setSubmitStatus(`✅ Submitted successfully!`);
         router.push('/engineer/interview/select-slot');
@@ -264,6 +352,16 @@ function Toolbar({ assignments }: { assignments: CodingAssignmentsResponse }) {
     } catch (error: unknown) {
       console.error('Submission failed:', error);
       setSubmitStatus(`❌ Submission failed: ${error}`);
+
+      // Mark coding test as failed on error
+      try {
+        await completeCodingTestStage(null, false);
+      } catch (stageError) {
+        console.warn(
+          'Failed to update coding test stage on error:',
+          stageError
+        );
+      }
     } finally {
       setIsSubmitting(false);
       setTimeout(() => setSubmitStatus(''), 8000);
@@ -273,17 +371,29 @@ function Toolbar({ assignments }: { assignments: CodingAssignmentsResponse }) {
   return (
     <div className="border-b bg-white">
       <div className="flex items-center justify-between px-3 py-2">
-        <div className="text-sm text-gray-600">Sandpack (auto-saved)</div>
+        <div className="text-sm text-gray-600">
+          Sandpack {disabled ? '(Time Up - Read Only)' : '(auto-saved)'}
+        </div>
         <div className="flex gap-2">
           <button
             onClick={addFile}
-            className="cursor-pointer px-3 py-1.5 rounded-lg text-white bg-[#1F514C] hover:opacity-90"
+            disabled={disabled}
+            className={`px-3 py-1.5 rounded-lg text-white ${
+              disabled
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'cursor-pointer bg-[#1F514C] hover:opacity-90'
+            }`}
           >
             New File
           </button>
           <button
             onClick={deleteActive}
-            className="cursor-pointer rounded-lg text-white px-3 py-1.5 border border-gray-300 bg-[#9c2828] hover:bg-[#9c2828]"
+            disabled={disabled}
+            className={`rounded-lg text-white px-3 py-1.5 border border-gray-300 ${
+              disabled
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'cursor-pointer bg-[#9c2828] hover:bg-[#9c2828]'
+            }`}
           >
             Delete Current
           </button>
@@ -346,3 +456,5 @@ function Toolbar({ assignments }: { assignments: CodingAssignmentsResponse }) {
     </div>
   );
 }
+
+export default SandpackIDE;

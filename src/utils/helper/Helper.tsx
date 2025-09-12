@@ -41,7 +41,10 @@ export const addHoursToISOString = (
 };
 
 // Convert to IST : 12-03-2025 - 02:00 PM
-export function formatDateTime(isoString: string): string {
+export function formatDateTime(
+  isoString: string,
+  type: 'all' | 'date' | 'time' = 'all'
+): string {
   const date = new Date(isoString);
 
   const options: Intl.DateTimeFormatOptions = {
@@ -63,7 +66,15 @@ export function formatDateTime(isoString: string): string {
   const minute = parts.find(p => p.type === 'minute')?.value;
   const dayPeriod = parts.find(p => p.type === 'dayPeriod')?.value;
 
-  return `${day}-${month}-${year} - ${hour}:${minute} ${dayPeriod}`;
+  if (type == 'all') {
+    return `${day}-${month}-${year} - ${hour}:${minute} ${dayPeriod}`;
+  } else if (type == 'date') {
+    return `${day}-${month}-${year}`;
+  } else if (type == 'time') {
+    return `${hour}:${minute} ${dayPeriod}`;
+  } else {
+    return `${day}-${month}-${year} - ${hour}:${minute} ${dayPeriod}`;
+  }
 }
 
 // FAKE DELAY CUSTOM API CALL
@@ -117,3 +128,11 @@ export function compareDates(
   if (time1 < time2) return 'past'; // date1 is in past compared to date2
   return 'same'; // dates are equal
 }
+
+export const formatReadableDate = (date: Date, long?: boolean): string => {
+  const options: Intl.DateTimeFormatOptions = long
+    ? { day: 'numeric', month: 'long', year: 'numeric' } // 👉 e.g. "9 September 2025"
+    : { day: '2-digit', month: 'short', year: '2-digit' }; // 👉 e.g. "09 Sep, 25"
+
+  return new Intl.DateTimeFormat('en-US', options).format(date);
+};

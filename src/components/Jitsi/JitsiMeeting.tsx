@@ -9,6 +9,7 @@ import { useParams } from 'next/navigation';
 import { submitInterviewFeedback } from '@/services/panelistService';
 import { FeedbackModal } from './feedbackModal';
 import { type Role } from '@/constants/capability';
+import { updateProfileStage } from '@/services/engineerService';
 
 interface JitsiMeetExternalAPI {
   dispose: () => void;
@@ -187,8 +188,10 @@ export default function JitsiMeetingPage() {
       };
 
       apiRef.current = new window.JitsiMeetExternalAPI(domain, options);
-      apiRef.current?.addEventListener('readyToClose', () => {
+      apiRef.current?.addEventListener('readyToClose', async () => {
         if (loggedInUser?.userType == 'candidate') {
+          // Mark interview stage as passed before navigating
+          await updateProfileStage('interview', 'passed');
           router.push(`/engineer/interview/${interviewId}/session-completed`);
         } else {
           // Show feedback modal for panelist

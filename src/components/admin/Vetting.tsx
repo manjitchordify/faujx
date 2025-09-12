@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import {
   FiSearch,
@@ -20,29 +20,97 @@ import {
   FiLoader,
   FiChevronsLeft,
   FiChevronsRight,
+  FiAlertCircle,
 } from 'react-icons/fi';
 import {
   getAllCandidates,
   updateCandidatePublishStatus,
+  getCandidateStatsWorkaround,
   type Candidate,
-  type GetAllCandidatesResponse,
-} from '@/services/adminService';
+  type PaginatedCandidatesResponse,
+} from '@/services/candidateService';
+
+// Confirmation Modal Component
+function ConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  candidateName,
+  isLoading,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  candidateName: string;
+  isLoading: boolean;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 backdrop-blur-sm bg-white/10 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
+              <FiAlertCircle className="w-5 h-5 text-orange-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Confirm Publishing
+            </h3>
+          </div>
+
+          <p className="text-gray-600 mb-6">
+            Are you sure you want to publish{' '}
+            <span className="font-medium">{candidateName}&apos;s</span> profile
+            to the projects platform? This action will make their profile
+            visible to potential clients.
+          </p>
+
+          <div className="flex items-center gap-3 justify-end">
+            <button
+              onClick={onClose}
+              disabled={isLoading}
+              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={isLoading}
+              className="px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <FiLoader className="w-4 h-4 animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <FiGlobe className="w-4 h-4" />
+                  Confirm Publish
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // View Candidate Details Modal
 function ViewCandidateModal({
   candidate,
   onClose,
   onPublishProfile,
-  isPublishing = false,
 }: {
   candidate: Candidate;
   onClose: () => void;
-  onPublishProfile: (candidateId: string) => void;
-  isPublishing?: boolean;
+  onPublishProfile: (candidate: Candidate) => void;
 }) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 backdrop-blur-sm bg-white/10 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-900">
             {candidate.firstName} - Candidate Details
@@ -50,7 +118,6 @@ function ViewCandidateModal({
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
-            disabled={isPublishing}
           >
             <FiX className="w-6 h-6" />
           </button>
@@ -284,7 +351,7 @@ function ViewCandidateModal({
             </div>
           </div>
 
-          {/* Action Buttons with Enhanced Publishing State */}
+          {/* Action Buttons */}
           <div className="border-t border-gray-200 pt-6">
             <div className="flex items-center justify-center">
               {candidate.isPublished ? (
@@ -294,25 +361,11 @@ function ViewCandidateModal({
                 </div>
               ) : candidate.interviewPassed ? (
                 <button
-                  onClick={() => onPublishProfile(candidate.id)}
-                  disabled={isPublishing}
-                  className={`inline-flex items-center gap-2 px-6 py-3 font-medium rounded-lg transition-all duration-200 shadow-sm ${
-                    isPublishing
-                      ? 'bg-green-500 text-white cursor-not-allowed'
-                      : 'bg-green-600 text-white hover:bg-green-700 hover:shadow-md'
-                  }`}
+                  onClick={() => onPublishProfile(candidate)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm hover:shadow-md"
                 >
-                  {isPublishing ? (
-                    <>
-                      <FiLoader className="w-5 h-5 animate-spin" />
-                      Publishing Profile...
-                    </>
-                  ) : (
-                    <>
-                      <FiGlobe className="w-5 h-5" />
-                      Publish Profile to Projects Platform
-                    </>
-                  )}
+                  <FiGlobe className="w-5 h-5" />
+                  Publish Profile to Projects Platform
                 </button>
               ) : (
                 <div className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-600 font-medium rounded-lg">
@@ -321,18 +374,6 @@ function ViewCandidateModal({
                 </div>
               )}
             </div>
-
-            {/* Publishing Status Message */}
-            {isPublishing && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center gap-2 text-blue-800">
-                  <FiLoader className="w-4 h-4 animate-spin" />
-                  <span className="text-sm font-medium">
-                    Publishing candidate profile to the projects platform...
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -350,57 +391,68 @@ function Vetting() {
     null
   );
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [publishingIds, setPublishingIds] = useState<Set<string>>(new Set());
 
-  // Server-side pagination states
+  // Confirmation modal state
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [candidateToPublish, setCandidateToPublish] =
+    useState<Candidate | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  // NEW: Add states for total counts (not filtered)
+  // Total stats (not filtered)
   const [totalStats, setTotalStats] = useState({
     totalCandidates: 0,
     passedCandidates: 0,
     failedCandidates: 0,
   });
 
-  // Fetch total stats separately (for the stats cards)
+  // Filter candidates locally for search (like users component)
+  const filteredCandidates = useMemo(() => {
+    return candidates.filter(candidate => {
+      const matchesSearch =
+        candidate.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        candidate.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'passed' && candidate.interviewPassed) ||
+        (statusFilter === 'failed' && !candidate.interviewPassed) ||
+        (statusFilter === 'published' && candidate.isPublished);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [candidates, searchTerm, statusFilter]);
+
+  // Fetch total stats separately
   const fetchTotalStats = async () => {
     try {
-      // Fetch all candidates without filters to get total counts
-      const allCandidatesResponse = await getAllCandidates(1, 1000, '', 'all'); // Large limit to get all
-
+      const stats = await getCandidateStatsWorkaround();
       setTotalStats({
-        totalCandidates: allCandidatesResponse.total,
-        passedCandidates: allCandidatesResponse.data.filter(
-          c => c.interviewPassed
-        ).length,
-        failedCandidates: allCandidatesResponse.data.filter(
-          c => !c.interviewPassed
-        ).length,
+        totalCandidates: stats.total,
+        passedCandidates: stats.passed,
+        failedCandidates: stats.failed,
       });
     } catch (err) {
       console.error('Error fetching total stats:', err);
     }
   };
 
-  // Fetch candidates with pagination
-  const fetchCandidates = async (
-    page: number = 1,
-    perPage: number = 10,
-    search: string = '',
-    filter: string = 'all'
-  ) => {
+  const fetchCandidates = async (page: number = 1, perPage: number = 10) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response: GetAllCandidatesResponse = await getAllCandidates(
+      // Only pass pagination parameters, search will be handled locally
+      const response: PaginatedCandidatesResponse = await getAllCandidates(
         page,
         perPage,
-        search,
-        filter
+        '',
+        'all'
       );
 
       setCandidates(response.data);
@@ -410,7 +462,7 @@ function Vetting() {
       setItemsPerPage(response.perPage);
     } catch (err: unknown) {
       console.error(
-        err instanceof Error ? err.message : 'Unknown error fetching users'
+        err instanceof Error ? err.message : 'Unknown error fetching candidates'
       );
       setError(
         err instanceof Error ? err.message : 'Failed to fetch candidates'
@@ -420,27 +472,17 @@ function Vetting() {
     }
   };
 
-  // Initial fetch - fetch both stats and candidates
+  // Initial fetch
   useEffect(() => {
-    fetchTotalStats(); // Get total counts for stats cards
-    fetchCandidates(1, itemsPerPage, searchTerm, statusFilter);
-  }, [itemsPerPage, searchTerm, statusFilter]);
-
-  // Handle search and filter changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setCurrentPage(1); // Reset to first page when search/filter changes
-      fetchCandidates(1, itemsPerPage, searchTerm, statusFilter);
-    }, 300); // Debounce search
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, statusFilter, itemsPerPage]);
+    fetchTotalStats();
+    fetchCandidates(1, itemsPerPage);
+  }, [itemsPerPage]);
 
   // Handle pagination changes
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
-      fetchCandidates(newPage, itemsPerPage, searchTerm, statusFilter);
+      fetchCandidates(newPage, itemsPerPage);
     }
   };
 
@@ -448,117 +490,170 @@ function Vetting() {
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
-    fetchCandidates(1, newItemsPerPage, searchTerm, statusFilter);
+    fetchCandidates(1, newItemsPerPage);
   };
 
-  // Handle actions
+  // Handle view candidate
   const handleViewCandidate = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
     setIsViewModalOpen(true);
   };
 
-  const handlePublishProfile = async (candidateId: string) => {
+  // Handle publish confirmation
+  const handlePublishClick = (candidate: Candidate) => {
+    setCandidateToPublish(candidate);
+    setShowConfirmation(true);
+  };
+
+  // Handle confirmed publish - ONLY API CALLS
+  const handleConfirmedPublish = async () => {
+    if (!candidateToPublish) return;
+
     try {
-      // Add candidate to publishing set
-      setPublishingIds(prev => new Set(prev).add(candidateId));
+      setIsPublishing(true);
 
-      // Call API to publish candidate profile
-      const updatedCandidate = await updateCandidatePublishStatus(
-        candidateId,
-        true
+      // Show immediate feedback
+      showToast(
+        `Publishing ${candidateToPublish.firstName}'s profile...`,
+        'info'
       );
 
-      // Update local state with the response from API
-      setCandidates(prev =>
-        prev.map(c => (c.id === candidateId ? updatedCandidate : c))
-      );
+      // API call to publish
+      await updateCandidatePublishStatus(candidateToPublish.id, true);
 
-      // Update selectedCandidate if it's the one being published
-      if (selectedCandidate && selectedCandidate.id === candidateId) {
-        setSelectedCandidate(updatedCandidate);
-      }
+      // Refresh all data from server - NO LOCAL STATE UPDATES
+      await Promise.all([
+        fetchCandidates(currentPage, itemsPerPage),
+        fetchTotalStats(),
+      ]);
 
-      // Refresh total stats since publish status changed
-      fetchTotalStats();
-
-      // Close modal and show success message
+      // Close modals
+      setShowConfirmation(false);
       setIsViewModalOpen(false);
+      setCandidateToPublish(null);
       setSelectedCandidate(null);
 
-      // Success notification with auto-dismiss
-      const successMessage = document.createElement('div');
-      successMessage.className =
-        'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-pulse';
-      successMessage.innerHTML = `
-        <div class="flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-          Profile published successfully!
-        </div>
-      `;
-      document.body.appendChild(successMessage);
-
-      setTimeout(() => {
-        if (successMessage.parentNode) {
-          successMessage.parentNode.removeChild(successMessage);
-        }
-      }, 3000);
+      // Success toast notification
+      showToast(
+        'Profile published successfully! The candidate is now visible on the projects platform.',
+        'success'
+      );
     } catch (err: unknown) {
       console.error(
         err instanceof Error ? err.message : 'Unknown error publishing profile'
       );
-
-      // Error notification
-      const errorMessage = document.createElement('div');
-      errorMessage.className =
-        'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-      errorMessage.innerHTML = `
-        <div class="flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-          Failed to publish profile. Please try again.
-        </div>
-      `;
-      document.body.appendChild(errorMessage);
-
-      setTimeout(() => {
-        if (errorMessage.parentNode) {
-          errorMessage.parentNode.removeChild(errorMessage);
-        }
-      }, 4000);
+      showToast(
+        'Failed to publish profile. Please try again or contact support if the issue persists.',
+        'error'
+      );
     } finally {
-      // Remove candidate from publishing set
-      setPublishingIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(candidateId);
-        return newSet;
-      });
+      setIsPublishing(false);
     }
   };
 
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pageNumbers = [];
-    const maxVisiblePages = 5;
+  // Enhanced Toast Notification System
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' = 'info'
+  ) => {
+    const toast = document.createElement('div');
+    const toastId = `toast-${Date.now()}`;
+    toast.id = toastId;
 
-    if (totalPages <= maxVisiblePages) {
-      // Show all pages if total pages is small
-      for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i);
-      }
-    } else {
-      // Show pages around current page
-      const startPage = Math.max(1, currentPage - 2);
-      const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-      for (let i = startPage; i <= endPage; i++) {
-        pageNumbers.push(i);
-      }
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'toast-container';
+      toastContainer.className = 'fixed top-4 right-4 z-50 space-y-2';
+      document.body.appendChild(toastContainer);
     }
 
-    return pageNumbers;
+    const bgColor = {
+      success: 'bg-green-500',
+      error: 'bg-red-500',
+      info: 'bg-blue-500',
+    }[type];
+
+    const icon = {
+      success:
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>',
+      error:
+        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>',
+      info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
+    }[type];
+
+    toast.className = `${bgColor} text-white px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out translate-x-full opacity-0 max-w-sm`;
+    toast.innerHTML = `
+      <div class="flex items-start gap-3">
+        <div class="flex-shrink-0 mt-0.5">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            ${icon}
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium leading-5">${message}</p>
+        </div>
+        <button 
+          onclick="document.getElementById('${toastId}').remove()" 
+          class="flex-shrink-0 ml-2 text-white/70 hover:text-white transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    // Animate in
+    setTimeout(() => {
+      toast.classList.remove('translate-x-full', 'opacity-0');
+      toast.classList.add('translate-x-0', 'opacity-100');
+    }, 100);
+
+    // Auto remove
+    const autoRemoveTimeout = setTimeout(
+      () => {
+        removeToast(toastId);
+      },
+      type === 'error' ? 5000 : 4000
+    );
+
+    // Store timeout for manual removal
+    toast.setAttribute('data-timeout', autoRemoveTimeout.toString());
+
+    return toastId;
+  };
+
+  // Helper to remove toast
+  const removeToast = (toastId: string) => {
+    const toast = document.getElementById(toastId);
+    if (!toast) return;
+
+    // Clear timeout
+    const timeoutId = toast.getAttribute('data-timeout');
+    if (timeoutId) {
+      clearTimeout(parseInt(timeoutId));
+    }
+
+    // Animate out
+    toast.classList.add('translate-x-full', 'opacity-0');
+    toast.classList.remove('translate-x-0', 'opacity-100');
+
+    // Remove from DOM
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+
+      // Clean up container if empty
+      const container = document.getElementById('toast-container');
+      if (container && container.children.length === 0) {
+        container.remove();
+      }
+    }, 300);
   };
 
   // Loading state
@@ -589,14 +684,7 @@ function Vetting() {
           </h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() =>
-              fetchCandidates(
-                currentPage,
-                itemsPerPage,
-                searchTerm,
-                statusFilter
-              )
-            }
+            onClick={() => fetchCandidates(currentPage, itemsPerPage)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Retry
@@ -618,7 +706,7 @@ function Vetting() {
         </p>
       </div>
 
-      {/* Fixed Stats Cards - Now using totalStats */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">
           <div className="flex items-center justify-between">
@@ -708,11 +796,9 @@ function Vetting() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {candidates.map(candidate => {
-                // Fixed logic: Only enable publish if passed interview AND not already published
+              {filteredCandidates.map(candidate => {
                 const canPublishProfile =
                   candidate.interviewPassed && !candidate.isPublished;
-                const isPublishing = publishingIds.has(candidate.id);
 
                 return (
                   <tr
@@ -725,7 +811,7 @@ function Vetting() {
                           {candidate.profilePic ? (
                             <Image
                               src={candidate.profilePic}
-                              alt={candidate.firstName}
+                              alt={candidate.firstName || 'Candidate'}
                               width={40}
                               height={40}
                               className="w-10 h-10 rounded-full object-cover"
@@ -799,33 +885,18 @@ function Vetting() {
                         </button>
 
                         <button
-                          onClick={() => handlePublishProfile(candidate.id)}
-                          disabled={isPublishing || !canPublishProfile}
-                          className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded transition-all duration-200 min-w-[80px] justify-center ${
+                          onClick={() => handlePublishClick(candidate)}
+                          disabled={!canPublishProfile}
+                          className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded transition-colors min-w-[80px] justify-center ${
                             candidate.isPublished
                               ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                               : canPublishProfile
-                                ? isPublishing
-                                  ? 'bg-green-500 text-white cursor-not-allowed'
-                                  : 'bg-green-600 text-white hover:bg-green-700'
+                                ? 'bg-green-600 text-white hover:bg-green-700'
                                 : 'bg-gray-100 text-gray-500 cursor-not-allowed'
                           }`}
                         >
-                          {isPublishing ? (
-                            <>
-                              <FiLoader className="w-3 h-3 animate-spin" />
-                              Publishing...
-                            </>
-                          ) : (
-                            <>
-                              <FiGlobe className="w-3 h-3" />
-                              {candidate.isPublished
-                                ? 'Published'
-                                : canPublishProfile
-                                  ? 'Publish'
-                                  : 'Publish'}
-                            </>
-                          )}
+                          <FiGlobe className="w-3 h-3" />
+                          {candidate.isPublished ? 'Published' : 'Publish'}
                         </button>
                       </div>
                     </td>
@@ -837,7 +908,7 @@ function Vetting() {
         </div>
 
         {/* Empty State */}
-        {candidates.length === 0 && !loading && (
+        {filteredCandidates.length === 0 && !loading && (
           <div className="text-center py-12">
             <FiUsers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -851,17 +922,15 @@ function Vetting() {
           </div>
         )}
 
-        {/* Enhanced Pagination */}
-        {candidates.length > 0 && (
+        {/* Simplified Pagination */}
+        {filteredCandidates.length > 0 && (
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-6 py-4 border-t border-gray-200">
-            {/* Pagination Info */}
             <div className="text-sm text-gray-600">
               Showing {(currentPage - 1) * itemsPerPage + 1}-
               {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}{' '}
               candidates
             </div>
 
-            {/* Items per page selector */}
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <span>Rows per page:</span>
               <select
@@ -876,7 +945,6 @@ function Vetting() {
               </select>
             </div>
 
-            {/* Pagination Controls */}
             <div className="flex items-center gap-1">
               {/* First Page */}
               <button
@@ -898,25 +966,10 @@ function Vetting() {
                 <FiChevronLeft className="w-4 h-4" />
               </button>
 
-              {/* Page Numbers */}
-              {getPageNumbers().map(pageNum => (
-                <button
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum)}
-                  className={`w-8 h-8 flex items-center justify-center rounded border text-sm font-medium transition-colors ${
-                    pageNum === currentPage
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              ))}
-
-              {/* Show ellipsis if there are more pages */}
-              {totalPages > 5 && currentPage < totalPages - 2 && (
-                <span className="px-2 text-gray-400">...</span>
-              )}
+              {/* Page Info */}
+              <span className="px-3 py-1 text-sm text-gray-600 font-medium">
+                Page {currentPage} of {totalPages}
+              </span>
 
               {/* Next Page */}
               <button
@@ -942,34 +995,28 @@ function Vetting() {
         )}
       </div>
 
-      {/* View Details Modal with Publishing State */}
+      {/* View Details Modal */}
       {isViewModalOpen && selectedCandidate && (
         <ViewCandidateModal
           candidate={selectedCandidate}
           onClose={() => setIsViewModalOpen(false)}
-          onPublishProfile={handlePublishProfile}
-          isPublishing={publishingIds.has(selectedCandidate.id)}
+          onPublishProfile={handlePublishClick}
         />
       )}
 
-      {/* Global Publishing Overlay (optional - for when publishing from table) */}
-      {publishingIds.size > 0 && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-[1px] flex items-center justify-center z-40 pointer-events-none">
-          <div className="bg-white rounded-lg shadow-lg p-6 mx-4 pointer-events-auto">
-            <div className="flex items-center gap-3">
-              <FiLoader className="w-6 h-6 text-blue-600 animate-spin" />
-              <div>
-                <h3 className="font-medium text-gray-900">
-                  Publishing Profile
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Please wait while we publish the candidate profile...
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onClose={() => {
+          if (!isPublishing) {
+            setShowConfirmation(false);
+            setCandidateToPublish(null);
+          }
+        }}
+        onConfirm={handleConfirmedPublish}
+        candidateName={candidateToPublish?.firstName || ''}
+        isLoading={isPublishing}
+      />
     </div>
   );
 }

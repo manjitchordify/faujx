@@ -1,22 +1,35 @@
 import { useAppDispatch, useAppSelector } from '@/store/store';
-import React, { useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import CandidateCard from './CandidateCard';
-import { Candidate } from '@/types/customer';
-import { setCustomerShortlisted } from '@/store/slices/customerSlice';
+import { Candidate, CustomerTabs } from '@/types/customer';
+import {
+  setCustomerShortlisted,
+  setIsFavouriteInfoSeen,
+} from '@/store/slices/customerSlice';
 import Button from '@/components/ui/Button';
 import { showToast } from '@/utils/toast/Toast';
 import ShortListModal from './modals/ShortListModal';
+import FloatingAction from './FloatingAction';
 
-function Favourites() {
+interface FavouritesProps {
+  setSelectedTab: React.Dispatch<React.SetStateAction<CustomerTabs>>;
+  selectedTab: CustomerTabs;
+}
+
+const Favourites: FC<FavouritesProps> = ({ setSelectedTab, selectedTab }) => {
   const [showShortListModal, setShowShortListModal] = useState(true);
+  const [showFloating, setShowFloating] = useState(false);
 
-  const { CustomerShortlisted, CustomerFavourites } = useAppSelector(
-    srore => srore.customer
-  );
+  const { CustomerShortlisted, CustomerFavourites, isFavouriteInfoSeen } =
+    useAppSelector(srore => srore.customer);
   const dispatch = useAppDispatch();
   const selectedShortlisedIds = CustomerShortlisted.map(item => item.id);
 
   const handleAddShortListed = (candidate: Candidate) => {
+    if (CustomerShortlisted.length == 3) {
+      return showToast('Max Candidate Shortlisted', 'warning');
+    }
+
     if (selectedShortlisedIds.includes(candidate.id)) {
       showToast('Already Shortlited', 'success');
     } else {
@@ -30,6 +43,27 @@ function Favourites() {
     );
     dispatch(setCustomerShortlisted(filterShortListed));
   };
+
+  const handleView = () => {
+    setSelectedTab('Shortlisted');
+    setShowFloating(false);
+  };
+
+  useEffect(() => {
+    if (CustomerShortlisted.length > 0) {
+      setShowFloating(true);
+    } else {
+      setShowFloating(false);
+    }
+  }, [CustomerShortlisted]);
+
+  if (CustomerFavourites.length == 0) {
+    return (
+      <div className="w-full h-full flex justify-center items-center">
+        NO FAVOURITES
+      </div>
+    );
+  }
 
   return (
     <>
@@ -61,11 +95,24 @@ function Favourites() {
         />
       ))}
 
-      {showShortListModal && (
-        <ShortListModal onClose={() => setShowShortListModal(false)} />
+      {!isFavouriteInfoSeen && showShortListModal && (
+        <ShortListModal
+          onClose={() => {
+            setShowShortListModal(false);
+            dispatch(setIsFavouriteInfoSeen(true));
+          }}
+        />
+      )}
+
+      {showFloating && selectedTab == 'Favourites' && (
+        <FloatingAction
+          text1={`You have shortlisted : ${CustomerShortlisted.length}/3`}
+          text2="View"
+          onView={() => handleView()}
+        />
       )}
     </>
   );
-}
+};
 
 export default Favourites;

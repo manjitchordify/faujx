@@ -5,6 +5,22 @@ import { store } from '@/store/store';
 import { setLoggedInUser } from '@/store/slices/userSlice';
 
 // ----------------------
+// Profile Stages Types (imported from your routing utility)
+// ----------------------
+export type StageKey =
+  | 'knowBetter'
+  | 'resumeUpload'
+  | 'mcq'
+  | 'codingTest'
+  | 'interview';
+export type StageStatus = 'passed' | 'failed';
+
+export interface ProfileStages {
+  lastStage: StageKey;
+  lastStatus: StageStatus;
+}
+
+// ----------------------
 // Types for authentication
 // ----------------------
 export interface SignupParams {
@@ -59,6 +75,8 @@ export interface LoginResponse {
     tokenType: string;
     isPreliminaryVideoCompleted?: boolean;
     phase1Completed?: boolean;
+    isPublished?: boolean;
+    profileStages?: ProfileStages; // Add profile stages
   };
 }
 
@@ -73,10 +91,13 @@ export interface VerifyTokenResponse {
   };
 }
 
+// Additional data interface for auth storage
 export interface AdditionalAuthData {
   isPreliminaryVideoCompleted?: boolean;
   tokenType?: string;
   phase1Completed?: boolean;
+  isPublished?: boolean;
+  profileStages?: ProfileStages; // Add profile stages
   [key: string]: unknown; // For any additional properties
 }
 
@@ -214,6 +235,8 @@ export async function loginApi(params: LoginParams): Promise<LoginResponse> {
         isPreliminaryVideoCompleted:
           response.data.data.isPreliminaryVideoCompleted,
         phase1Completed: response.data.data.phase1Completed,
+        isPublished: response.data.data.isPublished,
+        profileStages: response.data.data.profileStages,
       });
     }
 
@@ -228,6 +251,22 @@ export async function verifyToken(): Promise<VerifyTokenResponse> {
     const config = getAuthAxiosConfig();
     const response: AxiosResponse<VerifyTokenResponse> = await axios.get(
       'auth/verify-token',
+      config
+    );
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+}
+
+export async function resendVerificationEmail(
+  email: string
+): Promise<VerifyTokenResponse> {
+  try {
+    const config = getAuthAxiosConfig();
+    const response: AxiosResponse<VerifyTokenResponse> = await axios.post(
+      'auth/resend-verification-email',
+      { email: email },
       config
     );
     return response.data;

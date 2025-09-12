@@ -180,7 +180,7 @@ const Content = () => {
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-white rounded-full mt-2 flex-shrink-0"></div>
-                      <p className="text-base lg:text-lg leading-relaxed font-medium">
+                      <p className="text-lg lg:text-xl leading-relaxed font-medium">
                         {currentContent.subText}
                       </p>
                     </div>

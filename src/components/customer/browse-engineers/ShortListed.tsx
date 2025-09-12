@@ -1,12 +1,17 @@
 import { useAppDispatch, useAppSelector } from '@/store/store';
-import React from 'react';
+import React, { FC } from 'react';
 import CandidateCard from './CandidateCard';
 import Button from '@/components/ui/Button';
 import { setCustomerShortlisted } from '@/store/slices/customerSlice';
-import { Candidate } from '@/types/customer';
+import { Candidate, CustomerTabs } from '@/types/customer';
 import { useRouter } from 'next/navigation';
 
-function ShortListed() {
+interface ShortListedProps {
+  setSelectedTab: React.Dispatch<React.SetStateAction<CustomerTabs>>;
+  selectedTab: CustomerTabs;
+}
+
+const ShortListed: FC<ShortListedProps> = ({}) => {
   const { CustomerShortlisted } = useAppSelector(store => store.customer);
 
   const dispatch = useAppDispatch();
@@ -23,6 +28,14 @@ function ShortListed() {
     );
     dispatch(setCustomerShortlisted(filterShortListed));
   };
+
+  if (CustomerShortlisted.length == 0) {
+    return (
+      <div className="w-full h-full flex justify-center items-center">
+        NO SHORTLISTED
+      </div>
+    );
+  }
 
   return (
     <>
@@ -49,6 +62,6 @@ function ShortListed() {
       ))}
     </>
   );
-}
+};
 
 export default ShortListed;

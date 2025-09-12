@@ -1,5 +1,4 @@
 import React from 'react';
-import SectionHeader from './SectionHeader';
 
 // Custom SVG Icons with consistent styling
 const BrainIcon = () => (
@@ -138,7 +137,15 @@ function WhyDifferent() {
       <div className="max-w-7xl mx-auto px-4 lg:px-6 relative z-10">
         {/* Section Header */}
         <div className="mb-16 lg:mb-20">
-          <SectionHeader mainText="Why FaujX?" aboutSection="" />
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl leading-tight sm:leading-tight md:leading-tight lg:leading-tight font-semibold text-[#1F514C] tracking-tight">
+              Why{' '}
+              <span className="bg-gradient-to-r from-[#10B981] to-[#059669] bg-clip-text text-transparent font-bold">
+                FaujX
+              </span>{' '}
+              is different from other Job Boards & Recruiting Agencies?
+            </h2>
+          </div>
         </div>
 
         {/* Differentiators Grid */}

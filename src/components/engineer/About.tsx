@@ -33,7 +33,7 @@ export default function AboutSection() {
             </h1>
             {/* <p className="text-xl md:text-2xl lg:text-3xl 2xl:text-4xl text-[#3F3D56] mb-8"> */}
             <p className="font-normal text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-[#3F3D56] mb-8 leading-relaxed sm:leading-relaxed md:leading-relaxed">
-              Students | Bootcamp Grads | Self-Taught Coders
+              Engineers | Bootcamp Grads | Self-Taught Coders
             </p>
             <button className="bg-gradient-to-r from-[#2A6B65] to-[#1F514C] cursor-pointer hover:from-[#1F514C] hover:to-[#1a433f] text-white font-semibold py-4 px-8 lg:px-12 2xl:px-16 mb-10 rounded-3xl max-md:text-sm xl:text-lg transition-all duration-300 transform hover:-translate-y-0.5">
               Explore Skills in Demand

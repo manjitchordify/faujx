@@ -33,7 +33,7 @@ const AlternativeSlots: FC<AlternativeSlotsProps> = ({
     >
       <div className="flex flex-col gap-1 justify-center items-center text-center">
         <p className="text-xl sm:text-2xl lg:text-3xl font-bold">
-          Select 2 Alternative Slots
+          Select Time Slot
         </p>
         <p className="text-sm sm:text-base lg:text-[16px] text-gray-600 px-2">
           Choose your preferred time slots for the interview
@@ -50,7 +50,8 @@ const AlternativeSlots: FC<AlternativeSlotsProps> = ({
             } flex flex-row gap-2 justify-center items-center px-3 sm:px-4 py-2 sm:py-2.5 text-white rounded-xl sm:rounded-2xl cursor-pointer hover:opacity-90 transition-all duration-200 text-sm sm:text-base min-w-fit`}
           >
             <span className="whitespace-nowrap">
-              {formatDateTime(item.startTime)}
+              {formatDateTime(item.startTime, 'time')} -{' '}
+              {formatDateTime(item.endTime, 'time')}
             </span>
             {isSelected(item) && (
               <MdCancel

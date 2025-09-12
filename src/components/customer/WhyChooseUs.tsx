@@ -110,7 +110,7 @@ function WhyChooseUs() {
     {
       icon: UsersIcon,
       title: 'Pre-vetted Engineers',
-      description: 'Pre-vetted talent across top tech skills.',
+      description: 'Skills first approach to hiring.',
     },
     {
       icon: ClockIcon,
@@ -135,7 +135,7 @@ function WhyChooseUs() {
     {
       icon: CheckCircleIcon,
       title: 'High Success Rate',
-      description: '95% candidate retention after 6 months.',
+      description: 'High success and retention rate.',
     },
   ];
 

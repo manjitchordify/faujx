@@ -1,7 +1,7 @@
 import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
-// TypeScript interfaces for API responses
+// TypeScript interfaces for API responses and requests
 export interface AvailableTiming {
   day: string;
   startTime: string;
@@ -79,47 +79,6 @@ export interface Panelist {
   experience_years?: number;
 }
 
-// Interview List Interface - Updated to include resume fields
-export interface Interview {
-  id: string;
-  candidate_name: string;
-  interview_date: string;
-  interview_time: string;
-  position: string;
-  status:
-    | 'scheduled'
-    | 'completed'
-    | 'cancelled'
-    | 'in_progress'
-    | 'pending'
-    | 'confirmed'
-    | 'rejected';
-  interview_type: string;
-  duration: number;
-  meeting_link?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  resumeUrl?: string; // Added new field
-  resumeKey?: string; // Added new field
-}
-
-export interface InterviewListResponse {
-  interviews: Interview[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-// Interface for interview status update responses
-export interface InterviewStatusUpdateResponse {
-  id: string;
-  status: string;
-  message: string;
-  updatedAt: string;
-}
-
 // Interview feedback interfaces
 export interface InterviewFeedbackData {
   feedback: Record<string, number>;
@@ -136,6 +95,78 @@ export interface InterviewFeedbackResponse {
   message: string;
 }
 
+// User registration interfaces
+export interface RegisterUserRequest {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  userType: 'interview_panel';
+}
+
+export interface RegisterUserResponse {
+  userId: string;
+  user?: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+  };
+  message?: string;
+}
+
+// Create panelist interfaces
+export interface CreatePanelistRequest {
+  userId: string;
+  designation: string;
+  department: string;
+  seniorityLevel: string;
+  availableTimings: AvailableTiming[];
+  interviewTypes: string[];
+  skills: string[];
+  maxInterviewsPerDay: number;
+  isActive: boolean;
+  timezone: string;
+}
+
+export interface CreatePanelistResponse {
+  id: string;
+  userId: string;
+  designation: string;
+  department: string;
+  seniorityLevel: string;
+  availableTimings: AvailableTiming[];
+  interviewTypes: string[];
+  skills: string[];
+  maxInterviewsPerDay: number;
+  isActive: boolean;
+  timezone: string;
+  createdAt: string;
+  updatedAt: string;
+  message?: string;
+}
+
+export interface AddPanelistFormData {
+  // User registration data
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+
+  // Panelist specific data
+  designation: string;
+  department: string;
+  seniorityLevel: string;
+  availableTimings: AvailableTiming[];
+  interviewTypes: string[];
+  skills: string[];
+  maxInterviewsPerDay: number;
+  isActive: boolean;
+  timezone: string;
+}
+
+// Utility Functions
 function handleApiError(error: unknown): never {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<{ message?: string }>;
@@ -179,6 +210,8 @@ const transformPanelistForUI = (apiPanelist: PanelistFromAPI): Panelist => {
     experience_years: 0, // This would need to be calculated or come from user profile
   };
 };
+
+// Service Functions
 
 // Get all panelists
 export const getAllPanelists = async (
@@ -268,180 +301,7 @@ export const getAllPanelists = async (
   }
 };
 
-// Get panelist by ID
-export const getPanelistById = async (id: string): Promise<Panelist> => {
-  try {
-    const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    const response = await axios.get(
-      `https://devapi.faujx.com/api/interview-panel/${id}`,
-      config
-    );
-
-    return transformPanelistForUI(response.data);
-  } catch (error: unknown) {
-    handleApiError(error);
-  }
-};
-
-// Get interview panel interviews list - UPDATED with proper pagination and parameter handling
-export const getInterviewPanelInterviews = async (
-  page: number = 1,
-  limit: number = 10,
-  myAction?: string // Changed from status to myAction to match frontend usage
-): Promise<InterviewListResponse | Interview[]> => {
-  try {
-    const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    // Build query parameters
-    const params = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
-
-    // Map myAction to appropriate API parameter
-    if (myAction) {
-      // Based on your API endpoints, the parameter should be 'myAction'
-      // Valid values: 'confirmed', 'completed', 'pending', 'no_action'
-      params.append('myAction', myAction);
-    }
-
-    const apiUrl = `https://devapi.faujx.com/api/interview-panel/interviews/list?${params.toString()}`;
-    console.log('API Call:', apiUrl);
-    console.log('Parameters:', { page, limit, myAction });
-
-    const response = await axios.get(apiUrl, config);
-
-    console.log('Raw API Response:', response.data);
-    console.log(
-      'Response type:',
-      Array.isArray(response.data) ? 'Array' : 'Object'
-    );
-
-    // Handle the case where API returns array directly
-    if (Array.isArray(response.data)) {
-      console.log(
-        'API returned direct array with',
-        response.data.length,
-        'items'
-      );
-      return response.data; // Return the array directly
-    }
-
-    // If it returns the structured response, return as is
-    if (response.data && typeof response.data === 'object') {
-      console.log('API returned structured response');
-
-      // Log the structure to help debug
-      console.log('Response keys:', Object.keys(response.data));
-
-      if ('interviews' in response.data) {
-        console.log(
-          'Found interviews array with',
-          response.data.interviews?.length || 0,
-          'items'
-        );
-        console.log('Total count:', response.data.total);
-        console.log('Total pages:', response.data.totalPages);
-      } else if ('data' in response.data) {
-        console.log(
-          'Found data array with',
-          response.data.data?.length || 0,
-          'items'
-        );
-      }
-
-      return response.data;
-    }
-
-    // Fallback: return empty array
-    console.warn('API returned unexpected format, returning empty array');
-    return [];
-  } catch (error: unknown) {
-    console.error('API Error in getInterviewPanelInterviews:', error);
-
-    // Log additional error details for debugging
-    if (axios.isAxiosError(error)) {
-      console.error('Request config:', error.config);
-      console.error('Response status:', error.response?.status);
-      console.error('Response data:', error.response?.data);
-    }
-
-    handleApiError(error);
-  }
-};
-
-// Confirm interview - NEW API
-export const confirmInterview = async (
-  interviewId: string
-): Promise<InterviewStatusUpdateResponse> => {
-  try {
-    const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    console.log('Confirming interview:', interviewId);
-
-    const response = await axios.post(
-      `https://devapi.faujx.com/api/interview-panel/interviews/${interviewId}/confirm`,
-      {}, // Empty body for POST request
-      config
-    );
-
-    console.log('Confirm interview response:', response.data);
-    return response.data;
-  } catch (error: unknown) {
-    console.error('Error confirming interview:', error);
-    handleApiError(error);
-  }
-};
-
-// Reject interview - NEW API
-export const rejectInterview = async (
-  interviewId: string
-): Promise<InterviewStatusUpdateResponse> => {
-  try {
-    const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    console.log('Rejecting interview:', interviewId);
-
-    const response = await axios.post(
-      `https://devapi.faujx.com/api/interview-panel/interviews/${interviewId}/reject`,
-      {}, // Empty body for POST request
-      config
-    );
-
-    console.log('Reject interview response:', response.data);
-    return response.data;
-  } catch (error: unknown) {
-    console.error('Error rejecting interview:', error);
-    handleApiError(error);
-  }
-};
-
-// Submit interview feedback - NEW API
+// Submit interview feedback
 export const submitInterviewFeedback = async (
   interviewId: string,
   feedbackData: InterviewFeedbackData
@@ -477,5 +337,119 @@ export const submitInterviewFeedback = async (
   } catch (error: unknown) {
     console.error('Error submitting feedback:', error);
     handleApiError(error);
+  }
+};
+
+// Register user API call
+export const registerUser = async (
+  userData: RegisterUserRequest
+): Promise<RegisterUserResponse> => {
+  try {
+    const config = getAuthAxiosConfig();
+    const token = getAuthToken();
+
+    // For registration, we might not need auth token, but keeping consistent
+    if (token) {
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      };
+    }
+
+    config.headers = {
+      ...config.headers,
+      'Content-Type': 'application/json',
+    };
+
+    const response = await axios.post(
+      'https://devapi.faujx.com/api/auth/register',
+      userData,
+      config
+    );
+
+    return {
+      userId: response.data.userId || response.data.user?.id,
+      user: response.data.user,
+      message: response.data.message,
+    };
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+// Create panelist API call
+export const createPanelist = async (
+  panelistData: CreatePanelistRequest
+): Promise<CreatePanelistResponse> => {
+  try {
+    const config = getAuthAxiosConfig();
+    const token = getAuthToken();
+
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+
+    const response = await axios.post(
+      'https://devapi.faujx.com/api/interview-panel',
+      panelistData,
+      config
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+// Combined function to add a complete panelist (register + create panelist)
+export const addPanelist = async (
+  formData: AddPanelistFormData
+): Promise<CreatePanelistResponse> => {
+  try {
+    // Step 1: Register the user
+    const registrationData: RegisterUserRequest = {
+      email: formData.email,
+      password: formData.password,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      fullName: `${formData.firstName} ${formData.lastName}`,
+      userType: 'interview_panel',
+    };
+
+    const registrationResponse = await registerUser(registrationData);
+
+    if (!registrationResponse.userId) {
+      throw new Error('User registration failed - no userId returned');
+    }
+
+    // Step 2: Create panelist profile
+    const panelistData: CreatePanelistRequest = {
+      userId: registrationResponse.userId,
+      designation: formData.designation,
+      department: formData.department,
+      seniorityLevel: formData.seniorityLevel,
+      availableTimings: formData.availableTimings,
+      interviewTypes: formData.interviewTypes,
+      skills: formData.skills,
+      maxInterviewsPerDay: formData.maxInterviewsPerDay,
+      isActive: formData.isActive,
+      timezone: formData.timezone,
+    };
+
+    const panelistResponse = await createPanelist(panelistData);
+
+    return panelistResponse;
+  } catch (error: unknown) {
+    // Re-throw with proper error handling
+    if (error && typeof error === 'object' && 'message' in error) {
+      throw error;
+    }
+    throw {
+      status: 0,
+      message:
+        error instanceof Error ? error.message : 'Failed to add panelist',
+    };
   }
 };

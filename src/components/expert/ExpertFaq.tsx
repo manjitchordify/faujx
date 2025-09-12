@@ -42,7 +42,7 @@ const ExpertFaq: React.FC = () => {
   };
 
   return (
-    <section className="py-8 sm:py-12 md:py-16 lg:py-20" id="faq">
+    <section className="pb-8 sm:pb-12 md:pb-16 lg:pb-20" id="faq">
       <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
         <div className="text-center mb-8 sm:mb-10 md:mb-12">

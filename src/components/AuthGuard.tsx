@@ -42,6 +42,12 @@ const publicPaths: (string | RegExp)[] = [
   '/expert',
   '/customer',
   '/engineer',
+  '/faujx-lms',
+  '/faujx-lms/frontend',
+  '/faujx-lms/backend',
+  '/faujx-lms/aiml',
+  '/faujx-lms/devops',
+  '/faujx-lms/fullstack',
   '/engineer/book-mentor',
   '/engineer/blog',
   '/engineer/testimonials',
@@ -102,7 +108,14 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             console.error('Error reading localStorage:', error);
           }
 
-          router.push(`/${role}/login`);
+          const skipRedirectPaths = [
+            '/engineer/email-sent',
+            '/expert/email-sent',
+          ];
+          setIsChecking(false);
+          if (!skipRedirectPaths.includes(pathname)) {
+            router.push(`/${role}/login`);
+          }
           return;
         }
       } else {
@@ -127,7 +140,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           return;
         }
       }
-
       setIsChecking(false);
     };
 

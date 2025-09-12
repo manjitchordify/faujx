@@ -6,12 +6,16 @@ interface customerState {
   CustomerFavourites: Candidate[];
   CustomerShortlisted: Candidate[];
   CustomerMyInterviews: [];
+  isCandidateInfoSeen: boolean;
+  isFavouriteInfoSeen: boolean;
 }
 
 const initialState: customerState = {
   CustomerFavourites: [],
   CustomerShortlisted: [],
   CustomerMyInterviews: [],
+  isCandidateInfoSeen: false,
+  isFavouriteInfoSeen: false,
 };
 
 const customerSlice = createSlice({
@@ -27,6 +31,12 @@ const customerSlice = createSlice({
     setCustomerMyInterview: (state, action: PayloadAction<[]>) => {
       state.CustomerMyInterviews = action.payload;
     },
+    setIsCandidateInfoSeen: (state, action: PayloadAction<boolean>) => {
+      state.isCandidateInfoSeen = action.payload;
+    },
+    setIsFavouriteInfoSeen: (state, action: PayloadAction<boolean>) => {
+      state.isFavouriteInfoSeen = action.payload;
+    },
   },
 });
 
@@ -34,5 +44,7 @@ export const {
   setCustomerFavourites,
   setCustomerShortlisted,
   setCustomerMyInterview,
+  setIsCandidateInfoSeen,
+  setIsFavouriteInfoSeen,
 } = customerSlice.actions;
 export default customerSlice.reducer;

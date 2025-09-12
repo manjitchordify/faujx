@@ -189,7 +189,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
         id: 'interviews',
         label: 'My Interviews',
         icon: ClipboardList,
-        route: '#interviews',
+        route: '/engineer/my-interviews',
         active: false,
         hideOnBrowseMentors: isBrowseMentorsPage || !isUserVetted,
       },

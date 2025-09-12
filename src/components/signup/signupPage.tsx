@@ -46,8 +46,8 @@ export default function SignUpPage() {
 
   const roleRoutes: Record<string, string> = {
     customer: '/',
-    engineer: '/engineer/login',
-    expert: '/',
+    engineer: '/engineer/email-sent',
+    expert: '/expert/email-sent',
   };
 
   const [signupData, setSignupData] = useState<SignupData>({

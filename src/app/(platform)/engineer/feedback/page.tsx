@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppSelector } from '@/store/store';
 import FeedbackComponent from '@/components/engineer/shared/FeedbackComponent';
 
@@ -55,6 +55,7 @@ const FeedbackContent: React.FC = () => {
   const userName = searchParams.get('userName');
   const type = searchParams.get('type');
   const score = searchParams.get('score');
+  const router = useRouter();
 
   // Get capability data from Redux instead of localStorage
   const capabilityData = useAppSelector(
@@ -184,7 +185,8 @@ const FeedbackContent: React.FC = () => {
   };
 
   const handleUpskillClick = () => {
-    window.open('https://chordifyed.com', '_blank');
+    // window.open('https://chordifyed.com', '_blank');
+    router.push('/faujx-lms');
   };
 
   const getTitle = () => {

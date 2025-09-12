@@ -12,7 +12,7 @@ import React from 'react';
 export const metadata: Metadata = {
   title: 'Become an Expert Mentor | FaujX - Engineering Mentorship Platform',
   description:
-    'Join FaujX as an expert mentor and help shape the next generation of Foundation Engineers. Share your knowledge, mentor students, and contribute to tech education.',
+    'Join FaujX as an expert mentor and help shape the next generation of Foundation Engineers. Share your knowledge, mentor engineers, and contribute to tech education.',
   keywords:
     'engineering mentor, tech mentorship, software development mentor, engineering education, tech teaching, mentor platform, engineering expertise',
   openGraph: {

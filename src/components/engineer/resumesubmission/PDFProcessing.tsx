@@ -28,6 +28,10 @@ import {
   setUserResumeData,
 } from '@/store/slices/persistSlice';
 import { PASS_SCORE } from '@/constants/pass_score';
+import {
+  completeResumeUploadStage,
+  updateProfileStage,
+} from '@/services/engineerService';
 
 const BorderLinearProgress = styled(LinearProgress)(() => ({
   height: 8,
@@ -595,8 +599,10 @@ const PDFProcessing: React.FC<PDFProcessingProps> = ({
         dispatch(setCapabilityResponse(matchingResponse));
         submitCapabilitiesInBackground(matchingResponse);
         if (matchingResponse.score < PASS_SCORE) {
+          await updateProfileStage('resumeUpload', 'failed');
           router.push(`/engineer/feedback`);
         } else {
+          await completeResumeUploadStage();
           onComplete(dataToMatch);
         }
       } catch (error: unknown) {

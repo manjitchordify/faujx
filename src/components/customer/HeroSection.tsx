@@ -18,7 +18,7 @@ function HeroSection() {
           {/* Updated content with 3 lines and smaller font */}
           <div className="overflow-hidden">
             <div
-              className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl text-gray-900 leading-tight sm:leading-tight md:leading-tight lg:leading-tight xl:leading-tight flex flex-col"
+              className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl text-gray-900 leading-tight sm:leading-tight md:leading-tight lg:leading-tight xl:leading-tight flex flex-col"
               style={{
                 transform: loaded ? 'translateY(0)' : 'translateY(20px)',
                 opacity: loaded ? 1 : 0,
