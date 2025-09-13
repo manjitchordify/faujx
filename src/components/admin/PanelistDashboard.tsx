@@ -8,7 +8,9 @@ import {
   FiUsers,
   FiRefreshCw,
   FiArrowRight,
+  FiAlertCircle,
 } from 'react-icons/fi';
+import { getDashboardStats } from '@/services/admin-panelist-services/interviewPanelService';
 
 // Types for the dashboard data
 interface DashboardStats {
@@ -24,29 +26,55 @@ function PanelistDashboard(): React.JSX.Element {
     null
   );
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load dummy data
-  const loadDashboardData = (): void => {
+  // Load dashboard data from API
+  const loadDashboardData = async (): Promise<void> => {
     setLoading(true);
+    setError(null);
 
-    // Simulate loading delay
-    setTimeout(() => {
-      const dummyStats: DashboardStats = {
-        totalInterviews: 45,
-        pendingInterviews: 8,
-        confirmedInterviews: 12,
-        completedInterviews: 20,
-        transferredInterviews: 5,
-      };
-
-      setDashboardData(dummyStats);
+    try {
+      const stats = await getDashboardStats();
+      setDashboardData(stats);
+    } catch (error: unknown) {
+      console.error('Failed to load dashboard data:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : 'Failed to load dashboard data';
+      setError(errorMessage);
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <FiAlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">
+            Unable to load dashboard
+          </h2>
+          <p className="text-slate-600 mb-4">{error}</p>
+          <button
+            onClick={loadDashboardData}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+          >
+            <FiRefreshCw className="w-4 h-4" />
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Loading state
   if (loading) {

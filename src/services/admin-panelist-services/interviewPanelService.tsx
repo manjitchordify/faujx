@@ -61,6 +61,14 @@ export interface InterviewDetails {
   candidateRole: string;
   userId?: string;
 }
+export interface DashboardStats {
+  totalInterviews: number;
+  pendingInterviews: number;
+  confirmedInterviews: number;
+  completedInterviews: number;
+  rejectedInterviews: number;
+  transferredInterviews: number;
+}
 
 // Interface for available panelists - Updated to match actual API response
 export interface AvailablePanelist {
@@ -359,8 +367,29 @@ export const submitInterviewFeedback = async (
   }
 };
 
+export const getDashboardStats = async (): Promise<DashboardStats> => {
+  try {
+    const config = getAuthAxiosConfig();
+    const token = getAuthToken();
+
+    config.headers = {
+      ...config.headers,
+      Authorization: `Bearer ${token}`,
+    };
+
+    const response = await axios.get(
+      'https://devapi.faujx.com/api/interview-panel/dashboard/stats',
+      config
+    );
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
 export const interviewPanelService = {
   getInterviewPanelInterviews,
+  getDashboardStats,
   getInterviewDetails,
   getAvailablePanelists,
   transferInterview,

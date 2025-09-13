@@ -38,7 +38,7 @@ import {
   AdminUser,
   UpdateUserRequest,
   UserStats,
-} from '@/services/userService';
+} from '@/services/admin-panelist-services/userService';
 
 const InfoCard = ({
   label,

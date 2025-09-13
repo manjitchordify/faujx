@@ -17,7 +17,10 @@ import {
   FiFileText,
   FiFile,
 } from 'react-icons/fi';
-import { getAdminDashboard, DashboardApiData } from '@/services/adminService';
+import {
+  getAdminDashboard,
+  DashboardApiData,
+} from '@/services/admin-panelist-services/adminService';
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<DashboardApiData | null>(

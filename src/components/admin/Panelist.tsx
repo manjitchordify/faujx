@@ -25,12 +25,15 @@ import {
 } from 'react-icons/fi';
 
 // Import the service functions
-import { getAllPanelists, Panelist } from '@/services/panelistService';
+import {
+  getAllPanelists,
+  Panelist,
+} from '@/services/admin-panelist-services/panelistService';
 import {
   addPanelist,
   AddPanelistFormData,
   AvailableTiming,
-} from '@/services/panelistService';
+} from '@/services/admin-panelist-services/panelistService';
 
 // Define proper error types
 interface ApiError {

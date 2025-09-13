@@ -6,7 +6,7 @@ import Loader from '../ui/Loader';
 import Cookies from 'js-cookie';
 import { useAppSelector } from '@/store/store';
 import { useParams } from 'next/navigation';
-import { submitInterviewFeedback } from '@/services/panelistService';
+import { submitInterviewFeedback } from '@/services/admin-panelist-services/panelistService';
 import { FeedbackModal } from './feedbackModal';
 import { type Role } from '@/constants/capability';
 import { updateProfileStage } from '@/services/engineerService';

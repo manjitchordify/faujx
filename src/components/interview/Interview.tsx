@@ -4,7 +4,7 @@ import { InterviewDetails } from '@/types/interview';
 import { formatInterviewDate } from '@/utils/helper/Helper';
 import { showToast } from '@/utils/toast/Toast';
 import { Calendar, Clock, Video } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Loader from '../ui/Loader';
 import { jitsiLiveUrl } from '@/services/jitsiService';
 import { useAppSelector } from '@/store/store';
@@ -102,7 +102,7 @@ const Interview = () => {
     }
   };
 
-  const getUserInterview = async () => {
+  const getUserInterview = useCallback(async () => {
     try {
       setLoader(true);
       const res = await getAllInterviewsCandidate(userType);
@@ -114,7 +114,7 @@ const Interview = () => {
     } finally {
       setLoader(false);
     }
-  };
+  }, [userType]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -153,7 +153,7 @@ const Interview = () => {
 
   useEffect(() => {
     getUserInterview();
-  }, []);
+  }, [getUserInterview]);
 
   return (
     <div className="w-full min-h-[calc(100vh-100px)] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">

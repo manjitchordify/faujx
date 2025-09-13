@@ -7,7 +7,7 @@ import {
   type Interview,
   type InterviewListResponse,
   type InterviewListParams,
-} from '@/services/interviewPanelService';
+} from '@/services/admin-panelist-services/interviewPanelService';
 import { showToast } from '@/utils/toast/Toast';
 
 function PanelistInterviews() {

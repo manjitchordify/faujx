@@ -33,7 +33,7 @@ import {
   transferInterview,
   type InterviewDetails as InterviewDetailsType,
   type AvailablePanelist,
-} from '@/services/interviewPanelService';
+} from '@/services/admin-panelist-services/interviewPanelService';
 import { showToast } from '@/utils/toast/Toast';
 import { jitsiLiveUrl } from '@/services/jitsiService';
 import { useAppSelector } from '@/store/store';
