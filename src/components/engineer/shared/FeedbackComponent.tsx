@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import React from 'react';
-import { XCircle } from 'lucide-react';
 
 interface ReportItem {
   text: string;
@@ -73,11 +72,11 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
           <div className="w-full lg:w-1/3 h-fit flex flex-col gap-2 p-4 sm:p-6 lg:p-8 bg-white shadow-[0px_4px_65.9px_8px_#00000040] rounded-[20px]">
             {type == 'mcq' ? (
               <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl shadow-sm">
-                <XCircle className="w-6 h-6" />
+                {/* <XCircle className="w-6 h-6" /> */}
                 <p>
                   Thank you for participating! Your score is{' '}
-                  <strong>{score}</strong> Unfortunately, you are not qualified
-                  for the next process.
+                  <strong>{score}</strong>. Unfortunately, you are not qualified
+                  for the next stage of the process.
                 </p>
               </div>
             ) : (

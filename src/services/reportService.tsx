@@ -152,10 +152,15 @@ export interface SubmitCapabilitiesResponse {
   data?: unknown;
 }
 
+interface ProfileStages {
+  lastStage?: string;
+  lastStatus?: string;
+}
 // ----------------------
 // Report API Response Types
 // ----------------------
 export interface ReportExecutiveSummary {
+  profileStages: ProfileStages;
   candidateName: string;
   positionApplied: string;
   department: string;
@@ -251,23 +256,106 @@ export interface CapabilityAnalysis {
   domainKnowledge: CompetencyScore[];
 }
 
+// ----------------------
+// Coding Analysis Types
+// ----------------------
+export interface TestCaseResult {
+  testCase: string;
+  passed: boolean;
+  expectedOutput?: string;
+  actualOutput?: string;
+  executionTime?: number;
+  memoryUsed?: number;
+}
+
+export interface TestCasesPerformance {
+  total: number;
+  passed: number;
+  failed: number;
+  successRate: number;
+  results?: TestCaseResult[];
+  overallSuccess?: boolean;
+}
+
+export interface AdditionalNotes {
+  codeStyle?: string;
+  bestPractices?: string;
+  optimizations?: string[];
+  improvements?: string[];
+  generalObservations?: string[];
+  timeComplexity?: string;
+  spaceComplexity?: string;
+}
+
 export interface CodingAnalysis {
   overallScore: number;
   strengths: string[];
   weaknesses: string[];
+  // Optional properties that might be used in the frontend but not always present in API response
+  problemSolving?: string;
+  codeQuality?: string;
+  efficiency?: string;
+  languages?: string[];
+  testCasesPerformance?: TestCasesPerformance;
+  additionalNotes?: AdditionalNotes;
 }
 
 export interface Evaluation {
+  technicalScore: number;
+  culturalFitScore: number;
+  communicationScore: number;
+  summary: string;
   totalWeightedScore: number;
   recommendation: string;
   nextSteps: string[];
 }
 
 export interface InterviewNotes {
+  interviewerFeedback: string[];
+  keyHighlights: string[];
+  concerns: string[];
+  overallRating: number;
   notes: string[];
 }
+export interface scheduledSlotdata {
+  startTime: string;
+  endTime: string;
+}
 
+export interface InterviewData {
+  id: string;
+  candidateId: string;
+  customerId: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  createdAt?: string;
+  updatedAt?: string;
+  scheduledSlot?: scheduledSlotdata;
+}
+
+// Update your interface to match the actual data structure
 export interface CandidateReportResponse {
+  interviews: Array<{
+    id: string;
+    scheduledSlot: {
+      startTime: string;
+      endTime: string;
+      timezone: string;
+    };
+    interviewType: string;
+    status: string;
+    notes: string;
+    meetingLink: string;
+    createdAt: string;
+    interviewers: Array<{
+      id: string;
+      name: string;
+      designation: string;
+      department: string;
+    }>;
+  }>;
+  name: string;
   executiveSummary: ReportExecutiveSummary;
   resumeAnalysis: ResumeAnalysis;
   mcq: MCQAnalysis;
@@ -276,7 +364,6 @@ export interface CandidateReportResponse {
   evaluation: Evaluation;
   interviewNotes: InterviewNotes;
 }
-
 // ----------------------
 // Common error handling
 // ----------------------

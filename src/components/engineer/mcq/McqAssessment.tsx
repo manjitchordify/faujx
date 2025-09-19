@@ -165,7 +165,7 @@ const McqAssessment = ({ mcqData }: McqAssessmentProps) => {
               priority
             />
             <CountdownStopwatchExample
-              initialSeconds={mcqData.total_questions * 60}
+              initialSeconds={mcqData.total_questions * 30}
               className="text-xs md:text-sm font-medium"
               onComplete={handleFinish}
             />

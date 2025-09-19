@@ -308,10 +308,10 @@ function PanelistInterviews() {
       <div className="mb-6 md:mb-8">
         <div className="text-center sm:text-left">
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
-            Interview Management
+            Engineer Interview Management
           </h1>
           <p className="text-gray-600 mt-2 text-sm md:text-base lg:text-lg">
-            Manage candidate interviews, schedules, and assessments
+            Manage engineer interviews, schedules, and assessments
           </p>
         </div>
       </div>

@@ -2,17 +2,88 @@ import React, { useState, useCallback, useMemo } from 'react';
 import SandpackIDE from '@/components/sandbox/sandboxIDE';
 import { Clock, Code, Zap, AlertTriangle } from 'lucide-react';
 import {
-  CodingAssignmentsResponse,
   Assignment,
+  CodingAssignmentsResponse,
 } from '@/services/codingAssignmentsTypes';
 import CodeSandboxInstructions from './codesandoxInstruction';
-import { useTimer } from '@/utils/useTimer';
+import { useAppSelector } from '@/store/store';
+import { useEffect } from 'react';
 
-interface SandboxTestProps {
-  onSubmit?: (githubUrl: string) => void;
-  onBack?: () => void;
-  assignmentsData: CodingAssignmentsResponse;
+interface UseTimerOptions {
+  totalMinutes: number;
+  onTimeUp?: () => void;
+  onTimeWarning?: () => void;
 }
+
+const useTimer = ({
+  totalMinutes,
+  onTimeUp,
+  onTimeWarning,
+}: UseTimerOptions) => {
+  const totalSeconds = totalMinutes * 60;
+
+  const persistedStart = localStorage.getItem('timerStart');
+  const startTime = persistedStart ? parseInt(persistedStart, 10) : Date.now();
+
+  if (!persistedStart) {
+    localStorage.setItem('timerStart', startTime.toString());
+  }
+
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    return Math.max(totalSeconds - elapsed, 0);
+  });
+  const [showWarning, setShowWarning] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const remaining = Math.max(totalSeconds - elapsed, 0);
+      setTimeLeft(remaining);
+
+      if (remaining === 0) {
+        clearInterval(interval);
+        onTimeUp?.();
+      } else if (remaining === 600) {
+        setShowWarning(true);
+        onTimeWarning?.();
+
+        setTimeout(() => {
+          setShowWarning(false);
+        }, 5000);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [startTime, totalSeconds, onTimeUp, onTimeWarning]);
+
+  const formatTime = useCallback((seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }, []);
+
+  const getTimerColor = useCallback(() => {
+    if (timeLeft <= 300) return 'text-red-600';
+    if (timeLeft <= 600) return 'text-orange-500';
+    return 'text-green-600';
+  }, [timeLeft]);
+
+  const resetTimer = useCallback(() => {
+    localStorage.removeItem('timerStart');
+    localStorage.setItem('timerStart', Date.now().toString());
+    setShowWarning(false);
+  }, []);
+
+  return {
+    timeLeft,
+    isTimeUp: timeLeft === 0,
+    showWarning,
+    formatTime,
+    getTimerColor,
+    resetTimer,
+  };
+};
 
 const TimerDisplay: React.FC<{
   timeLeft: number;
@@ -64,7 +135,7 @@ const TimeUpAlert: React.FC = React.memo(() => (
       <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0" />
       <div>
         <p className="text-red-800 font-semibold text-sm mb-1">
-          Time&apos;s Up!: The coding environment has been disabled. Please
+          Time&apos;s Up! The coding environment has been disabled. Please
           submit your work.
         </p>
       </div>
@@ -74,19 +145,17 @@ const TimeUpAlert: React.FC = React.memo(() => (
 
 TimeUpAlert.displayName = 'TimeUpAlert';
 
-const SandboxTest: React.FC<SandboxTestProps> = ({
-  onBack,
-  assignmentsData,
-}) => {
+const SandboxTest: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const assignmentsData: CodingAssignmentsResponse | null = useAppSelector(
+    state => state.persist.assignmentsData
+  );
 
   const { timeLeft, isTimeUp, showWarning, formatTime, getTimerColor } =
     useTimer({
       totalMinutes: assignmentsData?.total_estimated_time_minutes || 0,
-      // totalMinutes: 1,
-      onTimeUp: useCallback(() => {
-        // alert('Time is up! The coding environment has been disabled. Please submit your work.');
-      }, []),
+      onTimeUp: useCallback(() => {}, []),
       onTimeWarning: useCallback(() => {
         console.log('Time warning: 10 minutes remaining');
       }, []),
@@ -99,11 +168,6 @@ const SandboxTest: React.FC<SandboxTestProps> = ({
   const handleModalClose = useCallback(() => {
     setIsOpen(false);
   }, []);
-
-  const memoizedAssignmentsData = useMemo(
-    () => assignmentsData,
-    [assignmentsData]
-  );
 
   const assignmentsList = useMemo(() => {
     if (!assignmentsData?.assignments) return null;
@@ -135,6 +199,7 @@ const SandboxTest: React.FC<SandboxTestProps> = ({
     <>
       <div className="w-full max-w-6xl">
         <h1 className="text-3xl font-semibold mb-4 text-center">Coding Test</h1>
+
         {assignmentsData && (
           <>
             {isTimeUp && <TimeUpAlert />}
@@ -164,34 +229,34 @@ const SandboxTest: React.FC<SandboxTestProps> = ({
             <div className="mb-8">
               <div className="md:grid-cols-1 lg:grid-cols-2">
                 {assignmentsList}
-                <div className="text-center mt-8"></div>
+                <div className="text-center mt-8" />
               </div>
             </div>
           </>
         )}
 
-        <div
-          style={{
-            position: 'relative',
-
-            pointerEvents: isTimeUp ? 'none' : 'auto',
-          }}
-        >
-          <SandpackIDE
-            key="sandpack-ide-stable" // Stable key prevents re-mounting
-            assignments={memoizedAssignmentsData}
-            disabled={isTimeUp}
-            readOnly={isTimeUp}
-          />
-        </div>
-
-        {onBack && <></>}
+        {/* Coding Environment */}
+        {assignmentsData && (
+          <div
+            style={{
+              position: 'relative',
+              pointerEvents: isTimeUp ? 'none' : 'auto',
+            }}
+          >
+            <SandpackIDE
+              key="sandpack-ide-stable"
+              assignments={assignmentsData}
+              disabled={isTimeUp}
+              readOnly={isTimeUp}
+            />
+          </div>
+        )}
       </div>
 
       {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 bg-opacity-50 z-50">
-          <div className="relative max-h-[80vh] overflow-y-auto rounded-md">
+          <div className="max-w-5xl relative max-h-[80vh] overflow-y-auto rounded-md">
             <CodeSandboxInstructions showCancel onCancel={handleModalClose} />
           </div>
         </div>

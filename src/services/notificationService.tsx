@@ -119,7 +119,7 @@ export const getNotifications = async (
       queryParams.append('notificationType', params.notificationType);
 
     const response = await axios.get(
-      `https://devapi.faujx.com/api/notifications?${queryParams.toString()}`,
+      `/notifications?${queryParams.toString()}`,
       config
     );
     return response.data;
@@ -143,11 +143,7 @@ export const createNotification = async (
       accept: '*/*',
     };
 
-    const response = await axios.post(
-      'https://devapi.faujx.com/api/notifications',
-      payload,
-      config
-    );
+    const response = await axios.post('/notifications', payload, config);
     return response.data;
   } catch (error: unknown) {
     handleApiError(error);
@@ -168,7 +164,7 @@ export const getUnreadNotificationsCount = async (): Promise<number> => {
   }
 };
 
-// Helper function to mark notification as read (using POST to update)
+// Helper function to mark notification as read (using PUT to update)
 export const markNotificationAsRead = async (
   notificationId: string
 ): Promise<void> => {
@@ -181,13 +177,7 @@ export const markNotificationAsRead = async (
       Authorization: `Bearer ${token}`,
     };
 
-    // This would need to be adjusted based on your actual API endpoint
-    // For now, using a POST request to mark as read
-    await axios.post(
-      `https://devapi.faujx.com/api/notifications/${notificationId}/read`,
-      {},
-      config
-    );
+    await axios.put(`/notifications/${notificationId}/read`, {}, config);
   } catch (error: unknown) {
     console.error('Failed to mark notification as read:', error);
   }
@@ -204,12 +194,7 @@ export const markAllNotificationsAsRead = async (): Promise<void> => {
       Authorization: `Bearer ${token}`,
     };
 
-    // This would need to be adjusted based on your actual API endpoint
-    await axios.post(
-      'https://devapi.faujx.com/api/notifications/mark-all-read',
-      {},
-      config
-    );
+    await axios.put('/notifications/mark-all-read', {}, config);
   } catch (error: unknown) {
     console.error('Failed to mark all notifications as read:', error);
   }

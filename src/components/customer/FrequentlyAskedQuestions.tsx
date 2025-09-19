@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const faqs = [
   {
@@ -61,9 +61,9 @@ export default function FrequentlyAskedQuestions() {
                     {faq.question}
                   </span>
                   {isOpen ? (
-                    <Minus className="w-5 h-5 text-[#1F514C]" />
+                    <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-[#1F514C] flex-shrink-0" />
                   ) : (
-                    <Plus className="w-5 h-5 text-gray-500" />
+                    <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
                   )}
                 </button>
 

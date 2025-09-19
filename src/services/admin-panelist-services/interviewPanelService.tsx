@@ -41,6 +41,7 @@ export interface AttendeeStatus {
   action: string;
   note: string | null;
   rating: number | null;
+  comments?: string;
 }
 
 export interface Attendee {
@@ -61,6 +62,7 @@ export interface InterviewDetails {
   candidateRole: string;
   userId?: string;
 }
+
 export interface DashboardStats {
   totalInterviews: number;
   pendingInterviews: number;
@@ -131,6 +133,23 @@ export type AvailablePanelistsResponse = AvailablePanelist[];
 export interface TransferInterviewResponse {
   message: string;
   status?: string;
+}
+
+// Interview feedback interfaces - Updated to include comments
+export interface InterviewFeedbackData {
+  feedback: Record<string, number>;
+  rating: number;
+  evaluationStatus: string;
+  comments: string;
+}
+
+export interface InterviewFeedbackResponse {
+  id: string;
+  interviewId: string;
+  feedback: string;
+  rating: number;
+  submittedAt: string;
+  message: string;
 }
 
 // Query parameters interface for list API
@@ -338,15 +357,12 @@ export const rejectInterview = async (
 };
 
 /**
- * Submit interview feedback
+ * Submit interview feedback - Updated to include comments field
  */
 export const submitInterviewFeedback = async (
   interviewId: string,
-  feedbackData: {
-    message: string;
-    rating: number;
-  }
-): Promise<{ message: string }> => {
+  feedbackData: InterviewFeedbackData
+): Promise<InterviewFeedbackResponse> => {
   try {
     const config = getAuthAxiosConfig();
     const token = getAuthToken();
@@ -354,15 +370,30 @@ export const submitInterviewFeedback = async (
     config.headers = {
       ...config.headers,
       Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     };
 
+    const requestBody = {
+      feedback: JSON.stringify(feedbackData.feedback),
+      rating: feedbackData.rating,
+      evaluationStatus: feedbackData.evaluationStatus,
+      comments: feedbackData.comments,
+    };
+
+    console.log('Submitting feedback for interview:', interviewId);
+    console.log('Feedback data:', requestBody);
+
+    // Updated URL to include interviewId as query parameter
     const response = await axios.post(
-      `https://devapi.faujx.com/api/interview-panel/interviews/${interviewId}/feedback`,
-      feedbackData,
+      `https://devapi.faujx.com/api/interview-panel/interviewer-feedback?interviewId=${interviewId}`,
+      requestBody, // Send feedback, rating, evaluationStatus, and comments in body
       config
     );
+
+    console.log('Feedback submission response:', response.data);
     return response.data;
   } catch (error: unknown) {
+    console.error('Error submitting feedback:', error);
     handleApiError(error);
   }
 };

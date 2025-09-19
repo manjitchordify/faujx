@@ -1,10 +1,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import React from 'react';
+import React, { useState } from 'react';
 
 const SecondaryHeader = () => {
   const currentPath = usePathname();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Function to check if a link is active
   const isActive = (href: string): boolean => {
@@ -24,9 +25,19 @@ const SecondaryHeader = () => {
     return `${baseClasses} ${isActive(href) ? activeClasses : inactiveClasses}`;
   };
 
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  // Close mobile menu when a link is clicked
+  const handleMobileLinkClick = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 lg:mt-10">
-      <div className="bg-[#1F514C] rounded-2xl px-4 sm:px-8 lg:px-16 py-4 lg:py-6">
+      <div className="bg-[#1F514C] rounded-2xl px-4 sm:px-6 lg:px-16 py-4 lg:py-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center flex-shrink-0">
@@ -37,7 +48,7 @@ const SecondaryHeader = () => {
                   alt="Faujx Logo"
                   height={80}
                   width={80}
-                  className="h-12 lg:h-14 w-auto mr-2"
+                  className="h-10 sm:h-12 lg:h-14 w-auto"
                   priority
                   quality={100}
                   style={{ objectFit: 'contain' }}
@@ -77,69 +88,114 @@ const SecondaryHeader = () => {
             </Link>
           </nav>
 
-          {/* Mobile Menu Button - Visible on mobile only */}
-          <button className="lg:hidden text-white p-2">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {/* Mobile Controls Container */}
+          <div className="flex items-center gap-3 lg:hidden">
+            {/* Launch Button - Mobile Version */}
+            <Link
+              href="/faujx-lms/courses"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white text-gray-800 px-3 py-2 rounded-full font-semibold hover:bg-gray-100 transition-colors duration-200 shadow-lg text-sm"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
+              Launch
+            </Link>
 
-          {/* Launch Button */}
+            {/* Mobile Menu Button */}
+            <button
+              onClick={toggleMobileMenu}
+              className="text-white p-2 hover:bg-white/10 rounded-lg transition-colors duration-200"
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? (
+                // Close icon
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              ) : (
+                // Hamburger icon
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
+
+          {/* Desktop Launch Button */}
           <Link
-            href="https://www.chordifyed.com/"
+            href="/faujx-lms/courses"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-white text-gray-800 px-4 py-2 sm:px-6 sm:py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors duration-200 shadow-lg text-sm sm:text-base flex-shrink-0"
+            className="hidden lg:block bg-white text-gray-800 px-6 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors duration-200 shadow-lg text-base"
           >
-            <span className="hidden sm:inline">Launch FaujX LMS</span>
-            <span className="sm:hidden">Launch</span>
+            Launch FaujX LMS
           </Link>
         </div>
 
-        {/* Mobile Navigation Menu - Toggle this with state */}
-        <nav className="lg:hidden mt-4 pt-4 border-t border-gray-700 hidden">
-          <div className="flex flex-col space-y-3">
+        {/* Mobile Navigation Menu */}
+        <nav
+          className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            isMobileMenuOpen
+              ? 'max-h-96 opacity-100 mt-4 pt-4 border-t border-white/20'
+              : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="flex flex-col space-y-3 pb-2">
             <Link
               href="/faujx-lms"
-              className={`font-medium transition-colors duration-200 ${
+              onClick={handleMobileLinkClick}
+              className={`py-2 px-3 rounded-lg transition-all duration-200 ${
                 isActive('/faujx-lms')
-                  ? 'text-[#36f3e0] font-semibold'
-                  : 'text-white hover:text-[#36f3e0]'
+                  ? 'text-[#36f3e0] font-semibold bg-white/10'
+                  : 'text-white hover:text-[#36f3e0] hover:bg-white/5'
               }`}
             >
               Home
             </Link>
             <Link
-              href="#how-it-works"
-              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium"
+              href="/faujx-lms#HowitWorksfaujx"
+              onClick={handleMobileLinkClick}
+              className="text-white hover:text-[#36f3e0] hover:bg-white/5 py-2 px-3 rounded-lg transition-all duration-200"
             >
               How it Works
             </Link>
             <Link
-              href="#explore-courses"
-              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium"
+              href="/faujx-lms#explore-courses"
+              onClick={handleMobileLinkClick}
+              className="text-white hover:text-[#36f3e0] hover:bg-white/5 py-2 px-3 rounded-lg transition-all duration-200"
             >
               Explore Courses
             </Link>
             <Link
-              href="#our-students"
-              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium"
+              href="/faujx-lms#our-students"
+              onClick={handleMobileLinkClick}
+              className="text-white hover:text-[#36f3e0] hover:bg-white/5 py-2 px-3 rounded-lg transition-all duration-200"
             >
-              Our students
+              Our Students
             </Link>
             <Link
-              href="#faq"
-              className="text-white hover:text-[#36f3e0] transition-colors duration-200 font-medium"
+              href="/faujx-lms#faq-faujxlms"
+              onClick={handleMobileLinkClick}
+              className="text-white hover:text-[#36f3e0] hover:bg-white/5 py-2 px-3 rounded-lg transition-all duration-200"
             >
               FAQ
             </Link>

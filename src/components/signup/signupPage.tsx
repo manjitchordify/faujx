@@ -47,7 +47,7 @@ export default function SignUpPage() {
       : 'expert';
 
   const roleRoutes: Record<string, string> = {
-    customer: '/',
+    customer: '/customer/email-sent',
     engineer: '/engineer/email-sent',
     expert: '/expert/email-sent',
   };

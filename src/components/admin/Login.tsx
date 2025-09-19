@@ -16,18 +16,6 @@ interface ApiError {
   statusText?: string;
 }
 
-// Helper function to get cookie value
-const getCookie = (name: string): string | null => {
-  if (typeof document !== 'undefined') {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-      return parts.pop()?.split(';').shift() || null;
-    }
-  }
-  return null;
-};
-
 const Login: React.FC = () => {
   const router = useRouter();
   const [credentials, setCredentials] = useState<Credentials>({
@@ -122,19 +110,6 @@ const Login: React.FC = () => {
       return false;
     }
 
-    // Check for common weak passwords
-    const commonWeakPasswords = [
-      '123456',
-      'password',
-      '123456789',
-      'qwerty',
-      'abc123',
-    ];
-    if (commonWeakPasswords.includes(credentials.password.toLowerCase())) {
-      setError('Please choose a stronger password');
-      return false;
-    }
-
     return true;
   };
 
@@ -152,31 +127,56 @@ const Login: React.FC = () => {
         password: credentials.password,
       });
 
+      console.log('Full API Response:', response);
+
       if (response?.data?.user && response?.data?.accessToken) {
-        console.log('Login successful:', response.data.user);
+        const { user } = response.data;
+        console.log('User data:', user);
+        console.log('UserType from response:', user.userType);
 
-        // Wait a moment for cookies to be set by the API response
-        setTimeout(() => {
-          const userType = getCookie('userType');
-          console.log('UserType from cookie:', userType);
+        // Use userType directly from the API response
+        const userType = user.userType;
 
-          if (userType === 'admin') {
+        // Handle different userType values
+        // The API returns lowercase "admin" but might return different values for panelists
+        switch (userType?.toLowerCase()) {
+          case 'admin':
+          case 'superadmin':
+            console.log('Routing to admin dashboard');
             router.push('/admin/dashboard');
-          } else if (userType === 'interview_panel') {
+            break;
+
+          case 'interview_panel':
+          case 'panelist':
+          case 'interviewer':
+            console.log('Routing to panelist dashboard');
             router.push('/panelist/dashboard');
-          } else {
+            break;
+
+          default:
+            console.error('Unrecognized userType:', userType);
             setError(
-              'Access denied. You do not have permission to access this system.'
+              `Access denied. User type "${userType}" is not authorized for this portal.`
             );
             setIsLoading(false);
             return;
-          }
-        }, 100);
+        }
+
+        // Store userType in localStorage if needed for other parts of the app
+        try {
+          localStorage.setItem('userType', userType);
+          localStorage.setItem('userId', user.id);
+          localStorage.setItem('userEmail', user.email);
+        } catch (err) {
+          console.error('Failed to store user data in localStorage:', err);
+        }
       } else {
-        setError('Invalid response from server');
+        setError('Invalid response from server - missing user data or token');
         setIsLoading(false);
       }
     } catch (error: unknown) {
+      console.error('Login error:', error);
+
       // Properly type the error handling
       let errorMessage = 'Login failed. Please try again.';
 
@@ -350,7 +350,7 @@ const Login: React.FC = () => {
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
-                  Signing in...
+                  Signing in....
                 </div>
               ) : (
                 'Log In'

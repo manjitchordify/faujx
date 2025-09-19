@@ -139,9 +139,12 @@ export default function SignInPage() {
           Admin: '/admin/dashboard',
           expert: '/expert/knowbetter',
         };
+        if (response?.data?.user?.isVerified) {
+          showToast('Logged in successfully!', 'success');
+        }
 
-        showToast('Logged in successfully!', 'success');
         if (!response?.data?.user?.isVerified) {
+          showToast('Please verify email to login', 'warning');
           const userRole = userType == 'candidate' ? 'engineer' : userType;
           router.push(`/${userRole}/email-sent`);
           return;

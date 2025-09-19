@@ -5,7 +5,7 @@ import MyInterview from '@/components/interview/myInterview';
 import Sidebar from '@/components/engineer/shared/sidebar';
 
 const Page = () => {
-  const [activeMenuItem, setActiveMenuItem] = useState<string>('dashboard');
+  const [activeMenuItem, setActiveMenuItem] = useState<string>('interviews');
 
   const handleMenuItemClick = (item: string) => {
     setActiveMenuItem(item);

@@ -1,34 +1,43 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Clock, Code, Zap } from 'lucide-react';
-import SandboxTest from './sandboxTest';
 import { generateCodingAssignmentsApi } from '@/services/codingAssignmentsService';
 import {
   CodingAssignmentsResponse,
   Assignment,
   ApiError,
   GenerateCodingAssignmentsParams,
+  ResumeData,
 } from '@/services/codingAssignmentsTypes';
 import { get_jd_s3_key_role } from '@/utils/helper/Helper';
-import { useAppSelector } from '@/store/store';
-import { ResumeData } from '@/services/codingAssignmentsTypes';
+import { useAppSelector, useAppDispatch } from '@/store/store';
+import { setAssignmentsData as setAssignmentsDataAction } from '@/store/slices/persistSlice';
+import { useRouter } from 'next/navigation';
 
 interface CodingTestProps {
   onNext?: () => void;
 }
 
-const CodingTest: React.FC<CodingTestProps> = ({ onNext }) => {
-  const { resumeData, enginnerRole } = useAppSelector(state => ({
+const CodingTest: React.FC<CodingTestProps> = () => {
+  const {
+    resumeData,
+    enginnerRole,
+    assignmentsData: storedAssignments,
+  } = useAppSelector(state => ({
     resumeData: state.persist.resumeData as ResumeData | null,
     enginnerRole: state.persist.enginnerRole,
+    assignmentsData: state.persist.assignmentsData,
   }));
-  const [showGithubLink, setShowGithubLink] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [assignmentsData, setAssignmentsData] =
-    useState<CodingAssignmentsResponse | null>(null);
+
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+
+  const [error, setError] = useState('');
+  const [localAssignmentsData, setLocalAssignmentsData] =
+    useState<CodingAssignmentsResponse | null>(storedAssignments || null);
   const [isLoadingAssignments, setIsLoadingAssignments] =
-    useState<boolean>(true);
+    useState(!storedAssignments);
 
   const jd_s3_key = get_jd_s3_key_role(enginnerRole ?? '');
 
@@ -36,8 +45,8 @@ const CodingTest: React.FC<CodingTestProps> = ({ onNext }) => {
     if (!resumeData) return null;
 
     const requestData: GenerateCodingAssignmentsParams = {
-      jd_s3_key: jd_s3_key,
-      resume_data: resumeData, // Type assertion to handle incompatible types
+      jd_s3_key,
+      resume_data: resumeData,
       num_assignments: 1,
       difficulty_mix: 'balanced',
       languages: ['python', 'javascript', 'java'],
@@ -47,58 +56,41 @@ const CodingTest: React.FC<CodingTestProps> = ({ onNext }) => {
   }, [resumeData, jd_s3_key]);
 
   const loadCodingAssignments = useCallback(async () => {
-    if (!resumeData || !sampleRequestData) {
-      console.error('resume_data is required but missing');
-      return;
-    }
-    setIsLoadingAssignments(true);
-    setError('');
+    if (!sampleRequestData) return;
 
     try {
-      const response = await generateCodingAssignmentsApi(sampleRequestData);
-      setAssignmentsData(response);
-    } catch (err: unknown) {
-      console.error('Error loading coding assignments:', err);
+      setIsLoadingAssignments(true);
+      setError('');
 
+      const response = await generateCodingAssignmentsApi(sampleRequestData);
+      setLocalAssignmentsData(response);
+      dispatch(setAssignmentsDataAction(response));
+    } catch (err: unknown) {
+      console.error('Error fetching assignments:', err);
       if (err && typeof err === 'object' && 'message' in err) {
         const apiError = err as ApiError;
-        setError(
-          apiError.message ||
-            'Failed to load coding assignments. Please try again.'
-        );
+        setError(apiError.message || 'Failed to load assignments.');
       } else if (err instanceof Error) {
-        setError(
-          err.message || 'Failed to load coding assignments. Please try again.'
-        );
+        setError(err.message || 'Failed to load assignments.');
       } else {
-        setError('Failed to load coding assignments. Please try again.');
+        setError('Failed to load assignments.');
       }
     } finally {
       setIsLoadingAssignments(false);
     }
-  }, [sampleRequestData, resumeData]);
+  }, [sampleRequestData, dispatch]);
 
-  if (!resumeData) {
-    console.error('resume_data is required but missing');
-  }
   useEffect(() => {
-    loadCodingAssignments();
-  }, [loadCodingAssignments]);
-
-  const handleAddLink = () => {
-    setShowGithubLink(true);
-  };
-
-  const handleGithubSubmit = (githubUrl: string) => {
-    console.log('GitHub URL received:', githubUrl);
-
-    if (onNext) {
-      onNext();
+    if (!storedAssignments && sampleRequestData) {
+      loadCodingAssignments();
+    } else if (storedAssignments) {
+      setLocalAssignmentsData(storedAssignments);
+      setIsLoadingAssignments(false);
     }
-  };
+  }, [storedAssignments, sampleRequestData, loadCodingAssignments]);
 
-  const handleGoBack = () => {
-    setShowGithubLink(false);
+  const handleContinue = () => {
+    router.push('/engineer/coding/coding-test');
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -113,18 +105,6 @@ const CodingTest: React.FC<CodingTestProps> = ({ onNext }) => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-
-  // If showGithubLink is true, render the AddGithubLink component
-  if (showGithubLink) {
-    return (
-      // <AddGithubLink onSubmit={handleGithubSubmit} onBack={handleGoBack} />
-      <SandboxTest
-        onSubmit={handleGithubSubmit}
-        onBack={handleGoBack}
-        assignmentsData={assignmentsData!} // Non-null assertion since we only show this after data is loaded
-      />
-    );
-  }
 
   // Loading state
   if (isLoadingAssignments) {
@@ -151,19 +131,19 @@ const CodingTest: React.FC<CodingTestProps> = ({ onNext }) => {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-light text-gray-900 mb-4">
             Coding Test
           </h1>
-          {assignmentsData && (
+          {localAssignmentsData && (
             <div className="flex justify-center gap-4 text-sm text-gray-600 mb-4">
               <span className="flex items-center gap-1">
                 <Code className="w-4 h-4" />
-                {assignmentsData.total_assignments} Assignments
+                {localAssignmentsData.total_assignments} Assignments
               </span>
               <span className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                {assignmentsData.total_estimated_time_minutes} mins
+                {localAssignmentsData.total_estimated_time_minutes} mins
               </span>
               <span className="flex items-center gap-1">
                 <Zap className="w-4 h-4" />
-                {assignmentsData.job_title}
+                {localAssignmentsData.job_title}
               </span>
             </div>
           )}
@@ -185,57 +165,61 @@ const CodingTest: React.FC<CodingTestProps> = ({ onNext }) => {
         )}
 
         {/* Assignments Section */}
-        {assignmentsData && (
+        {localAssignmentsData && (
           <div className="mb-8">
             <div className="md:grid-cols-1 lg:grid-cols-2">
-              {assignmentsData.assignments.map((assignment: Assignment) => (
-                <div
-                  key={assignment.assignment_id}
-                  className="bg-white rounded-3xl shadow-lg p-6 sm:p-8"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <h2 className="text-xl font-medium text-gray-900 pr-4">
-                      {assignment.title}
-                    </h2>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(assignment.difficulty)} uppercase`}
-                    >
-                      {assignment.difficulty}
-                    </span>
-                  </div>
-
-                  <p className="text-gray-700 mb-4 text-sm leading-relaxed">
-                    {assignment.problem_statement}
-                  </p>
-
-                  <div className="space-y-3 text-sm">
-                    <div>
-                      <span className="font-medium text-gray-900">
-                        Category:{' '}
-                      </span>
-                      <span className="text-gray-600 capitalize">
-                        {assignment.category}
+              {localAssignmentsData.assignments.map(
+                (assignment: Assignment) => (
+                  <div
+                    key={assignment.assignment_id}
+                    className="bg-white rounded-3xl shadow-lg p-6 sm:p-8"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <h2 className="text-xl font-medium text-gray-900 pr-4">
+                        {assignment.title}
+                      </h2>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
+                          assignment.difficulty
+                        )} uppercase`}
+                      >
+                        {assignment.difficulty}
                       </span>
                     </div>
 
-                    <div>
-                      <span className="font-medium text-gray-900">
-                        Skills Tested:{' '}
-                      </span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {assignment.skills_tested.map((skill, skillIndex) => (
-                          <span
-                            key={skillIndex}
-                            className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs capitalize"
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                    <p className="text-gray-700 mb-4 text-sm leading-relaxed">
+                      {assignment.problem_statement}
+                    </p>
+
+                    <div className="space-y-3 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-900">
+                          Category:{' '}
+                        </span>
+                        <span className="text-gray-600 capitalize">
+                          {assignment.category}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="font-medium text-gray-900">
+                          Skills Tested:{' '}
+                        </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {assignment.skills_tested.map((skill, skillIndex) => (
+                            <span
+                              key={skillIndex}
+                              className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs capitalize"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              )}
             </div>
 
             {/* Skills Coverage */}
@@ -244,7 +228,7 @@ const CodingTest: React.FC<CodingTestProps> = ({ onNext }) => {
                 Skills Coverage
               </h3>
               <div className="flex flex-wrap gap-2">
-                {assignmentsData.skills_coverage.map((skill, index) => (
+                {localAssignmentsData.skills_coverage.map((skill, index) => (
                   <span
                     key={index}
                     className="px-3 py-1 bg-[#1F514C] text-white rounded-full text-sm capitalize"
@@ -260,7 +244,7 @@ const CodingTest: React.FC<CodingTestProps> = ({ onNext }) => {
         {/* Add Link Button */}
         <div className="flex justify-center px-6">
           <button
-            onClick={handleAddLink}
+            onClick={handleContinue}
             disabled={isLoadingAssignments}
             className={`
               px-16 md:px-12 py-3 rounded-[20px] font-medium text-white transition-all duration-200 relative bg-[#1f514C] hover:bg-[#1f514C]

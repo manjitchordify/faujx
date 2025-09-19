@@ -42,8 +42,8 @@ const cardVariants: Variants = {
 const profiles: Developer[] = [
   // Developers
   {
-    name: 'Olivia Smith',
-    image: '/images/customer/image 10.png',
+    name: 'Sirajje Kisirinya',
+    image: '/images/customer/sirajje.jpg',
     skills: ['React', 'Node', 'CSS', 'HTML', 'Redux', 'GraphQL'],
     capabilities: [
       'Full-stack development with modern JavaScript frameworks',
@@ -54,8 +54,8 @@ const profiles: Developer[] = [
     role: 'developer',
   },
   {
-    name: 'John Doe',
-    image: '/images/customer/image 11.png',
+    name: 'Ruth Masagazi',
+    image: '/images/customer/ruth.jpeg',
     skills: ['Vue', 'Python', 'MongoDB', 'Django', 'AWS', 'REST API'],
     capabilities: [
       'Cloud infrastructure and deployment automation',
@@ -65,10 +65,9 @@ const profiles: Developer[] = [
     workType: 'Remote',
     role: 'developer',
   },
-  // Experts
   {
-    name: 'Dr. Sarah Johnson',
-    image: '/images/customer/image 9.jpg',
+    name: 'Mohit Bhure',
+    image: '/images/expert/mentor12.jpeg',
     skills: [
       'Angular',
       'Java',
@@ -86,8 +85,20 @@ const profiles: Developer[] = [
     role: 'expert',
   },
   {
-    name: 'Michael Chen',
-    image: '/images/customer/image 12.png',
+    name: 'Aaron Efrata',
+    image: '/images/customer/aaron.jpg',
+    skills: ['React', 'Node', 'CSS', 'HTML', 'Redux', 'GraphQL'],
+    capabilities: [
+      'Full-stack development with modern JavaScript frameworks',
+      'API design and database optimization',
+      'Agile development and team collaboration',
+    ],
+    workType: 'Remote',
+    role: 'developer',
+  },
+  {
+    name: 'Karthikeyan Dharmalingam',
+    image: '/images/expert/mentor[6].jpeg',
     skills: [
       'TypeScript',
       'Next.js',
@@ -104,25 +115,36 @@ const profiles: Developer[] = [
     workType: 'Remote',
     role: 'expert',
   },
-  // Mentors
   {
-    name: 'Alex Rodriguez',
-    image: '/images/customer/image 10.png',
-    skills: [
-      'Leadership',
-      'Team Management',
-      'Agile',
-      'Scrum',
-      'Product Strategy',
-      'Communication',
-    ],
+    name: 'Shadia Nankya',
+    image: '/images/customer/shadia.jpeg',
+    skills: ['Vue', 'Python', 'MongoDB', 'Django', 'AWS', 'REST API'],
     capabilities: [
-      'Technical leadership and team building',
-      'Career development and growth planning',
-      'Cross-functional collaboration and stakeholder management',
+      'Cloud infrastructure and deployment automation',
+      'Backend architecture and microservices design',
+      'Database management and performance tuning',
     ],
     workType: 'Remote',
-    role: 'mentor',
+    role: 'developer',
+  },
+  {
+    name: 'Manjit Singh',
+    image: '/images/expert/mentor[3].jpg',
+    skills: [
+      'Angular',
+      'Java',
+      'PostgreSQL',
+      'Spring Boot',
+      'Docker',
+      'Kubernetes',
+    ],
+    capabilities: [
+      'Enterprise application development and scaling',
+      'Container orchestration and DevOps practices',
+      'System architecture and security implementation',
+    ],
+    workType: 'Hybrid',
+    role: 'expert',
   },
   {
     name: 'Emma Thompson',
@@ -142,6 +164,25 @@ const profiles: Developer[] = [
     ],
     workType: 'Hybrid',
     role: 'mentor',
+  },
+  {
+    name: 'Taranjeet Singh',
+    image: '/images/expert/mentor[4].jpg',
+    skills: [
+      'Angular',
+      'Java',
+      'PostgreSQL',
+      'Spring Boot',
+      'Docker',
+      'Kubernetes',
+    ],
+    capabilities: [
+      'Enterprise application development and scaling',
+      'Container orchestration and DevOps practices',
+      'System architecture and security implementation',
+    ],
+    workType: 'Hybrid',
+    role: 'expert',
   },
 ];
 
@@ -164,7 +205,7 @@ const InternePhotoFrame: React.FC = () => {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'developer':
-        return 'bg-gradient-to-r from-[#2A6B65] to-[#1F514C]';
+        return 'bg-gradient-to-r from-[#4ade80] to-[#22c55e]';
       case 'expert':
         return 'bg-[#3B82F6]';
       case 'mentor':
@@ -226,14 +267,15 @@ const InternePhotoFrame: React.FC = () => {
               <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-8">
                 {/* Profile Image */}
                 <div className="flex-shrink-0">
-                  <div className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 rounded-xl overflow-hidden bg-gray-800">
+                  <div className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 rounded-xl overflow-hidden bg-gray-800 relative">
                     <Image
                       src={profile.image}
                       alt={`${profile.name} profile`}
                       width={192}
                       height={192}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover object-top"
                       priority={currentProfile === 0}
+                      style={{ objectPosition: 'center top' }}
                     />
                   </div>
                 </div>

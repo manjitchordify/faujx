@@ -27,7 +27,7 @@ import {
   setCapabilityResponse,
   setUserResumeData,
 } from '@/store/slices/persistSlice';
-import { PASS_SCORE } from '@/constants/pass_score';
+import { RESUME_PASS_SCORE } from '@/constants/pass_score';
 import {
   completeResumeUploadStage,
   updateProfileStage,
@@ -598,7 +598,7 @@ const PDFProcessing: React.FC<PDFProcessingProps> = ({
         );
         dispatch(setCapabilityResponse(matchingResponse));
         submitCapabilitiesInBackground(matchingResponse);
-        if (matchingResponse.score < PASS_SCORE) {
+        if (matchingResponse.score < RESUME_PASS_SCORE) {
           await updateProfileStage('resumeUpload', 'failed');
           router.push(`/engineer/feedback`);
         } else {

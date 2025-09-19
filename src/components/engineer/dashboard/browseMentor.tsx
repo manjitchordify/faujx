@@ -1,9 +1,21 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { Search, Star } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Search } from 'lucide-react';
 import TimePickerModal from '../modals/TimePickerModal';
-import Image from 'next/image';
+import Calendar from '../modals/CalendarModal';
+import { CalendarType } from '@/types/common';
+import AskQueryModal from '../modals/AskQueryModal';
+import {
+  bookMentorApi,
+  BookMentorParams,
+  fetchAllMentorBookingApi,
+} from '@/services/MentorService';
+import Loader from '@/components/ui/Loader';
+import { showToast } from '@/utils/toast/Toast';
+
+import UnifiedCard, { MentorData, BookingData, CardData } from './mentorCard';
+import { jitsiLiveUrl } from '@/services/jitsiService';
+import { useAppSelector } from '@/store/store';
 
 export interface ExpertResponse {
   message: string;
@@ -46,98 +58,24 @@ export interface User {
   isPremium: boolean;
 }
 
-interface Mentor {
+export interface ApiBookingResponse {
   id: string;
-  name: string;
-  role: string;
-  avatar: string;
-  rating: number;
-  skills: string[];
-  experience: string;
-  price: number;
+  candidate_id: string;
+  expert_id: string;
+  booking_date: string;
+  duration_minutes: number;
+  hourly_rate: string;
+  total_amount: string;
+  currency: string;
+  status: string;
+  notes: string;
+  meeting_link?: string;
+  created_at: string;
+  updated_at: string;
+  payments?: Record<string, unknown>[];
 }
 
-const MentorCard: React.FC<{ mentor: Mentor; onBook: () => void }> = ({
-  mentor,
-  onBook,
-}) => {
-  return (
-    <div className="bg-white rounded-xl p-5 shadow-xl hover:shadow-2xl transition-all duration-300 w-full max-w-sm mx-auto">
-      <div className="flex items-start justify-between mb-4">
-        <div className="mr-2 sm:mr-4">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full overflow-hidden relative flex items-center justify-center">
-            {mentor.avatar ? (
-              <Image
-                src={mentor.avatar}
-                alt={mentor.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 64px, (max-width: 768px) 80px, 96px"
-              />
-            ) : (
-              <div className="w-full h-full rounded-full bg-gray-400 flex items-center justify-center">
-                <span className="text-white text-xl md:text-2xl font-bold">
-                  {mentor.name?.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="flex-1 text-center">
-          <h3 className="text-2xl font-bold capitalize truncate text-black mb-1">
-            {mentor.name}
-          </h3>
-          <p className="text-[#2563EB] font-bold text-sm mb-2">{mentor.role}</p>
-          <div className="flex items-center justify-center">
-            <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-            <span className="text-lg font-bold text-[#696969]">
-              {mentor.rating}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-3 pl-4">
-        <div className="flex items-center gap-2 mb-2">
-          <h4 className="text-base text-gray-900">Skills</h4>
-          {mentor.skills.map((skill, index) => (
-            <span
-              key={index}
-              className="bg-[#6E6CFF] text-white px-2 py-1 rounded-full text-xs font-medium"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-4 pl-4">
-        <div className="flex items-center gap-2 mb-2">
-          <h4 className="text-base text-gray-900">Experience</h4>
-          <span className="bg-[#6E6CFF] text-white px-2 py-1 rounded-full text-xs font-medium">
-            {mentor.experience}
-          </span>
-        </div>
-      </div>
-
-      <div className="text-center mb-4">
-        <div className="text-2xl font-bold text-[#585858]">
-          <span className="text-2xl">$</span>
-          {mentor.price}
-        </div>
-      </div>
-
-      <div className="flex justify-center">
-        <button
-          onClick={onBook}
-          className="cursor-pointer bg-[#54A044] hover:bg-[#4a8c3d] text-white font-bold py-2 px-6 rounded-lg transition-colors duration-200 text-md"
-        >
-          Book Mentor
-        </button>
-      </div>
-    </div>
-  );
-};
+type ViewType = 'mentors' | 'bookings';
 
 const Spinner = () => (
   <div className="flex justify-center items-center p-10">
@@ -146,172 +84,444 @@ const Spinner = () => (
 );
 
 const BrowseMentor: React.FC = () => {
-  const router = useRouter();
+  const [currentView, setCurrentView] = useState<ViewType>('mentors');
   const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [mentors, setMentors] = useState<Mentor[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedMentor] = useState<Mentor | null>(null);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const limit = 6;
-  const totalPages = Math.ceil(total / limit);
+  const [showClock, setShowClock] = useState(false);
+  const [selectedMentor, setSelectedMentor] = useState<MentorData | null>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [slots, setSlots] = useState<Date>();
+  const [askQuery, setAskQuery] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
+  const { loggedInUser } = useAppSelector(state => state.user);
+  const userType = loggedInUser?.userType as string;
 
+  // Mentor-related state
+  const [isLoadingMentors, setIsLoadingMentors] = useState(true);
+  const [mentors, setMentors] = useState<MentorData[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalMentors, setTotalMentors] = useState(0);
+  const limit = 6;
+  const totalPages = Math.ceil(totalMentors / limit);
+
+  // Booking-related state
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+  const [bookings, setBookings] = useState<BookingData[]>([]);
+  const [bookingCount, setBookingCount] = useState(0);
+
+  // Fetch mentors only when page changes
   useEffect(() => {
     const fetchMentors = async () => {
-      setIsLoading(true);
+      setIsLoadingMentors(true);
 
       try {
         const res = await fetch(
-          `https://devapi.faujx.com/api/experts/getexperts?page=${page}&limit=${limit}`
+          `https://devapi.faujx.com/api/experts/getexperts?page=${currentPage}&limit=${limit}`
         );
         if (!res.ok) throw new Error('Failed to fetch experts');
         const data: ExpertResponse = await res.json();
 
-        const transformedMentors: Mentor[] = data.data.map(
+        const transformedMentors: MentorData[] = data.data.map(
           (expert: Expert) => ({
+            type: 'mentor' as const,
             id: expert.id,
             name: `${expert.user.firstName} ${expert.user.lastName}`,
             role: expert.role.trim(),
-            // avatar: expert.profilePic
-            //   ? `/uploads/${expert.profilePic}` // or full URL if hosted elsewhere
-            //   : '/default-avatar.png',
-            avatar: expert.profilePic, // Placeholder avatar
+            avatar: expert.profilePic,
             rating: expert.rating,
             skills: expert.skills,
             experience: expert.experience,
             price: parseFloat(expert.price),
+            isAvailable: expert.isAvailable,
           })
         );
 
         setMentors(transformedMentors);
-        setTotal(data.total);
+        setTotalMentors(data.total);
       } catch (err) {
         console.error('Error fetching mentors:', err);
+        showToast('Failed to load mentors', 'error');
       } finally {
-        setIsLoading(false);
+        setIsLoadingMentors(false);
       }
     };
 
     fetchMentors();
-  }, [page]);
+  }, [currentPage]);
 
+  // Fetch bookings only once when component mounts
   useEffect(() => {
-    setPage(1);
+    const fetchBookings = async () => {
+      setIsLoadingBookings(true);
+      try {
+        const response: ApiBookingResponse[] = await fetchAllMentorBookingApi();
+        console.log('response', response);
+
+        // Transform API response to BookingData format
+        const transformedBookings: BookingData[] = response.map(
+          (booking: ApiBookingResponse) => ({
+            type: 'booking' as const,
+            id: booking.id,
+            candidate_id: booking.candidate_id,
+            expert_id: booking.expert_id,
+            booking_date: booking.booking_date,
+            duration_minutes: booking.duration_minutes,
+            hourly_rate: booking.hourly_rate,
+            total_amount: booking.total_amount,
+            currency: booking.currency,
+            status: booking.status,
+            notes: booking.notes,
+            meeting_link: booking.meeting_link,
+            created_at: booking.created_at,
+            updated_at: booking.updated_at,
+            payments: booking.payments,
+            name: 'Expert Name',
+            role: 'Subject Matter Expert',
+            avatar: '',
+          })
+        );
+
+        setBookings(transformedBookings);
+        setBookingCount(transformedBookings.length);
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        showToast('Failed to load bookings', 'error');
+      } finally {
+        setIsLoadingBookings(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
   }, [searchTerm]);
+
+  const CalendarDateSelect = (data: CalendarType) => {
+    setSelectedDate(data.dateObject);
+    setShowClock(true);
+    setShowCalendar(false);
+  };
+
+  const handleSetSlots = (data: Date) => {
+    console.log('data', data);
+    setSlots(data);
+    setAskQuery(true);
+  };
+
+  const handleBookMentor = async (queryText: string) => {
+    if (!selectedMentor || !slots || !selectedDate) {
+      console.error('Missing required booking information');
+      return;
+    }
+
+    try {
+      // If slots is just time and selectedDate is just date, combine them
+      setIsBooking(true);
+      const bookingDateTime = new Date(selectedDate);
+      if (slots instanceof Date) {
+        bookingDateTime.setHours(slots.getHours());
+        bookingDateTime.setMinutes(slots.getMinutes());
+      }
+
+      const bookingParams: BookMentorParams = {
+        expertId: selectedMentor.id,
+        bookingDate: bookingDateTime.toISOString(),
+        durationMinutes: 60,
+        notes: queryText,
+      };
+
+      const response = await bookMentorApi(bookingParams);
+
+      console.log('Booking successful:', response?.stripe_session_url);
+
+      // Reset states and increment booking count
+      setAskQuery(false);
+      setSelectedMentor(null);
+      setSelectedDate(undefined);
+      setSlots(undefined);
+      setIsBooking(false);
+      setBookingCount(prev => prev + 1);
+
+      window.location.href = response?.stripe_session_url;
+    } catch (error: unknown) {
+      const message = (error as Error)?.message || 'An error occurred';
+      showToast(message, 'error');
+      setIsBooking(false);
+    }
+  };
+
+  const handleMentorBook = (mentor: MentorData) => {
+    setSelectedMentor(mentor);
+    setShowCalendar(true);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleViewChange = (view: ViewType) => {
+    setCurrentView(view);
+  };
+
+  const handleJoinSession = async (booking: BookingData) => {
+    const session_id = booking?.meeting_link?.split('/').pop() || '';
+    try {
+      const response = await jitsiLiveUrl({
+        userId: loggedInUser?.id as string,
+        sessionId: session_id,
+        role: userType,
+      });
+      if (response?.url) {
+        window.open(
+          `/enginner/session/${booking.id}/meeting?room=${session_id}`
+        );
+      }
+    } catch (error: unknown) {
+      const message = (error as Error)?.message || 'An error occurred';
+      showToast(message, 'error');
+    }
+  };
 
   const filteredMentors = mentors.filter(
     mentor =>
       mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       mentor.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      mentor.skills.some(skill =>
+      mentor.skills.some((skill: string) =>
         skill.toLowerCase().includes(searchTerm.toLowerCase())
       )
   );
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="mb-8 pt-12">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="relative w-full md:w-auto md:flex-1 md:max-w-lg">
-            <input
-              type="text"
-              placeholder="Search for Mentors"
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-6 py-3 text-base border-2 text-gray-700 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
-            />
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+  // Filter bookings based on search (you can search by notes or status)
+  const filteredBookings = bookings.filter(
+    booking =>
+      booking.notes.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      booking.status.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Common grid and card styling for both mentor and booking lists
+  const renderCardGrid = (
+    items: CardData[],
+    isLoading: boolean,
+    emptyMessage: string,
+    emptySubMessage: string
+  ) => {
+    if (isLoading) {
+      return <Spinner />;
+    }
+
+    if (items.length === 0) {
+      return (
+        <div className="text-center py-12 px-4">
+          <div className="text-gray-400 text-xl mb-4">{emptyMessage}</div>
+          <p className="text-gray-600">{emptySubMessage}</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 w-full">
+        {items.map(item => (
+          <UnifiedCard
+            key={item.id}
+            data={item}
+            onAction={() => {
+              if (item.type === 'mentor') {
+                handleMentorBook(item as MentorData);
+              } else {
+                handleJoinSession(item as BookingData);
+              }
+            }}
+            actionLabel={item.type === 'mentor' ? 'Book Mentor' : undefined}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // Render mentor list with pagination
+  const renderMentorList = () => (
+    <div className="w-full">
+      {renderCardGrid(
+        filteredMentors,
+        isLoadingMentors,
+        'No mentors found',
+        'Try adjusting your search terms'
+      )}
+
+      {/* Pagination - only for mentors */}
+      {!isLoadingMentors && totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center px-4 sm:px-6 py-4 border-t border-gray-200 mt-8 gap-4">
+          <div className="flex items-center gap-2 order-2 sm:order-1">
+            <button
+              onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+              disabled={currentPage === 1}
+              className="cursor-pointer px-3 py-1 text-sm border text-gray-700 border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+
+            <div className="hidden sm:flex items-center gap-2">
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage > totalPages - 3) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`cursor-pointer px-3 py-1 text-sm border rounded-md ${
+                      currentPage === pageNum
+                        ? 'bg-green-600 text-white border-green-600'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="sm:hidden flex items-center gap-2 text-sm text-gray-600">
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+            </div>
+
+            <button
+              onClick={() =>
+                handlePageChange(Math.min(currentPage + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className="cursor-pointer px-3 py-1 text-sm border text-gray-700 border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto justify-start">
+          <div className="text-sm text-gray-500 order-1 sm:order-2">
+            Showing {filteredMentors.length} mentors
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // Render booking list
+  const renderBookingList = () => (
+    <div className="w-full">
+      {renderCardGrid(
+        filteredBookings,
+        isLoadingBookings,
+        'No bookings found',
+        bookings.length === 0
+          ? "You haven't booked any mentors yet"
+          : 'No bookings match your search'
+      )}
+
+      {/* Show count info for bookings */}
+      {!isLoadingBookings && filteredBookings.length > 0 && (
+        <div className="flex justify-end items-center px-4 sm:px-6 py-4 border-t border-gray-200 mt-8">
+          <div className="text-sm text-gray-500">
+            Showing {filteredBookings.length} bookings
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      {/* Fixed Header with Search and Tabs */}
+      <div className="mb-6 sm:mb-8 pt-8 sm:pt-12">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          {/* Search Bar */}
+          <div className="relative w-full lg:w-auto lg:flex-1 lg:max-w-lg">
+            <input
+              type="text"
+              placeholder={
+                currentView === 'mentors'
+                  ? 'Search for Mentors'
+                  : 'Search bookings'
+              }
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-10 sm:pl-12 pr-4 sm:pr-6 py-2 sm:py-3 text-sm sm:text-base border-2 text-gray-700 border-gray-200 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
+            />
+            <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto">
             <button
-              className="cursor-pointer px-6 py-3 rounded-lg font-medium text-sm transition-colors bg-white text-black border border-green-200"
-              onClick={() => router.push('/engineer/dashboard')}
+              className={`cursor-pointer px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-colors flex-1 sm:flex-none ${
+                currentView === 'mentors'
+                  ? 'bg-[#54A044] text-white border border-green-600'
+                  : 'text-gray-700 hover:text-gray-900 border border-green-200 bg-white'
+              }`}
+              onClick={() => handleViewChange('mentors')}
             >
-              Engineer Dashboard
+              Browse Mentors
             </button>
-            <button className="cursor-pointer px-6 py-3 rounded-lg font-medium text-sm transition-colors text-gray-700 hover:text-gray-900 border border-green-200 bg-white">
+            <button
+              className={`cursor-pointer px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-colors relative flex-1 sm:flex-none ${
+                currentView === 'bookings'
+                  ? 'bg-[#54A044] text-white border border-green-600'
+                  : 'text-gray-700 hover:text-gray-900 border border-green-200 bg-white'
+              }`}
+              onClick={() => handleViewChange('bookings')}
+            >
               My Bookings
+              {bookingCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center font-bold">
+                  {bookingCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {isLoading ? (
-        <Spinner />
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
-            {filteredMentors.map(mentor => (
-              <MentorCard
-                key={mentor.id}
-                mentor={mentor}
-                onBook={() => {
-                  // setSelectedMentor(mentor);
-                  // setIsModalOpen(true);
-                  router.push('/expert');
-                }}
-              />
-            ))}
-          </div>
+      {/* Dynamic Content Area - Unified Grid Layout */}
+      {currentView === 'mentors' ? renderMentorList() : renderBookingList()}
 
-          {filteredMentors.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-xl mb-4">No mentors found</div>
-              <p className="text-gray-600">Try adjusting your search terms</p>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-between items-center px-6 py-4 border-t border-gray-200">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-                  disabled={page === 1}
-                  className="cursor-pointer px-3 py-1 text-sm border text-gray-700 border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={`cursor-pointer px-3 py-1 text-sm border rounded-md ${
-                      page === p
-                        ? 'bg-green-600 text-white border-green-600'
-                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-
-                <button
-                  onClick={() =>
-                    setPage(prev => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={page === totalPages}
-                  className="cursor-pointer px-3 py-1 text-sm border text-gray-700 border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-        </>
+      {/* Modals */}
+      {showCalendar && (
+        <Calendar
+          onSelect={CalendarDateSelect}
+          onClose={() => setShowCalendar(false)}
+        />
       )}
 
-      {isModalOpen && selectedMentor && (
+      {showClock && (
         <TimePickerModal
-          onTimeSelect={() => {
-            setIsModalOpen(false);
-          }}
-          onClose={() => setIsModalOpen(false)}
-          selectedDate={new Date()}
+          onTimeSelect={handleSetSlots}
+          onClose={() => setShowClock(false)}
+          selectedDate={selectedDate}
         />
+      )}
+
+      {askQuery && (
+        <AskQueryModal
+          onSubmit={handleBookMentor}
+          onClose={() => setAskQuery(false)}
+        />
+      )}
+
+      {isBooking && (
+        <div className="fixed inset-0 bg-gray-500/80 flex items-center justify-center z-50">
+          <Loader text="Redirecting to payment..." />
+        </div>
       )}
     </div>
   );

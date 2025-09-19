@@ -196,6 +196,7 @@ const KnowBetterQuestions: React.FC = () => {
         break;
       case 2: // Monthly compensation and currency
         if (formData.monthlyCompensation) {
+          // Remove the multiplication logic - just pass the value as entered
           profile.preferredMonthlySalary = formData.monthlyCompensation;
         }
         if (formData.currency) {
@@ -243,10 +244,11 @@ const KnowBetterQuestions: React.FC = () => {
         return formData.location.trim() !== '';
       case 2:
         const salary = parseInt(formData.monthlyCompensation || '0');
+        const maxSalary = formData.currency === 'INR' ? 99999 : 9999;
         return (
           formData.monthlyCompensation.trim() !== '' &&
           salary > 0 &&
-          salary <= 99999
+          salary <= maxSalary
         );
       case 3:
         return formData.workArrangement.length > 0;
@@ -387,17 +389,23 @@ const KnowBetterQuestions: React.FC = () => {
                   value={formData.monthlyCompensation}
                   onChange={e => {
                     const input = e.target as HTMLInputElement;
-                    let value = input.value.replace(/[^0-9]/g, '');
+                    const value = input.value.replace(/[^0-9]/g, '');
 
-                    // Allow up to 5 digits for salary
-                    const MAX_SALARY = 99999;
-                    const numValue = parseInt(value || '0');
+                    // Set max digits based on country (5 for India, 4 for others)
+                    const maxDigits = formData.currency === 'INR' ? 5 : 4;
+                    const maxSalary =
+                      formData.currency === 'INR' ? 99999 : 9999;
 
-                    if (numValue > MAX_SALARY) {
-                      value = MAX_SALARY.toString();
+                    // If the new value exceeds max digits, don't update (keep previous value)
+                    if (
+                      value.length > maxDigits ||
+                      parseInt(value || '0') > maxSalary
+                    ) {
+                      // Don't update the value, just show error
                       setError(
-                        `Maximum salary is ${MAX_SALARY.toLocaleString()}`
+                        `Maximum ${maxDigits} digits allowed for ${formData.currency}`
                       );
+                      return; // Exit without updating formData
                     } else {
                       setError('');
                     }
@@ -405,8 +413,8 @@ const KnowBetterQuestions: React.FC = () => {
                     updateFormData('monthlyCompensation', value);
                   }}
                   min="0"
-                  max="99999"
-                  placeholder="Enter amount (e.g., 25000)"
+                  max={formData.currency === 'INR' ? '99999' : '9999'}
+                  placeholder={`Enter amount (${formData.currency === 'INR' ? 'up to 5 digits' : 'up to 4 digits'})`}
                   className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:border-[#1F514C] focus:outline-none transition-colors duration-200 text-lg"
                   autoFocus
                   disabled={isLoading}

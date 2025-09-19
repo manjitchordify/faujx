@@ -47,7 +47,7 @@ const ExploreCourses = () => {
   ];
 
   const handleCourseClick = (courseLink: string) => {
-    router.push(`/faujx-lms/${courseLink}`);
+    router.push(`/faujx-lms/courses/${courseLink}`);
   };
 
   const containerVariants: Variants = {

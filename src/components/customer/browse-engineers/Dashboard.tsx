@@ -1,26 +1,28 @@
 'use client';
 import Button from '@/components/ui/Button';
-import { setIsCandidateInfoSeen } from '@/store/slices/customerSlice';
+import Loader from '@/components/ui/Loader';
+import {
+  getFavouriteCustomerCandidates,
+  getPublishedCandidates,
+  getShortlistedCustomerCandidates,
+} from '@/services/customerService';
+import {
+  setCustomerFavourites,
+  setCustomerShortlisted,
+  setIsCandidateInfoSeen,
+} from '@/store/slices/customerSlice';
 import { useAppDispatch, useAppSelector } from '@/store/store';
-import { CustomerTabs } from '@/types/customer';
+import { Candidate, CustomerTabs } from '@/types/customer';
+import { showToast } from '@/utils/toast/Toast';
 import { ArrowRight, ChevronDown, Menu, MoreVertical, X } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import React, { useCallback, useEffect, useState } from 'react';
 import Candidates from './Candidates';
 import Favourites from './Favourites';
 import FloatingAction from './FloatingAction';
 import SelectionModal from './modals/SelectionModal';
 import MyInterviews from './MyInterviews';
 import ShortListed from './ShortListed';
-
-interface Candidate {
-  id: number;
-  role: string;
-  skills: string[];
-  capabilities: string[];
-  salary: string;
-  location: string;
-  profileImage?: string;
-}
 
 const Dashboard: React.FC = () => {
   const CustomerTabsArray: CustomerTabs[] = [
@@ -46,165 +48,29 @@ const Dashboard: React.FC = () => {
   } = useAppSelector(store => store.customer);
   const dispatch = useAppDispatch();
   const loggedInUser = useAppSelector(state => state.user.loggedInUser);
+  const [candidateLoader, setCandidateLoader] = useState(false);
+  const [publishedCandidates, setPublishedCandidates] = useState<
+    Candidate[] | null
+  >();
+  const searchParams = useSearchParams();
 
   const isLoggedIn = !!loggedInUser?.accessToken;
 
-  // Sample candidate data
-  const candidates: Candidate[] = [
-    {
-      id: 1,
-      role: 'Frontend Developer',
-      skills: ['React', 'JavaScript', 'CSS'],
-      capabilities: [
-        'Frontend specialization: Modern UI development',
-        'Expert in creating responsive and accessible user interfaces',
-      ],
-      salary: '$95,000 - $120,000',
-      location: 'New York',
-      profileImage: '/images/blurPic.png',
-    },
-    {
-      id: 2,
-      role: 'Backend Developer',
-      skills: ['Node.js', 'Python', 'React'],
-      capabilities: [
-        'Backend development: API design and database optimization',
-        'Experienced in microservices architecture and cloud deployment',
-      ],
-      salary: '$85,000 - $100,000',
-      location: 'London',
-      profileImage: '/images/blurPic.png',
-    },
-    {
-      id: 3,
-      role: 'UI/UX Designer',
-      skills: ['Figma', 'JavaScript', 'CSS'],
-      capabilities: [
-        'UI/UX design: User-centered design approach',
-        'Expert in creating intuitive and visually appealing interfaces',
-      ],
-      salary: '$90,000 - $115,000',
-      location: 'Remote',
-      profileImage: '/images/blurPic.png',
-    },
-    {
-      id: 4,
-      role: 'Frontend Developer',
-      skills: ['React', 'Node.js', 'Figma'],
-      capabilities: [
-        'Frontend development: Component-based architecture',
-        'Strong background in modern JavaScript frameworks',
-      ],
-      salary: '$100,000 - $130,000',
-      location: 'New York',
-      profileImage: '/images/blurPic.png',
-    },
-    {
-      id: 5,
-      role: 'Backend Developer',
-      skills: ['Python', 'JavaScript', 'CSS'],
-      capabilities: [
-        'Backend development: Scalable system architecture',
-        'Specialist in server-side technologies and database design',
-      ],
-      salary: '$75,000 - $95,000',
-      location: 'London',
-      profileImage: '/images/blurPic.png',
-    },
-    {
-      id: 6,
-      role: 'UI/UX Designer',
-      skills: ['Figma', 'React', 'Node.js'],
-      capabilities: [
-        'UI/UX design: Design systems and prototyping',
-        'Experienced in user research and interaction design',
-      ],
-      salary: '$80,000 - $95,000',
-      location: 'Remote',
-      profileImage: '/images/blurPic.png',
-    },
-    {
-      id: 7,
-      role: 'Frontend Developer',
-      skills: ['CSS', 'Python', 'Figma'],
-      capabilities: [
-        'Frontend development: Cross-platform applications',
-        'Expert in responsive design and modern CSS techniques',
-      ],
-      salary: '$105,000 - $140,000',
-      location: 'New York',
-      profileImage: '/images/blurPic.png',
-    },
-    {
-      id: 8,
-      role: 'Backend Developer',
-      skills: ['Node.js', 'React', 'Figma'],
-      capabilities: [
-        'Backend development: Microservices and APIs',
-        'Proficient in both backend technologies and system design',
-      ],
-      salary: '$90,000 - $110,000',
-      location: 'London',
-      profileImage: '/images/blurPic.png',
-    },
-    {
-      id: 9,
-      role: 'UI/UX Designer',
-      skills: ['Figma', 'CSS', 'Python'],
-      capabilities: [
-        'UI/UX design: Brand identity and visual design',
-        'Expert in design tools and front-end implementation',
-      ],
-      salary: '$110,000 - $135,000',
-      location: 'Remote',
-      profileImage: '/images/blurPic.png',
-    },
-    {
-      id: 10,
-      role: 'Frontend Developer',
-      skills: ['React', 'Node.js', 'Python'],
-      capabilities: [
-        'Frontend development: Modern web applications',
-        'Specialized in React ecosystem and full-stack capabilities',
-      ],
-      salary: '$105,000 - $125,000',
-      location: 'New York',
-      profileImage: '/images/blurPic.png',
-    },
-  ];
-
-  // Fixed helper function to extract numeric salary range
-  const getSalaryRange = (salary: string): { min: number; max: number } => {
-    const matches = salary.match(
-      /\$(\d{1,3}(?:,\d{3})*),?(\d{3})?\s*-\s*\$(\d{1,3}(?:,\d{3})*),?(\d{3})?/
-    );
-    if (matches) {
-      const minStr = matches[1].replace(/,/g, '') + (matches[2] || '');
-      const maxStr = matches[3].replace(/,/g, '') + (matches[4] || '');
-      const min = parseInt(minStr);
-      const max = parseInt(maxStr);
-      return { min, max };
+  useEffect(() => {
+    const role = searchParams.get('role');
+    const tab = searchParams.get('tab'); // Read the tab query parameter
+    if (role) {
+      setSelectedRole(role);
     }
-
-    const simpleMatches = salary.match(
-      /\$(\d+),?(\d{3})?\s*-\s*\$(\d+),?(\d{3})?/
-    );
-    if (simpleMatches) {
-      const min = parseInt(
-        (simpleMatches[1] + (simpleMatches[2] || '')).replace(/,/g, '')
-      );
-      const max = parseInt(
-        (simpleMatches[3] + (simpleMatches[4] || '')).replace(/,/g, '')
-      );
-      return { min, max };
+    if (tab && CustomerTabsArray.includes(tab as CustomerTabs)) {
+      setSelectedTab(tab as CustomerTabs); // Set the selected tab if valid
     }
-
-    return { min: 0, max: 0 };
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const getFilteredCandidates = (): Candidate[] => {
-    return candidates.filter(candidate => {
-      if (selectedRole && candidate.role !== selectedRole) {
+    return publishedCandidates!.filter(candidate => {
+      if (selectedRole && candidate.roleTitle !== selectedRole) {
         return false;
       }
 
@@ -216,10 +82,9 @@ const Dashboard: React.FC = () => {
         return false;
       }
 
-      const salaryRange = getSalaryRange(candidate.salary);
       const maxCompensation = compensationRange * 1000;
 
-      if (salaryRange.min > 0 && salaryRange.min > maxCompensation) {
+      if (candidate.expectedSalary > maxCompensation) {
         return false;
       }
 
@@ -236,10 +101,6 @@ const Dashboard: React.FC = () => {
     setSelectedTab('Favourites');
     setShowFloating(false);
   };
-
-  const uniqueSkills = Array.from(
-    new Set(candidates.flatMap(c => c.skills))
-  ).sort();
 
   const clearAllFilters = () => {
     setSelectedRole('');
@@ -286,9 +147,11 @@ const Dashboard: React.FC = () => {
           className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-gray-600"
         >
           <option value="">All Roles</option>
-          <option value="Frontend Developer">Frontend Developer</option>
-          <option value="Backend Developer">Backend Developer</option>
-          <option value="UI/UX Designer">UI/UX Designer</option>
+          <option value="Front-end">Frontend</option>
+          <option value="'Back-end">Backend</option>
+          <option value="Full-Stack">Full Stack</option>
+          <option value="AI/MLr">AIML</option>
+          <option value="Devops">Devops</option>
         </select>
         <ChevronDown className="absolute right-3 top-9 w-5 h-5 text-gray-400 pointer-events-none" />
       </div>
@@ -304,11 +167,13 @@ const Dashboard: React.FC = () => {
           className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-gray-600"
         >
           <option value="">All Skills</option>
-          {uniqueSkills.map(skill => (
-            <option key={skill} value={skill}>
-              {skill}
-            </option>
-          ))}
+          {Array.from(new Set(publishedCandidates!.flatMap(c => c.skills)))
+            .sort()
+            .map(skill => (
+              <option key={skill} value={skill}>
+                {skill}
+              </option>
+            ))}
         </select>
         <ChevronDown className="absolute right-3 top-9 w-5 h-5 text-gray-400 pointer-events-none" />
       </div>
@@ -324,9 +189,19 @@ const Dashboard: React.FC = () => {
           className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none text-gray-600"
         >
           <option value="">All Locations</option>
-          <option value="New York">New York</option>
-          <option value="London">London</option>
-          <option value="Remote">Remote</option>
+          {Array.from(
+            new Set(
+              publishedCandidates!
+                .map(c => c.location)
+                .filter((loc): loc is string => Boolean(loc)) // 👈 ensures only non-null strings
+            )
+          )
+            .sort()
+            .map(location => (
+              <option key={location} value={location}>
+                {location}
+              </option>
+            ))}
         </select>
         <ChevronDown className="absolute right-3 top-9 w-5 h-5 text-gray-400 pointer-events-none" />
       </div>
@@ -339,14 +214,34 @@ const Dashboard: React.FC = () => {
         <div className="relative">
           <input
             type="range"
-            min="50"
+            min="0"
             max="150"
             value={compensationRange}
             onChange={e => setCompensationRange(parseInt(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+            className={`
+            w-full h-2 rounded-lg appearance-none cursor-pointer
+            [&::-webkit-slider-thumb]:appearance-none
+            [&::-webkit-slider-thumb]:w-4
+            [&::-webkit-slider-thumb]:h-4
+            [&::-webkit-slider-thumb]:rounded-full
+            [&::-webkit-slider-thumb]:bg-green-700
+            [&::-webkit-slider-thumb]:cursor-pointer
+            [&::-moz-range-thumb]:w-4
+            [&::-moz-range-thumb]:h-4
+            [&::-moz-range-thumb]:rounded-full
+            [&::-moz-range-thumb]:bg-green-700
+            [&::-moz-range-thumb]:cursor-pointer
+          `}
+            style={{
+              background: `linear-gradient(to right, 
+              #22c55e 0%, 
+              #22c55e ${((compensationRange - 0) / (150 - 0)) * 100}%, 
+              #e5e7eb ${((compensationRange - 0) / (150 - 0)) * 100}%, 
+              #e5e7eb 100%)`,
+            }}
           />
           <div className="flex justify-between text-sm text-gray-500 mt-3">
-            <span>$50k</span>
+            <span>$0k</span>
             <span>$150k</span>
           </div>
         </div>
@@ -362,220 +257,286 @@ const Dashboard: React.FC = () => {
     </div>
   );
 
-  return (
-    <div className="w-full h-screen bg-gray-50 flex overflow-hidden">
-      {/* Desktop Sidebar - Static */}
-      <div className="hidden xl:flex w-72 bg-gray-100 flex-col flex-shrink-0">
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-6">
-              Filters
-            </h2>
-            <FilterSection />
-          </div>
-        </div>
-      </div>
+  const getAllPublishedCandidates = useCallback(async () => {
+    try {
+      setCandidateLoader(true);
+      const res = await getPublishedCandidates();
+      const filterData = res.filter(
+        item =>
+          item?.skills.length > 0 &&
+          item.location &&
+          item.capabilities.length > 0
+      );
+      setPublishedCandidates(filterData);
+    } catch (error) {
+      console.log(error);
+      showToast('Try Again', 'error');
+    } finally {
+      setCandidateLoader(false);
+    }
+  }, []);
 
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-            onClick={() => setSidebarOpen(false)}
-          />
-          <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-gray-100 shadow-xl flex flex-col transform transition-transform">
-            <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 bg-white flex-shrink-0">
-              <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-md hover:bg-gray-100 transition-colors"
-              >
-                <X className="h-5 w-5 text-gray-600" />
-              </button>
-            </div>
+  const getAllFavourites = useCallback(async () => {
+    try {
+      const favouriteCandidates: Candidate[] =
+        await getFavouriteCustomerCandidates();
+      dispatch(setCustomerFavourites(favouriteCandidates)); // Overwrite instead of merge
+    } catch (error) {
+      console.log(error);
+    }
+  }, [dispatch]);
+
+  const getAllShortListed = useCallback(async () => {
+    try {
+      const shortlistedCandidates: Candidate[] =
+        await getShortlistedCustomerCandidates();
+      dispatch(setCustomerShortlisted(shortlistedCandidates)); // Overwrite instead of merge
+    } catch (error) {
+      console.log(error);
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    getAllPublishedCandidates();
+    getAllFavourites();
+    getAllShortListed();
+  }, [getAllPublishedCandidates, getAllFavourites, getAllShortListed]);
+
+  if (candidateLoader) {
+    return (
+      <div className="w-full h-full flex justify-center items-center">
+        <Loader text="Getting Candidates ..." />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-[calc(100vh-104px)] bg-gray-50 flex overflow-hidden">
+      {publishedCandidates ? (
+        <>
+          {/* Desktop Sidebar - Static */}
+          <div className="hidden xl:flex w-72 bg-gray-100 flex-col flex-shrink-0">
             <div className="flex-1 overflow-y-auto">
               <div className="p-6">
+                <h2 className="text-lg font-semibold text-gray-800 mb-6">
+                  Filters
+                </h2>
                 <FilterSection />
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Mobile Header with Tab Menu */}
-        <div className="lg:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 flex-shrink-0">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
-          >
-            <Menu className="h-6 w-6" />
-          </button>
-
-          <h1 className="text-lg font-bold text-gray-900 truncate max-w-[200px]">
-            {selectedTab}
-          </h1>
-
-          {/* Mobile Tab Menu */}
-          {isLoggedIn && (
-            <div className="relative">
-              <button
-                onClick={() => setTabMenuOpen(!tabMenuOpen)}
-                className="p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors relative"
-              >
-                <MoreVertical className="h-6 w-6" />
-                {(CustomerFavourites.length > 0 ||
-                  CustomerShortlisted.length > 0 ||
-                  CustomerMyInterviews.length > 0) && (
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse"></span>
-                )}
-              </button>
-
-              {/* Tab Dropdown Menu */}
-              {tabMenuOpen && (
-                <>
-                  {/* Backdrop */}
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setTabMenuOpen(false)}
-                  />
-
-                  {/* Dropdown */}
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-in slide-in-from-top-2 duration-200">
-                    {CustomerTabsArray.map(item => {
-                      const badgeCount = getBadgeCount(item);
-
-                      return (
-                        <button
-                          key={item}
-                          onClick={() => handleTabSelect(item)}
-                          className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between ${
-                            selectedTab === item
-                              ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-500'
-                              : 'text-gray-700'
-                          }`}
-                        >
-                          <span className="font-medium text-sm">{item}</span>
-                          {badgeCount > 0 && (
-                            <span
-                              className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-semibold ${
-                                selectedTab === item
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-gray-100 text-gray-800'
-                              }`}
-                            >
-                              {badgeCount}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+          {/* Mobile Sidebar Overlay */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+                onClick={() => setSidebarOpen(false)}
+              />
+              <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-gray-100 shadow-xl flex flex-col transform transition-transform">
+                <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 bg-white flex-shrink-0">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Filters
+                  </h2>
+                  <button
+                    onClick={() => setSidebarOpen(false)}
+                    className="p-2 rounded-md hover:bg-gray-100 transition-colors"
+                  >
+                    <X className="h-5 w-5 text-gray-600" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <div className="p-6">
+                    <FilterSection />
                   </div>
-                </>
-              )}
+                </div>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto bg-white">
-          <div className="p-4 sm:p-6 lg:p-8">
-            {/* Header Section */}
-            <div className="mb-6 lg:mb-8">
-              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 lg:gap-6">
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 capitalize truncate">
-                    {selectedTab}
-                  </h1>
-                  <p className="text-gray-600 text-sm sm:text-base">
-                    Discover talented professionals for your team
-                  </p>
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            {/* Mobile Header with Tab Menu */}
+            <div className="lg:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 flex-shrink-0">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+
+              <h1 className="text-lg font-bold text-gray-900 truncate max-w-[200px]">
+                {selectedTab}
+              </h1>
+
+              {/* Mobile Tab Menu */}
+              {isLoggedIn && (
+                <div className="relative">
+                  <button
+                    onClick={() => setTabMenuOpen(!tabMenuOpen)}
+                    className="p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors relative"
+                  >
+                    <MoreVertical className="h-6 w-6" />
+                    {(CustomerFavourites.length > 0 ||
+                      CustomerShortlisted.length > 0 ||
+                      CustomerMyInterviews.length > 0) && (
+                      <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse"></span>
+                    )}
+                  </button>
+
+                  {/* Tab Dropdown Menu */}
+                  {tabMenuOpen && (
+                    <>
+                      {/* Backdrop */}
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setTabMenuOpen(false)}
+                      />
+
+                      {/* Dropdown */}
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 animate-in slide-in-from-top-2 duration-200">
+                        {CustomerTabsArray.map(item => {
+                          const badgeCount = getBadgeCount(item);
+
+                          return (
+                            <button
+                              key={item}
+                              onClick={() => handleTabSelect(item)}
+                              className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between ${
+                                selectedTab === item
+                                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-500'
+                                  : 'text-gray-700'
+                              }`}
+                            >
+                              <span className="font-medium text-sm">
+                                {item}
+                              </span>
+                              {badgeCount > 0 && (
+                                <span
+                                  className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-semibold ${
+                                    selectedTab === item
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : 'bg-gray-100 text-gray-800'
+                                  }`}
+                                >
+                                  {badgeCount}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Scrollable Content Area */}
+            <div className="flex-1 overflow-y-auto bg-white">
+              <div className="p-4 sm:p-6 lg:p-8">
+                {/* Header Section */}
+                <div className="mb-6 lg:mb-8">
+                  <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 lg:gap-6">
+                    <div className="min-w-0 flex-1">
+                      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 capitalize truncate">
+                        {selectedTab}
+                      </h1>
+                      <p className="text-gray-600 text-sm sm:text-base">
+                        Discover talented professionals for your team
+                      </p>
+                    </div>
+
+                    {/* Desktop Tabs */}
+                    {isLoggedIn && (
+                      <div className="hidden lg:flex flex-row gap-2 xl:gap-3 flex-shrink-0 flex-wrap">
+                        {CustomerTabsArray.map(item => (
+                          <Button
+                            text={item}
+                            onClick={() => setSelectedTab(item)}
+                            showBadge={true}
+                            badgeCount={getBadgeCount(item)}
+                            key={item}
+                            className={`capitalize px-3 xl:px-4 py-2 border rounded-2xl cursor-pointer font-semibold text-xs transition-all duration-200 whitespace-nowrap ${
+                              selectedTab === item
+                                ? 'bg-[#1F514C] text-white border-[#1F514C] shadow-md'
+                                : 'bg-white text-black border-[#D3F5C6] hover:bg-gray-50 hover:shadow-sm'
+                            }`}
+                            textColor={
+                              selectedTab === item ? 'text-white' : 'text-black'
+                            }
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Desktop Tabs */}
-                {isLoggedIn && (
-                  <div className="hidden lg:flex flex-row gap-2 xl:gap-3 flex-shrink-0 flex-wrap">
-                    {CustomerTabsArray.map(item => (
-                      <Button
-                        text={item}
-                        onClick={() => setSelectedTab(item)}
-                        showBadge={true}
-                        badgeCount={getBadgeCount(item)}
-                        key={item}
-                        className={`capitalize px-3 xl:px-4 py-2 border rounded-2xl cursor-pointer font-semibold text-xs transition-all duration-200 whitespace-nowrap ${
-                          selectedTab === item
-                            ? 'bg-[#1F514C] text-white border-[#1F514C] shadow-md'
-                            : 'bg-white text-black border-[#D3F5C6] hover:bg-gray-50 hover:shadow-sm'
-                        }`}
-                        textColor={
-                          selectedTab === item ? 'text-white' : 'text-black'
-                        }
-                      />
-                    ))}
+                {/* Content Grid */}
+                <div className="w-full h-full flex flex-row flex-wrap gap-6">
+                  {selectedTab === 'Candidates' ? (
+                    <Candidates
+                      setSelectedTab={setSelectedTab}
+                      selectedTab={selectedTab}
+                      candidates={getFilteredCandidates()}
+                      selectedRole={selectedRole}
+                    />
+                  ) : selectedTab === 'Favourites' ? (
+                    <Favourites
+                      setSelectedTab={setSelectedTab}
+                      selectedTab={selectedTab}
+                    />
+                  ) : selectedTab === 'Shortlisted' ? (
+                    <ShortListed
+                      setSelectedTab={setSelectedTab}
+                      selectedTab={selectedTab}
+                    />
+                  ) : (
+                    <MyInterviews
+                      setSelectedTab={setSelectedTab}
+                      selectedTab={selectedTab}
+                    />
+                  )}
+                </div>
+
+                {/* Sign Up Section for Shortlisted */}
+                {!isLoggedIn && selectedTab === 'Shortlisted' && (
+                  <div className="w-full flex flex-col gap-4 justify-center items-center p-6 sm:p-8 mt-8 bg-gray-50 rounded-lg">
+                    <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl text-center max-w-4xl text-gray-800">
+                      To view full profiles, please sign up and pay access fee
+                    </p>
+                    <button className="w-full max-w-xs sm:max-w-sm flex flex-row justify-center items-center gap-3 px-6 py-3 rounded-2xl bg-[#1F514C] text-white cursor-pointer hover:bg-[#164139] transition-all duration-200 hover:shadow-lg">
+                      <span className="font-medium">Sign Up</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
                   </div>
                 )}
               </div>
             </div>
-
-            {/* Content Grid */}
-            <div className="w-full h-[calc(100vh-290px)] flex flex-row flex-wrap gap-6">
-              {selectedTab === 'Candidates' ? (
-                <Candidates
-                  setSelectedTab={setSelectedTab}
-                  selectedTab={selectedTab}
-                  candidates={getFilteredCandidates()}
-                />
-              ) : selectedTab === 'Favourites' ? (
-                <Favourites
-                  setSelectedTab={setSelectedTab}
-                  selectedTab={selectedTab}
-                />
-              ) : selectedTab === 'Shortlisted' ? (
-                <ShortListed
-                  setSelectedTab={setSelectedTab}
-                  selectedTab={selectedTab}
-                />
-              ) : (
-                <MyInterviews
-                  setSelectedTab={setSelectedTab}
-                  selectedTab={selectedTab}
-                />
-              )}
-            </div>
-
-            {/* Sign Up Section for Shortlisted */}
-            {!isLoggedIn && selectedTab === 'Shortlisted' && (
-              <div className="w-full flex flex-col gap-4 justify-center items-center p-6 sm:p-8 mt-8 bg-gray-50 rounded-lg">
-                <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl text-center max-w-4xl text-gray-800">
-                  To view full profiles, please sign up and pay access fee
-                </p>
-                <button className="w-full max-w-xs sm:max-w-sm flex flex-row justify-center items-center gap-3 px-6 py-3 rounded-2xl bg-[#1F514C] text-white cursor-pointer hover:bg-[#164139] transition-all duration-200 hover:shadow-lg">
-                  <span className="font-medium">Sign Up</span>
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              </div>
-            )}
           </div>
+
+          {/* Modals and Floating Elements */}
+          {!isCandidateInfoSeen && showSelectionModal && (
+            <SelectionModal
+              onClose={() => {
+                setShowSelectionModal(false);
+                dispatch(setIsCandidateInfoSeen(true));
+              }}
+            />
+          )}
+
+          {showFloating && selectedTab === 'Candidates' && (
+            <FloatingAction
+              text1={`Favourites : ${CustomerFavourites.length}/8`}
+              text2="View"
+              onView={() => handleView()}
+            />
+          )}
+        </>
+      ) : (
+        <div className="w-full h-full flex justify-center items-center font-medium">
+          NO DATA AVAILABLE
         </div>
-      </div>
-
-      {/* Modals and Floating Elements */}
-      {!isCandidateInfoSeen && showSelectionModal && (
-        <SelectionModal
-          onClose={() => {
-            setShowSelectionModal(false);
-            dispatch(setIsCandidateInfoSeen(true));
-          }}
-        />
-      )}
-
-      {showFloating && selectedTab === 'Candidates' && (
-        <FloatingAction
-          text1={`Favourites : ${CustomerFavourites.length}/8`}
-          text2="View"
-          onView={() => handleView()}
-        />
       )}
 
       {/* Custom Styles */}

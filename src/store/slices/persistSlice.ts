@@ -1,5 +1,6 @@
-import { ResumeData } from '@/types/resume.types';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { ResumeData } from '@/types/resume.types';
+import { CodingAssignmentsResponse } from '@/services/codingAssignmentsTypes';
 
 interface CapabilityResponse {
   score: number;
@@ -45,6 +46,7 @@ interface persistState {
   enginnerRole: string | null;
   capabilityResponse: CapabilityResponse | null;
   evaluationResult: EvaluationResult | null;
+  assignmentsData: CodingAssignmentsResponse | null;
 }
 
 const initialState: persistState = {
@@ -53,8 +55,10 @@ const initialState: persistState = {
   enginnerRole: null,
   capabilityResponse: null,
   evaluationResult: null,
+  assignmentsData: null,
 };
 
+// -------------------- Slice --------------------
 const persistSlice = createSlice({
   name: 'persist',
   initialState,
@@ -74,24 +78,38 @@ const persistSlice = createSlice({
     setEvaluationResult: (state, action: PayloadAction<EvaluationResult>) => {
       state.evaluationResult = action.payload;
     },
+    setAssignmentsData: (
+      state,
+      action: PayloadAction<CodingAssignmentsResponse | null>
+    ) => {
+      state.assignmentsData = action.payload;
+    },
     clearCapabilityResponse: state => {
       state.capabilityResponse = null;
+    },
+    clearAssignmentsData: state => {
+      state.assignmentsData = null;
     },
     clearAllData: state => {
       state.resumeData = null;
       state.enginnerRole = null;
       state.capabilityResponse = null;
       state.evaluationResult = null;
+      state.assignmentsData = null;
     },
   },
 });
 
+// -------------------- Exports --------------------
 export const {
   setUserResumeData,
   setEnginnerRole,
   setCapabilityResponse,
   setEvaluationResult,
+  setAssignmentsData,
   clearCapabilityResponse,
+  clearAssignmentsData,
   clearAllData,
 } = persistSlice.actions;
+
 export default persistSlice.reducer;

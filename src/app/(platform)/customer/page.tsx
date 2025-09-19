@@ -9,7 +9,6 @@ import PricingPlans from '@/components/customer/PricingPlans';
 import FrequentlyAskedQuestions from '@/components/customer/FrequentlyAskedQuestions';
 import UserStories from '@/components/customer/UserStories';
 import VettingProcessSlides from '@/components/customer/VettingProcessSlides';
-import WhyDifferent from '@/components/customer/WhyDifferent';
 
 export const metadata: Metadata = {
   title:
@@ -53,7 +52,6 @@ function Employer() {
       <WhyChooseUs />
       <HowItWorks />
       <VettingProcessSlides />
-      <WhyDifferent />
       <ExpertServices />
       <UserStories />
       <PricingPlans />

@@ -8,6 +8,7 @@ interface SuccessPageProps {
   onButtonClick: () => void;
   icon?: React.ReactNode;
   description?: string;
+  onRetry?: () => void;
 }
 
 const SuccessPage: React.FC<SuccessPageProps> = ({

@@ -3,8 +3,8 @@
 // ----------------------
 export interface SubmitCodingTestParams {
   question: string;
-  answerFiles: Record<string, string>;
-  url: string;
+  files: Record<string, string>;
+  link: string;
   evaluationResult: CodingTestAISubmissionResponse;
   totalScore: number;
 }

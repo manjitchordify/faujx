@@ -136,7 +136,7 @@ const LearningPlatform = () => {
               whileHover={{
                 scale: 1.05,
                 y: -2,
-                boxShadow: '0 15px 30px rgba(150,146,248,0.3)',
+                boxShadow: '0 5px 15px #2a837a ',
                 transition: { duration: 0.2 },
               }}
               whileTap={{ scale: 0.95 }}

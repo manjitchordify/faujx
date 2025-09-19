@@ -84,6 +84,7 @@ export interface InterviewFeedbackData {
   feedback: Record<string, number>;
   rating: number;
   evaluationStatus: string;
+  comments: string;
 }
 
 export interface InterviewFeedbackResponse {
@@ -318,6 +319,7 @@ export const submitInterviewFeedback = async (
       feedback: JSON.stringify(feedbackData.feedback),
       rating: feedbackData.rating,
       evaluationStatus: feedbackData.evaluationStatus,
+      comments: feedbackData.comments,
     };
 
     console.log('Submitting feedback for interview:', interviewId);
@@ -326,7 +328,7 @@ export const submitInterviewFeedback = async (
     // Updated URL to include interviewId as query parameter
     const response = await axios.post(
       `https://devapi.faujx.com/api/interview-panel/interviewer-feedback?interviewId=${interviewId}`,
-      requestBody, // Send only feedback and rating in body
+      requestBody, // Send feedback, rating, evaluationStatus, and comments in body
       config
     );
 

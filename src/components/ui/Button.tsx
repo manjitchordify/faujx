@@ -1,5 +1,5 @@
 // components/ui/Button.tsx
-import React, { CSSProperties } from 'react';
+import React, { CSSProperties, ReactNode } from 'react';
 
 interface ButtonProps {
   width?: string; // Tailwind width, e.g. "w-40"
@@ -14,6 +14,7 @@ interface ButtonProps {
   showBadge?: boolean;
   badgeCount?: number;
   textColor?: string;
+  icon?: ReactNode | null;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -25,6 +26,7 @@ const Button: React.FC<ButtonProps> = ({
   showBadge = false,
   badgeCount = 0,
   textColor = 'text-white',
+  icon = null,
 }) => {
   return (
     <button
@@ -41,7 +43,10 @@ const Button: React.FC<ButtonProps> = ({
       {isLoading ? (
         <span className="animate-spin border-2 border-white border-t-transparent rounded-full w-5 h-5"></span>
       ) : (
-        text
+        <div className="w-full flex flex-row justify-evenly items-center">
+          <p>{text}</p>
+          {icon && icon}
+        </div>
       )}
       {/* BADEG */}
       {showBadge && badgeCount > 0 && (

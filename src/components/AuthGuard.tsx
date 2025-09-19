@@ -43,11 +43,11 @@ const publicPaths: (string | RegExp)[] = [
   '/customer',
   '/engineer',
   '/faujx-lms',
-  '/faujx-lms/frontend',
-  '/faujx-lms/backend',
-  '/faujx-lms/aiml',
-  '/faujx-lms/devops',
-  '/faujx-lms/fullstack',
+  '/faujx-lms/courses/frontend',
+  '/faujx-lms/courses/backend',
+  '/faujx-lms/courses/aiml',
+  '/faujx-lms/courses/devops',
+  '/faujx-lms/courses/fullstack',
   '/faujx-lms/courses',
   '/engineer/book-mentor',
   '/engineer/blog',
@@ -60,6 +60,10 @@ const publicPaths: (string | RegExp)[] = [
   '/customer/browse-engineers',
   '/admin/login',
   /^\/vetting-report\/candidate\/[a-zA-Z0-9-]+$/,
+  '/payment/success',
+  '/payment/failure',
+  '/subscription/success',
+  '/subscription/failure',
 ];
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -112,6 +116,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           const skipRedirectPaths = [
             '/engineer/email-sent',
             '/expert/email-sent',
+            '/customer/email-sent',
           ];
           setIsChecking(false);
           if (!skipRedirectPaths.includes(pathname)) {

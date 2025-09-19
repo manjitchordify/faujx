@@ -8,6 +8,8 @@ import { ResumeData } from '@/types/resume.types';
 import { useDispatch } from 'react-redux';
 import { setUserResumeData } from '@/store/slices/persistSlice';
 import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
+import { useAppSelector } from '@/store/store';
 
 interface UploadResumeProps {
   candidateId?: string;
@@ -22,19 +24,35 @@ const UploadResume: React.FC<UploadResumeProps> = ({ candidateId }) => {
   const [isLoading, setIsLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const dispatch = useDispatch(); // Added dispatch
+  const dispatch = useDispatch();
+
+  // Get profile stage data from Redux store - read from user slice instead of persist slice
+  const loggedInUser = useAppSelector(state => state.user.loggedInUser);
+  const lastStage = loggedInUser?.profileStages?.lastStage;
+  const lastStatus = loggedInUser?.profileStages?.lastStatus;
+  const userResumeData = useAppSelector(state => state.persist.resumeData);
 
   useEffect(() => {
     const userData = getUserFromCookie();
     const token = getAuthToken();
     if (userData && token) {
       setIsAuthenticated(true);
+      if (lastStage === 'resumeUpload' && lastStatus === 'passed') {
+        setShowSuccess(true);
+      }
     } else {
       setIsAuthenticated(false);
     }
 
     setIsLoading(false);
-  }, [candidateId]);
+  }, [
+    candidateId,
+    lastStage,
+    lastStatus,
+    userResumeData,
+    router,
+    loggedInUser,
+  ]);
 
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -71,15 +89,18 @@ const UploadResume: React.FC<UploadResumeProps> = ({ candidateId }) => {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
     if (!allowedTypes.includes(file.type)) {
-      alert('Please upload a PDF, DOC, or DOCX file.');
+      // alert('Please upload a PDF, DOC, or DOCX file.');
+      toast.error('Please upload a PDF, DOC, or DOCX file.');
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB.');
+      toast.error('File size must be less than 5MB.');
+      // alert('File size must be less than 5MB.');
       return;
     }
     if (!isAuthenticated) {
-      alert('Please log in to upload your resume.');
+      toast.error('Please log in to upload your resume.');
+      // alert('Please log in to upload your resume.');
       return;
     }
     setUploadedFile(file);
@@ -135,18 +156,18 @@ const UploadResume: React.FC<UploadResumeProps> = ({ candidateId }) => {
     dispatch(setUserResumeData(_resumeData));
   };
 
-  // const handlePreviewEdit = () => {
-  //   setShowProcessing(false);
-  //   setShowSuccess(false);
-  //   setUploadedFile(null);
-  //   if (fileInputRef.current) {
-  //     fileInputRef.current.value = '';
-  //   }
-  // };
-
   const handleSuccessAction = () => {
-    // Navigate to MCQ test or next step
+    // Navigate to MCQ test
     router.push('/engineer/mcq');
+  };
+
+  const handleRetryFromSuccess = () => {
+    // Allow user to retry from success component if needed
+    setShowSuccess(false);
+    setUploadedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   if (isLoading) {
@@ -209,6 +230,8 @@ const UploadResume: React.FC<UploadResumeProps> = ({ candidateId }) => {
           buttonText="Start AI MCQ Test"
           onButtonClick={handleSuccessAction}
           description="Your resume has been successfully uploaded and processed. Ready to test your skills?"
+          // Optional: Add a retry button if the SuccessComponent supports it
+          onRetry={handleRetryFromSuccess}
         />
       </div>
     );
@@ -225,7 +248,9 @@ const UploadResume: React.FC<UploadResumeProps> = ({ candidateId }) => {
             <p className="mb-2">
               Please upload a recent version of your resume.
             </p>
-            <p>Supported formats: PDF, DOC, DOCX. Max file size: 5MB.</p>
+            <p>
+              Supported formats: PDF, DOC, DOCX. Max file size less than 5MB.
+            </p>
           </div>
         </div>
 

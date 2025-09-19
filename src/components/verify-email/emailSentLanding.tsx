@@ -71,6 +71,9 @@ const EmailSentLanding = () => {
             <ol className="text-sm text-[#008E5B] space-y-1">
               <li>1. Check your email inbox (and spam folder)</li>
               <li>2. Click the verification link in the email</li>
+              <li>
+                3. Go back to the login page and log in with your credentials
+              </li>
             </ol>
           </div>
 

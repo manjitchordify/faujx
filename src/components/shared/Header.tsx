@@ -141,7 +141,7 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
                 alt="Faujx Logo"
                 height={80}
                 width={80}
-                className="h-12 lg:h-14 w-auto mr-2"
+                className="h-12 lg:h-14 w-auto mr-2 rounded-lg"
                 priority
                 quality={100}
                 style={{ objectFit: 'contain' }}
@@ -169,10 +169,10 @@ const Header: FC<HeaderProps> = ({ hideNavMenu = false }) => {
                           handleSmoothScroll(e, item.href);
                         }
                       }}
-                      className={`px-1 py-2 text-sm font-medium transition-colors duration-200  ${
+                      className={`px-1 py-2 ${isMain ? 'text-lg font-semibold' : 'text-sm'} font-medium transition-all duration-300 hover:scale-105 ${
                         pathname === item.href
-                          ? `${isMain ? 'text-[#1F514C] border-b-2 border-[#1F514C]' : isEngineerLandingPage ? 'text-white border-b-2 border-white' : 'text-[#1F514C] border-b-2 border-[#1F514C]'}`
-                          : `${isMain ? 'text-gray-700 hover:text-blue-600' : isEngineerLandingPage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-blue-600'}`
+                          ? `${isMain ? 'text-[#1F514C] border-b-2 border-[#1F514C] bg-gradient-to-r from-[#1F514C]/5 to-[#1F514C]/10 rounded-lg px-3 py-2' : isEngineerLandingPage ? 'text-white border-b-2 border-white' : 'text-[#1F514C] border-b-2 border-[#1F514C]'}`
+                          : `${isMain ? 'text-gray-700 hover:text-[#1F514C] hover:bg-gradient-to-r hover:from-[#1F514C]/5 hover:to-[#1F514C]/10 hover:rounded-lg hover:px-3 hover:py-2' : isEngineerLandingPage ? 'text-white hover:text-gray-200' : 'text-gray-700 hover:text-[#1F514C]'}`
                       }`}
                     >
                       {item.label}

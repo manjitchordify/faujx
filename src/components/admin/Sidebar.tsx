@@ -14,6 +14,7 @@ import {
   FiCalendar,
   FiMessageSquare,
   FiBarChart2,
+  FiShoppingBag,
 } from 'react-icons/fi';
 
 interface SidebarProps {
@@ -45,6 +46,11 @@ const isLinkActive = (linkPath: string, currentPath: string): boolean => {
     return currentPath.startsWith('/panelist/interviews');
   }
 
+  // For expert interview management
+  if (linkPath === '/panelist/expert-interviews') {
+    return currentPath.startsWith('/panelist/expert-interviews');
+  }
+
   // For admin interview management
   if (linkPath === '/admin/interviews') {
     return currentPath.startsWith('/admin/interviews');
@@ -64,12 +70,17 @@ const adminLinks = [
   { name: 'Dashboard', href: '/admin/dashboard', icon: FiHome },
   { name: 'Manage Users', href: '/admin/users', icon: FiUsers },
   { name: 'Panelist Management', href: '/admin/panelists', icon: FiUser },
+  { name: 'Engineer Management', href: '/admin/engineer', icon: FiCheckCircle },
   {
-    name: 'Mentorship Management',
-    href: '/admin/mentorship',
+    name: 'Customer Management',
+    href: '/admin/customer',
+    icon: FiShoppingBag,
+  },
+  {
+    name: 'Expert Management',
+    href: '/admin/expert',
     icon: FiBookOpen,
   },
-  { name: 'Candidate Vetting', href: '/admin/vetting', icon: FiCheckCircle },
   {
     name: 'Subscription & Revenue',
     href: '/admin/revenue',
@@ -92,7 +103,16 @@ const adminLinks = [
 // Interview Panel navigation links
 const interviewPanelLinks = [
   { name: 'Dashboard', href: '/panelist/dashboard', icon: FiHome },
-  { name: 'Manage Interviews', href: '/panelist/interviews', icon: FiCalendar },
+  {
+    name: 'Manage Engineer Interviews',
+    href: '/panelist/interviews',
+    icon: FiCalendar,
+  },
+  {
+    name: 'Manage Expert Interviews',
+    href: '/panelist/expert-interviews',
+    icon: FiCheckCircle,
+  },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {

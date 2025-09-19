@@ -342,7 +342,7 @@ const CorporateTraining: React.FC<CorporateTrainingProps> = ({ onProceed }) => {
                               Video Locked
                             </>
                           ) : (
-                            <>
+                            <div className="cursor-pointer flex">
                               <svg
                                 className="w-4 h-4"
                                 fill="none"
@@ -357,7 +357,7 @@ const CorporateTraining: React.FC<CorporateTrainingProps> = ({ onProceed }) => {
                                 />
                               </svg>
                               Watch Video
-                            </>
+                            </div>
                           )}
                         </button>
                       )}

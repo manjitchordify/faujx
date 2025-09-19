@@ -84,7 +84,7 @@ const TestimonialsFaujxlms = () => {
               {/* Testimonial Text - Fixed height container */}
               <div className="flex-1 mb-3 mt-12">
                 <div className="h-32 md:h-40 flex items-start">
-                  <h3 className="text-2xl md:text-3xl  text-gray-700 leading-relaxed">
+                  <h3 className="text-xl md:text-3xl  text-gray-700 leading-relaxed">
                     {testimonials[currentSlide].testimonial}
                   </h3>
                 </div>

@@ -3,6 +3,7 @@ import Cookies from 'js-cookie';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import { store } from '@/store/store';
 import { setLoggedInUser } from '@/store/slices/userSlice';
+import { setAssignmentsData } from '@/store/slices/persistSlice';
 
 // ----------------------
 // Profile Stages Types (imported from your routing utility)
@@ -76,7 +77,8 @@ export interface LoginResponse {
     isPreliminaryVideoCompleted?: boolean;
     phase1Completed?: boolean;
     isPublished?: boolean;
-    profileStages?: ProfileStages; // Add profile stages
+    profileStages?: ProfileStages;
+    isPremium?: boolean;
   };
 }
 
@@ -97,8 +99,9 @@ export interface AdditionalAuthData {
   tokenType?: string;
   phase1Completed?: boolean;
   isPublished?: boolean;
-  profileStages?: ProfileStages; // Add profile stages
-  [key: string]: unknown; // For any additional properties
+  profileStages?: ProfileStages;
+  isPremium: boolean; // Make this required boolean instead of optional
+  [key: string]: unknown;
 }
 
 // ----------------------
@@ -190,12 +193,13 @@ export function clearAuthCookies() {
     Cookies.remove('accessToken');
     Cookies.remove('user');
     Cookies.remove('userType');
-    localStorage.removeItem('userRole');
+    localStorage.clear();
   } catch (error) {
     console.error('Error clearing auth data:', error);
   }
 
   store.dispatch(setLoggedInUser(null));
+  store.dispatch(setAssignmentsData(null));
 }
 
 // ----------------------
@@ -230,12 +234,19 @@ export async function loginApi(params: LoginParams): Promise<LoginResponse> {
       config
     );
 
-    if (response.data.data.user && response.data.data.accessToken) {
+    if (
+      response.data.data.user &&
+      response.data.data.accessToken &&
+      (response.data.data.user.userType === 'admin' ||
+        response.data.data.user.userType === 'interview_panel' ||
+        response.data.data.user.isVerified)
+    ) {
       storeAuthData(response.data.data.user, response.data.data.accessToken, {
         isPreliminaryVideoCompleted:
           response.data.data.isPreliminaryVideoCompleted,
         phase1Completed: response.data.data.phase1Completed,
         isPublished: response.data.data.isPublished,
+        isPremium: response.data.data.isPremium ?? false, // Provide default false value
         profileStages: response.data.data.profileStages,
       });
     }

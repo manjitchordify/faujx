@@ -42,20 +42,18 @@ const ExpertFaq: React.FC = () => {
   };
 
   return (
-    <section className="pb-8 sm:pb-12 md:pb-16 lg:pb-20" id="faq">
-      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <div className="text-center mb-8 sm:mb-10 md:mb-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-normal text-gray-900 mb-3 sm:mb-4">
+    <section id="frequently-asked-questions" className="py-16 md:py-20">
+      <div className="w-full max-w-4xl mx-auto px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center ">
+          <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight sm:leading-tight md:leading-tight lg:leading-tight font-semibold text-[#1F514C] tracking-tight">
             Frequently Asked Questions
           </h2>
-          <p className="text-gray-600 font-light max-w-2xl mx-auto text-sm sm:text-base md:text-lg px-4">
-            Here are the top questions our experts ask before getting started.
-          </p>
         </div>
+        <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-center font-normal text-[#1F514C] mb-4 sm:mb-5 md:mt-6 lg:mt-8 md:mb-3 leading-relaxed sm:leading-relaxed md:leading-relaxed">
+          Here are the top questions our experts ask before getting started.
+        </p>
 
-        {/* FAQ Items */}
-        <div className="space-y-3 sm:space-y-4">
+        <div className="mt-12 space-y-4" id="accordion">
           {faqData.map(item => {
             const isOpen = openItem === item.id;
             return (
@@ -63,13 +61,11 @@ const ExpertFaq: React.FC = () => {
                 key={item.id}
                 className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md"
               >
-                {/* Question Header */}
                 <button
+                  className="w-full text-left px-6 py-4 flex justify-between items-center focus:outline-none"
                   onClick={() => toggleItem(item.id)}
-                  className="w-full px-4 sm:px-6 py-4 sm:py-5 flex justify-between items-center text-left focus:outline-none"
-                  aria-expanded={isOpen}
                 >
-                  <span className="text-base sm:text-lg font-medium text-gray-900 pr-2">
+                  <span className="text-lg font-medium text-gray-900">
                     {item.question}
                   </span>
                   {isOpen ? (
@@ -79,7 +75,6 @@ const ExpertFaq: React.FC = () => {
                   )}
                 </button>
 
-                {/* Answer Content */}
                 <div
                   className={`grid transition-all duration-300 ease-in-out ${
                     isOpen
@@ -88,10 +83,8 @@ const ExpertFaq: React.FC = () => {
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <div className="px-4 sm:px-6 pb-4 sm:pb-5 border-t border-gray-100">
-                      <p className="text-gray-600 leading-relaxed mt-3 text-sm sm:text-base">
-                        {item.answer}
-                      </p>
+                    <div className="px-6 pb-4 text-gray-700 text-sm leading-relaxed">
+                      <p className="mb-2 last:mb-0">{item.answer}</p>
                     </div>
                   </div>
                 </div>

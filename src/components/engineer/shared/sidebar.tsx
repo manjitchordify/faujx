@@ -13,6 +13,7 @@ import {
   Star,
   Code,
   Briefcase,
+  UserRound,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
 
@@ -190,6 +191,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
         label: 'My Interviews',
         icon: ClipboardList,
         route: '/engineer/my-interviews',
+        active: false,
+        hideOnBrowseMentors: isBrowseMentorsPage || !isUserVetted,
+      },
+      {
+        id: 'Profile',
+        label: 'Profile',
+        icon: UserRound,
+        route: '/engineer/dashboard/profile',
         active: false,
         hideOnBrowseMentors: isBrowseMentorsPage || !isUserVetted,
       },

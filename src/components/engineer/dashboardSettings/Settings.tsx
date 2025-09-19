@@ -6,13 +6,17 @@ import ProfilePictureUploadModal from './ProfilePictureUploadModal';
 import ResumeUploadModal from './ResumeUploadModal';
 import SettingsVideoUploadModal from './SettingsVideoUploadModal';
 import CustomerServiceModal from './CustomerServiceModal';
-import { getProfileApi } from '@/services/profileSettingsService';
+import {
+  getProfileApi,
+  type ProfileGetResponse,
+} from '@/services/profileSettingsService';
 import { ProfilePicUploadResponse } from '@/services/profileSetupService';
 import { ResumeUploadResponse } from '@/types/resume.types';
 import {
   updateEngineerProfileApi,
   type UpdateEngineerProfileParams,
 } from '@/services/engineerService';
+import Loader from '@/components/ui/Loader';
 
 interface FormData {
   salary: string;
@@ -38,30 +42,6 @@ interface Country {
 
 interface CountryCityData {
   countries: Country[];
-}
-
-interface CandidateData {
-  expectedSalary?: number;
-  preferredLocations?: string[];
-  linkedinUrl?: string;
-  githubUrl?: string;
-  portfolioUrl?: string;
-  currencyType?: string;
-}
-
-interface ProfileApiResponse {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  profilePic?: string;
-  profileVideo?: string;
-  resume?: string;
-  candidate?: CandidateData;
-}
-
-interface ApiResponse {
-  data?: ProfileApiResponse;
 }
 
 interface VideoUploadResponse {
@@ -121,7 +101,7 @@ const Settings: React.FC = () => {
     const fetchProfile = async () => {
       try {
         setLoading(true);
-        const response: ApiResponse = await getProfileApi();
+        const response: ProfileGetResponse = await getProfileApi();
 
         if (response.data) {
           const { data } = response;
@@ -145,10 +125,12 @@ const Settings: React.FC = () => {
             portfolioUrl: data.candidate?.portfolioUrl || '',
           });
 
-          // Set media URLs
-          setProfileVideoUrl(data.profileVideo || null);
-          setProfilePictureUrl(data.profilePic || null);
-          setResumeUrl(data.resume || null);
+          // Set media URLs - handle null values properly
+          setProfileVideoUrl(data.profileVideo ?? null);
+          setProfilePictureUrl(data.profilePic ?? null);
+
+          // Resume URL is in the candidate object
+          setResumeUrl(data.candidate?.resumeUrl ?? null);
 
           // Populate available cities if country exists
           if (country) {
@@ -322,12 +304,8 @@ const Settings: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex justify-center items-center h-64">
-            <div className="text-gray-600">Loading profile...</div>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center  py-8">
+        <Loader text="Settings Loading" />
       </div>
     );
   }

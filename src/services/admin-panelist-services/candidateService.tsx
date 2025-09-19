@@ -1,5 +1,6 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
+import { showToast } from '@/utils/toast/Toast';
 
 // TypeScript interfaces
 export interface CandidateStats {
@@ -28,7 +29,7 @@ export interface Candidate {
   profilePic: string | null;
   resumeParsingScore: number;
   mcqScore: number;
-  codingScore: number | string; // Can be number or string like "56.50"
+  codingScore: number | string;
   interviewStatus:
     | 'pending'
     | 'confirmed'
@@ -106,6 +107,78 @@ export interface UpdateCandidateInterviewRequest {
   interviewPassed?: boolean;
 }
 
+// Hired Candidate Interfaces
+export interface HiredCandidateEducation {
+  degree: string;
+  institute: string;
+  year: number;
+}
+
+export interface HiredCandidateExperience {
+  company: string;
+  role: string;
+  duration: string;
+}
+
+export interface HiredCandidateProject {
+  name: string;
+  description: string;
+}
+
+export interface HiredCandidateParsedSkills {
+  technical: string[];
+  soft: string[];
+  languages: string[];
+}
+
+export interface HiredCandidateInterviewFeedback {
+  rating: number;
+  comments: string;
+}
+
+export interface HiredCandidate {
+  hireStatus: string;
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  phone: string;
+  location: string;
+  preferredMonthlySalary: string;
+  experienceYears: number;
+  currentDesignation: string;
+  currentCompany: string;
+  workMode: string[];
+  currencyType: string;
+  skills: string[];
+  portfolioUrl: string | null;
+  linkedinUrl: string | null;
+  githubUrl: string | null;
+  resumeUrl: string | null;
+  resumeParseScore: number;
+  roleTitle: string;
+  joiningPeriod: string;
+  isWillingToRelocate: boolean;
+  isOpenToOtherLocations: boolean;
+  relocationConfirmed: boolean;
+  createdAt: string;
+  updatedAt: string;
+  parsedEducation: HiredCandidateEducation[];
+  parsedExperience: HiredCandidateExperience[];
+  parsedProjects: HiredCandidateProject[];
+  parsedSkills: HiredCandidateParsedSkills;
+  interviewFeedback: HiredCandidateInterviewFeedback;
+}
+
+export interface PaginatedHiredCandidatesResponse {
+  data: HiredCandidate[];
+  total: number;
+  page: number;
+  perPage: number;
+  totalPages: number;
+}
+
 function handleApiError(error: unknown): never {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<{ message?: string }>;
@@ -127,17 +200,19 @@ function handleApiError(error: unknown): never {
 export const getCandidateStats = async (): Promise<CandidateStats> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    const response = await axios.get(
-      `https://devapi.faujx.com/api/candidates/stats`,
+    const response = await axios.get<CandidateStats>(
+      `/candidates/stats`,
       config
     );
+
+    if (!response.data) {
+      showToast('No candidate statistics data received from server.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing candidate statistics data',
+      };
+    }
 
     return response.data;
   } catch (error: unknown) {
@@ -150,18 +225,23 @@ export const getCandidateStatsWorkaround =
   async (): Promise<CandidateStats> => {
     try {
       const config = getAuthAxiosConfig();
-      const token = getAuthToken();
-
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
 
       // Get all candidates with a large perPage to get actual counts
-      const response = await axios.get(
-        `https://devapi.faujx.com/api/candidates/allCandidates?page=1&perPage=1000`,
+      const response = await axios.get<PaginatedCandidatesResponse>(
+        `/candidates/allCandidates?page=1&perPage=1000`,
         config
       );
+
+      if (!response.data?.data) {
+        showToast(
+          'No candidates data received for statistics calculation.',
+          'error'
+        );
+        throw {
+          status: 500,
+          message: 'Invalid server response: missing candidates data',
+        };
+      }
 
       const allCandidates: Candidate[] = response.data.data;
       const total = response.data.total;
@@ -216,12 +296,6 @@ export const getAllCandidates = async (
 ): Promise<PaginatedCandidatesResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     // Build query parameters
     const params = new URLSearchParams({
@@ -239,10 +313,19 @@ export const getAllCandidates = async (
       params.append('filter', filter);
     }
 
-    const response = await axios.get(
-      `https://devapi.faujx.com/api/candidates/allCandidates?${params.toString()}`,
+    const response = await axios.get<PaginatedCandidatesResponse>(
+      `/candidates/allCandidates?${params.toString()}`,
       config
     );
+
+    if (!response.data) {
+      showToast('No candidates data received from server.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing candidates data',
+      };
+    }
+
     return response.data;
   } catch (error: unknown) {
     handleApiError(error);
@@ -255,17 +338,19 @@ export const getCandidateById = async (
 ): Promise<Candidate> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    const response = await axios.get(
-      `https://devapi.faujx.com/api/candidates/${candidateId}`,
+    const response = await axios.get<Candidate>(
+      `/candidates/${candidateId}`,
       config
     );
+
+    if (!response.data) {
+      showToast('No candidate data received from server.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing candidate data',
+      };
+    }
 
     return response.data;
   } catch (error: unknown) {
@@ -279,19 +364,20 @@ export const createCandidate = async (
 ): Promise<Candidate> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
-    const response = await axios.post(
-      `https://devapi.faujx.com/api/candidates`,
+    const response = await axios.post<Candidate>(
+      `/candidates`,
       candidateData,
       config
     );
+
+    if (!response.data) {
+      showToast('Failed to create candidate.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing created candidate data',
+      };
+    }
 
     return response.data;
   } catch (error: unknown) {
@@ -306,19 +392,20 @@ export const updateCandidate = async (
 ): Promise<Candidate> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
-    const response = await axios.put(
-      `https://devapi.faujx.com/api/candidates/${candidateId}`,
+    const response = await axios.put<Candidate>(
+      `/candidates/${candidateId}`,
       candidateData,
       config
     );
+
+    if (!response.data) {
+      showToast('Failed to update candidate.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing updated candidate data',
+      };
+    }
 
     return response.data;
   } catch (error: unknown) {
@@ -330,17 +417,8 @@ export const updateCandidate = async (
 export const deleteCandidate = async (candidateId: string): Promise<void> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    await axios.delete(
-      `https://devapi.faujx.com/api/candidates/${candidateId}`,
-      config
-    );
+    await axios.delete(`/candidates/${candidateId}`, config);
   } catch (error: unknown) {
     handleApiError(error);
   }
@@ -352,15 +430,8 @@ export const deleteMultipleCandidates = async (
 ): Promise<void> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
-    await axios.delete('https://devapi.faujx.com/api/candidates/bulk', {
+    await axios.delete('/candidates/bulk', {
       ...config,
       data: { candidateIds },
     });
@@ -375,23 +446,24 @@ export const updateCandidatePublishStatus = async (
 ): Promise<Candidate> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
 
     const requestBody: UpdateCandidatePublishRequest = {
       isPublished: true,
     };
 
-    const response = await axios.put(
-      `https://devapi.faujx.com/api/candidates/${candidateId}`,
+    const response = await axios.put<Candidate>(
+      `/candidates/${candidateId}`,
       requestBody,
       config
     );
+
+    if (!response.data) {
+      showToast('Failed to update candidate publish status.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing updated candidate data',
+      };
+    }
 
     return response.data;
   } catch (error: unknown) {
@@ -406,23 +478,24 @@ export const updateCandidateVettingStatus = async (
 ): Promise<Candidate> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
 
     const requestBody: UpdateCandidateVettingRequest = {
       vettingStatus,
     };
 
-    const response = await axios.patch(
-      `https://devapi.faujx.com/api/candidates/${candidateId}/vetting`,
+    const response = await axios.patch<Candidate>(
+      `/candidates/${candidateId}/vetting`,
       requestBody,
       config
     );
+
+    if (!response.data) {
+      showToast('Failed to update candidate vetting status.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing updated candidate data',
+      };
+    }
 
     return response.data;
   } catch (error: unknown) {
@@ -437,19 +510,20 @@ export const updateCandidateInterviewStatus = async (
 ): Promise<Candidate> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
-    const response = await axios.patch(
-      `https://devapi.faujx.com/api/candidates/${candidateId}/interview`,
+    const response = await axios.patch<Candidate>(
+      `/candidates/${candidateId}/interview`,
       interviewData,
       config
     );
+
+    if (!response.data) {
+      showToast('Failed to update candidate interview status.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing updated candidate data',
+      };
+    }
 
     return response.data;
   } catch (error: unknown) {
@@ -530,22 +604,23 @@ export const bulkUpdateCandidatePublishStatus = async (
 ): Promise<Candidate[]> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
-    const response = await axios.patch(
-      'https://devapi.faujx.com/api/candidates/bulk/publish',
+    const response = await axios.patch<Candidate[]>(
+      '/candidates/bulk/publish',
       {
         candidateIds,
         isPublished,
       },
       config
     );
+
+    if (!response.data) {
+      showToast('Failed to bulk update candidate publish status.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing updated candidates data',
+      };
+    }
 
     return response.data;
   } catch (error: unknown) {
@@ -560,22 +635,62 @@ export const bulkUpdateCandidateVettingStatus = async (
 ): Promise<Candidate[]> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
-    const response = await axios.patch(
-      'https://devapi.faujx.com/api/candidates/bulk/vetting',
+    const response = await axios.patch<Candidate[]>(
+      '/candidates/bulk/vetting',
       {
         candidateIds,
         vettingStatus,
       },
       config
     );
+
+    if (!response.data) {
+      showToast('Failed to bulk update candidate vetting status.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing updated candidates data',
+      };
+    }
+
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+// GET all hired candidates
+export const getAllHiredCandidates = async (
+  page: number = 1,
+  perPage: number = 10,
+  search: string = ''
+): Promise<PaginatedHiredCandidatesResponse> => {
+  try {
+    const config = getAuthAxiosConfig();
+
+    // Build query parameters
+    const params = new URLSearchParams({
+      page: page.toString(),
+      perPage: perPage.toString(),
+    });
+
+    // Add search parameter if provided
+    if (search.trim()) {
+      params.append('search', search.trim());
+    }
+
+    const response = await axios.get<PaginatedHiredCandidatesResponse>(
+      `/admin-dashboard/hired-candidates?${params.toString()}`,
+      config
+    );
+
+    if (!response.data) {
+      showToast('No hired candidates data received from server.', 'error');
+      throw {
+        status: 500,
+        message: 'Invalid server response: missing hired candidates data',
+      };
+    }
 
     return response.data;
   } catch (error: unknown) {

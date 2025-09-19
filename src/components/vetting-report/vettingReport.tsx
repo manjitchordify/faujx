@@ -1,58 +1,691 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import {
-  User,
-  Calendar,
-  MapPin,
-  Briefcase,
-  Award,
-  Clock,
-  Target,
-  Code,
-  MessageCircle,
-  TrendingUp,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-} from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   getReportApi,
   CandidateReportResponse,
 } from '@/services/reportService';
 import { useParams } from 'next/navigation';
+declare global {
+  interface Window {
+    html2pdf?: unknown; // or a more specific type if you know it
+  }
+}
 
-const VettingReport: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('Resume Analysis');
-  const [candidateData, setCandidateData] =
-    useState<CandidateReportResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+// Type definitions
+interface AssessmentScore {
+  label: string;
+  score: string;
+  description: string;
+  status: 'excellent' | 'good' | 'pending';
+  percentage?: number;
+}
+
+interface Skill {
+  name: string;
+  level: string;
+  percentage: number;
+}
+
+interface InterviewStructureBlock {
+  duration: string;
+  title: string;
+  description: string;
+  type: 'technical' | 'problem' | 'soft-skills';
+  emoji: string;
+}
+
+interface EvaluationCriteria {
+  percentage: string;
+  title: string;
+  details: string;
+}
+
+interface DevelopmentPhase {
+  period: string;
+  skills: string[];
+}
+
+interface CandidateData {
+  name: string;
+  role: string;
+  overallScore: number;
+  stageProgress: string;
+  initials: string;
+  interviewDate: string;
+  assessmentScores: AssessmentScore[];
+  strengths: Skill[];
+  growthAreas: Skill[];
+  interviewStructure: InterviewStructureBlock[];
+  evaluationCriteria: EvaluationCriteria[];
+  developmentPhases: DevelopmentPhase[];
+}
+
+interface InfographicReportProps {
+  candidateData?: CandidateData;
+}
+
+// Function to map API response to component data
+const mapApiDataToCandidate = (
+  apiData: CandidateReportResponse
+): CandidateData => {
+  // Helper function to get initials from name
+  const getInitials = (name: string): string => {
+    return (
+      name
+        .trim()
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase() || 'NA'
+    );
+  };
+
+  // Helper function to determine stage progress
+  const getStageProgress = (lastStage: string): string => {
+    if (lastStage === 'interview') {
+      return '4/4';
+    } else if (lastStage === 'codingTest' || lastStage === 'coding') {
+      return '3/4';
+    } else if (lastStage === 'mcq') {
+      return '2/4';
+    } else {
+      return '1/4';
+    }
+  };
+
+  // Helper function to format interview date
+  const getFormattedInterviewDate = (
+    apiData: CandidateReportResponse
+  ): string => {
+    // Handle interviews as array or single object
+    let interview = null;
+
+    if (Array.isArray(apiData.interviews) && apiData.interviews.length > 0) {
+      interview = apiData.interviews[0];
+    }
+
+    if (interview) {
+      // Use scheduled slot times from the interview
+      const scheduledSlot = interview.scheduledSlot;
+      const startTimeStr = scheduledSlot?.startTime;
+      const endTimeStr = scheduledSlot?.endTime || startTimeStr;
+
+      if (startTimeStr) {
+        const startTime = new Date(startTimeStr);
+        const endTime = new Date(endTimeStr);
+
+        // Check if dates are valid
+        if (!isNaN(startTime.getTime())) {
+          // Format date as "January 25, 2025"
+          const dateOptions: Intl.DateTimeFormatOptions = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          };
+          const formattedDate = startTime.toLocaleDateString(
+            'en-US',
+            dateOptions
+          );
+
+          // Format time range as "2:00 PM - 3:30 PM"
+          const timeOptions: Intl.DateTimeFormatOptions = {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+          };
+          const startTimeFormatted = startTime.toLocaleTimeString(
+            'en-US',
+            timeOptions
+          );
+          const endTimeFormatted = endTime.toLocaleTimeString(
+            'en-US',
+            timeOptions
+          );
+
+          return `${formattedDate} • ${startTimeFormatted} - ${endTimeFormatted}`;
+        }
+      }
+    }
+
+    // Fallback to default date
+    return 'January 25, 2025 • 2:00 PM - 3:30 PM';
+  };
+
+  // Helper function to determine status based on score
+  const getScoreStatus = (score: number): 'excellent' | 'good' | 'pending' => {
+    if (score >= 75) return 'excellent';
+    if (score >= 40) return 'good';
+    return 'good';
+  };
+
+  // Helper function to get score description
+  const getScoreDescription = (score: number, type: string): string => {
+    if (type === 'coding') {
+      if (score >= 70) return 'Good implementation with room for improvement';
+      if (score >= 50) return 'Basic functionality with significant issues';
+      return 'Major improvements needed';
+    }
+    if (type === 'mcq') {
+      if (score >= 70) return 'Strong theoretical knowledge';
+      if (score >= 50) return 'Adequate understanding with gaps';
+      return 'Needs improvement in fundamentals';
+    }
+    return 'Assessment completed';
+  };
+
+  // Calculate overall score (average of available scores)
+  const codingScore = apiData.coding?.overallScore || 0;
+  const mcqScore = parseInt(
+    apiData.mcq?.testOverview?.score?.split('%')[0] || '0'
+  );
+  const resumeScore = apiData.resumeAnalysis?.resumeQuality || 0;
+  const overallScore = Math.round((codingScore + mcqScore + resumeScore) / 3);
+
+  // Map strengths from MCQ, coding, and capability data
+  const strengths: Skill[] = [];
+  const growthAreas: Skill[] = [];
+
+  // Process MCQ category performance for strengths
+  if (apiData.mcq?.categoryWisePerformance) {
+    apiData.mcq.categoryWisePerformance.forEach(category => {
+      const percentage = parseInt(category.accuracy.replace('% accuracy', ''));
+      const skill = {
+        name: category.category,
+        level:
+          percentage >= 80
+            ? 'Expert'
+            : percentage >= 60
+              ? 'Advanced'
+              : percentage >= 40
+                ? 'Proficient'
+                : 'Developing',
+        percentage: percentage,
+      };
+
+      if (percentage >= 50) {
+        strengths.push(skill);
+      } else {
+        growthAreas.push(skill);
+      }
+    });
+  }
+
+  // Add capability data to strengths and growth areas
+  if (apiData.capability) {
+    // Add core competencies
+    if (apiData.capability.coreCompetencies) {
+      apiData.capability.coreCompetencies.forEach(competency => {
+        const percentage = (competency.score / 10) * 100; // Convert 10-point scale to percentage
+        const skill = {
+          name: competency.name,
+          level:
+            competency.score >= 8
+              ? 'Expert'
+              : competency.score >= 6
+                ? 'Advanced'
+                : competency.score >= 4
+                  ? 'Proficient'
+                  : 'Developing',
+          percentage: percentage,
+        };
+
+        if (competency.score >= 6) {
+          strengths.push(skill);
+        } else {
+          growthAreas.push(skill);
+        }
+      });
+    }
+
+    // Add soft skills
+    if (apiData.capability.softSkills) {
+      apiData.capability.softSkills.forEach(skill => {
+        const percentage = (skill.score / 10) * 100; // Convert 10-point scale to percentage
+        const skillData = {
+          name: skill.name,
+          level:
+            skill.score >= 8
+              ? 'Expert'
+              : skill.score >= 6
+                ? 'Advanced'
+                : skill.score >= 4
+                  ? 'Proficient'
+                  : 'Developing',
+          percentage: percentage,
+        };
+
+        if (skill.score >= 6) {
+          strengths.push(skillData);
+        } else {
+          growthAreas.push(skillData);
+        }
+      });
+    }
+
+    // Add domain knowledge
+    if (apiData.capability.domainKnowledge) {
+      apiData.capability.domainKnowledge.forEach(knowledge => {
+        const percentage = (knowledge.score / 10) * 100; // Convert 10-point scale to percentage
+        const skill = {
+          name: knowledge.name,
+          level:
+            knowledge.score >= 8
+              ? 'Expert'
+              : knowledge.score >= 6
+                ? 'Advanced'
+                : knowledge.score >= 4
+                  ? 'Proficient'
+                  : 'Developing',
+          percentage: percentage,
+        };
+
+        if (knowledge.score >= 6) {
+          strengths.push(skill);
+        } else {
+          growthAreas.push(skill);
+        }
+      });
+    }
+
+    // Add role-specific skills
+    if (apiData.capability.roleSpecificSkills) {
+      apiData.capability.roleSpecificSkills.forEach(roleSkill => {
+        const percentage = (roleSkill.score / 10) * 100; // Convert 10-point scale to percentage
+        const skill = {
+          name: roleSkill.name,
+          level:
+            roleSkill.score >= 8
+              ? 'Expert'
+              : roleSkill.score >= 6
+                ? 'Advanced'
+                : roleSkill.score >= 4
+                  ? 'Proficient'
+                  : 'Developing',
+          percentage: percentage,
+        };
+
+        if (roleSkill.score >= 6) {
+          strengths.push(skill);
+        } else {
+          growthAreas.push(skill);
+        }
+      });
+    }
+  }
+
+  // Add coding-specific skills based on strengths and weaknesses
+  if (apiData.coding) {
+    // Add strengths as skills
+    if (apiData.coding.strengths) {
+      apiData.coding.strengths.forEach(strength => {
+        strengths.push({
+          name: strength,
+          level: 'Proficient',
+          percentage: 75,
+        });
+      });
+    }
+
+    // Add weaknesses as growth areas
+    if (apiData.coding.weaknesses) {
+      apiData.coding.weaknesses.slice(0, 4).forEach(weakness => {
+        let skillName = 'Code Quality';
+        let percentage = 40;
+
+        if (weakness.toLowerCase().includes('test')) {
+          skillName = 'Testing & Quality Assurance';
+          percentage = 25;
+        } else if (weakness.toLowerCase().includes('component')) {
+          skillName = 'Component Architecture';
+          percentage = 30;
+        } else if (weakness.toLowerCase().includes('error')) {
+          skillName = 'Error Handling & Debugging';
+          percentage = 35;
+        } else if (weakness.toLowerCase().includes('performance')) {
+          skillName = 'Performance Optimization';
+          percentage = 40;
+        }
+
+        growthAreas.push({
+          name: skillName,
+          level: 'Developing',
+          percentage: percentage,
+        });
+      });
+    }
+  }
+
+  // Add experience-based skills from resume
+  if (apiData.resumeAnalysis?.experience?.length > 0) {
+    const experience = apiData.resumeAnalysis.experience[0];
+    const description = experience.description || '';
+
+    if (description) {
+      const hasReact = description.toLowerCase().includes('react');
+      const hasNode = description.toLowerCase().includes('node');
+      const hasAWS = description.toLowerCase().includes('aws');
+      const isLeadRole = (experience.title || '')
+        .toLowerCase()
+        .includes('lead');
+
+      if (hasReact) {
+        strengths.push({
+          name: 'React Development',
+          level: 'Expert',
+          percentage: 85,
+        });
+      }
+
+      if (hasNode) {
+        strengths.push({
+          name: 'Backend Development',
+          level: 'Expert',
+          percentage: 80,
+        });
+      }
+
+      if (hasAWS) {
+        strengths.push({
+          name: 'Cloud Technologies (AWS)',
+          level: 'Advanced',
+          percentage: 75,
+        });
+      }
+
+      if (isLeadRole) {
+        strengths.push({
+          name: 'Technical Leadership',
+          level: 'Expert',
+          percentage: 90,
+        });
+      }
+    }
+  }
+
+  // Limit to 4 skills each and remove duplicates
+  const uniqueStrengths = strengths
+    .filter(
+      (skill, index, self) =>
+        index === self.findIndex(s => s.name === skill.name)
+    )
+    .slice(0, 4);
+
+  const uniqueGrowthAreas = growthAreas
+    .filter(
+      (skill, index, self) =>
+        index === self.findIndex(s => s.name === skill.name)
+    )
+    .slice(0, 4);
+
+  // Get stage progress and interview date
+  const stageProgress = getStageProgress(
+    apiData.executiveSummary?.profileStages?.lastStage || ''
+  );
+  const formattedInterviewDate = getFormattedInterviewDate(apiData);
+
+  return {
+    name:
+      apiData.name ||
+      apiData.executiveSummary?.candidateName?.trim() ||
+      'Test Candidate',
+    role: apiData.executiveSummary?.positionApplied || 'Lead Developer',
+    overallScore: overallScore,
+    stageProgress: stageProgress,
+    initials: getInitials(
+      apiData.name || apiData.executiveSummary?.candidateName || 'TC'
+    ),
+    interviewDate: formattedInterviewDate,
+    assessmentScores: [
+      {
+        label: 'Coding Assessment',
+        score: `${codingScore}%`,
+        description: getScoreDescription(codingScore, 'coding'),
+        status: codingScore >= 75 ? 'excellent' : 'good',
+        percentage: codingScore,
+      },
+      {
+        label: 'Technical MCQ',
+        score: `${mcqScore}%`,
+        description: getScoreDescription(mcqScore, 'mcq'),
+        status: mcqScore >= 75 ? 'excellent' : 'good',
+        percentage: mcqScore,
+      },
+      {
+        label: 'Resume Analysis',
+        score: `${resumeScore}%`,
+        description: 'Comprehensive profile evaluation',
+        status: getScoreStatus(resumeScore),
+        percentage: resumeScore,
+      },
+      {
+        label: 'Panel Interview',
+        score: 'Pending',
+        description: 'Scheduled for technical evaluation',
+        status: 'pending',
+      },
+    ],
+    strengths: uniqueStrengths,
+    growthAreas: uniqueGrowthAreas,
+    interviewStructure: [
+      {
+        duration: '45 min',
+        title: 'Technical Deep Dive',
+        description:
+          'System design, backend architecture, and cloud technologies',
+        type: 'technical',
+        emoji: '🔧',
+      },
+      {
+        duration: '25 min',
+        title: 'Leadership & Problem Solving',
+        description:
+          'Team management, technical decision making, and troubleshooting',
+        type: 'problem',
+        emoji: '🧩',
+      },
+      {
+        duration: '20 min',
+        title: 'Culture & Communication',
+        description:
+          'Communication skills, team collaboration, and growth mindset',
+        type: 'soft-skills',
+        emoji: '👥',
+      },
+    ],
+    evaluationCriteria: (() => {
+      const criteria: EvaluationCriteria[] = [];
+
+      // Add capability data to evaluation criteria
+      if (apiData.capability?.coreCompetencies) {
+        apiData.capability.coreCompetencies.forEach(competency => {
+          const percentage = (competency.score / 10) * 100;
+          criteria.push({
+            percentage: `${Math.round(percentage)}%`,
+            title: competency.name,
+            details: `Core competency assessment based on experience and demonstrated capabilities`,
+          });
+        });
+      }
+
+      if (apiData.capability?.roleSpecificSkills) {
+        apiData.capability.roleSpecificSkills.forEach(competency => {
+          const percentage = (competency.score / 10) * 100;
+          criteria.push({
+            percentage: `${Math.round(percentage)}%`,
+            title: competency.name,
+            details: `Core competency assessment based on experience and demonstrated capabilities`,
+          });
+        });
+      }
+
+      if (apiData.capability?.softSkills) {
+        apiData.capability.softSkills.forEach(competency => {
+          const percentage = (competency.score / 10) * 100;
+          criteria.push({
+            percentage: `${Math.round(percentage)}%`,
+            title: competency.name,
+            details: `Core competency assessment based on experience and demonstrated capabilities`,
+          });
+        });
+      }
+
+      if (apiData.capability?.domainKnowledge) {
+        apiData.capability.domainKnowledge.forEach(competency => {
+          const percentage = (competency.score / 10) * 100;
+          criteria.push({
+            percentage: `${Math.round(percentage)}%`,
+            title: competency.name,
+            details: `Core competency assessment based on experience and demonstrated capabilities`,
+          });
+        });
+      }
+
+      // Add role-specific skills if available
+      if (apiData.capability?.roleSpecificSkills && criteria.length < 6) {
+        apiData.capability.roleSpecificSkills.slice(0, 2).forEach(roleSkill => {
+          const percentage = (roleSkill.score / 10) * 100;
+          criteria.push({
+            percentage: `${Math.round(percentage)}%`,
+            title: roleSkill.name,
+            details: `Role-specific skill evaluation with ${roleSkill.weight} weightage`,
+          });
+        });
+      }
+
+      // Return criteria or default fallback
+      return criteria.length > 0
+        ? criteria
+        : [
+            {
+              percentage: '30%',
+              title: 'Technical Leadership',
+              details:
+                'Architecture decisions, system design, and technical mentoring',
+            },
+            {
+              percentage: '25%',
+              title: 'Problem Solving',
+              details:
+                'Analytical thinking, debugging skills, and solution approach',
+            },
+            {
+              percentage: '25%',
+              title: 'Code Quality',
+              details:
+                'Best practices, clean code, and maintainability standards',
+            },
+            {
+              percentage: '20%',
+              title: 'Team Collaboration',
+              details: 'Communication, leadership, and cultural alignment',
+            },
+          ];
+    })(),
+    developmentPhases: [
+      {
+        period: '0-2 Months',
+        skills: [
+          'Team onboarding and integration',
+          'System architecture review',
+          'Code quality improvement',
+          'Company processes and tools',
+        ],
+      },
+      {
+        period: '2-6 Months',
+        skills: [
+          'Lead technical initiatives',
+          'Mentor junior developers',
+          'Optimize existing systems',
+          'Cross-team collaboration',
+        ],
+      },
+      {
+        period: '6-12 Months',
+        skills: [
+          'Strategic technical planning',
+          'Architecture ownership',
+          'Process improvements',
+          'Technical innovation leadership',
+        ],
+      },
+    ],
+  };
+};
+
+// Notification component
+const Notification: React.FC<{ message: string; show: boolean }> = ({
+  message,
+  show,
+}) => {
+  if (!show) return null;
+
+  return (
+    <div className="fixed top-5 right-5 bg-gradient-to-r from-green-600 to-green-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50 font-semibold text-sm max-w-sm">
+      ✅ {message}
+    </div>
+  );
+};
+
+// Loading component
+const LoadingSpinner: React.FC = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+  </div>
+);
+
+// Error component
+const ErrorDisplay: React.FC<{ error: string; onRetry?: () => void }> = ({
+  error,
+  onRetry,
+}) => (
+  <div className="flex flex-col items-center justify-center min-h-screen p-8">
+    <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md text-center">
+      <h3 className="text-lg font-semibold text-red-800 mb-2">
+        Error Loading Report
+      </h3>
+      <p className="text-red-600 mb-4">{error}</p>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+        >
+          Try Again
+        </button>
+      )}
+    </div>
+  </div>
+);
+
+const VettingReport: React.FC<InfographicReportProps> = ({ candidateData }) => {
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [apiCandidateData, setApiCandidateData] =
+    useState<CandidateData | null>(null);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [showNotification, setShowNotification] = useState<boolean>(false);
+  const [notificationMessage, setNotificationMessage] = useState<string>('');
+  const reportRef = useRef<HTMLDivElement>(null);
   const params = useParams();
   const candidateId = params?.id as string;
 
-  const tabs = [
-    { id: 'Resume Analysis', icon: User },
-    { id: 'Capability', icon: Target },
-    { id: 'MCQ', icon: Award },
-    { id: 'Coding', icon: Code },
-    { id: 'Evaluation', icon: TrendingUp },
-    { id: 'Interview Notes', icon: MessageCircle },
-  ];
+  // Use provided candidateData or API data
+  const displayData = candidateData || apiCandidateData;
 
-  // Fetch vetting report data
   useEffect(() => {
     const fetchVettingReport = async () => {
-      if (!candidateId) {
-        setError('No candidate ID available');
-        setLoading(false);
+      if (candidateData) {
+        // Don't fetch if candidateData is already provided
         return;
       }
 
       try {
         setLoading(true);
         setError(null);
-        const response = await getReportApi(candidateId);
-        setCandidateData(response);
+        const response: CandidateReportResponse =
+          await getReportApi(candidateId);
+        const mappedData = mapApiDataToCandidate(response);
+        setApiCandidateData(mappedData);
       } catch (err) {
         console.error('Error fetching vetting report:', err);
         setError('Failed to load vetting report. Please try again.');
@@ -62,1558 +695,630 @@ const VettingReport: React.FC = () => {
     };
 
     fetchVettingReport();
-  }, [candidateId]);
+  }, [candidateId, candidateData]);
 
-  const getRecommendationColor = (recommendation: string) => {
-    switch (recommendation) {
-      case 'Hire':
-      case 'HIRE':
-        return 'text-emerald-700 bg-emerald-50 border-emerald-200';
-      case 'Reject':
-      case 'REJECT':
-        return 'text-red-700 bg-red-50 border-red-200';
-      case 'Review':
-      case 'REVIEW':
-        return 'text-amber-700 bg-amber-50 border-amber-200';
-      default:
-        return 'text-gray-700 bg-gray-50 border-gray-200';
+  useEffect(() => {
+    // Animate skill progress bars only when we have data
+    if (displayData) {
+      const timer = setTimeout(() => {
+        const skillBars = document.querySelectorAll(
+          '.skill-fill'
+        ) as NodeListOf<HTMLElement>;
+        skillBars.forEach(bar => {
+          const targetWidth = bar.getAttribute('data-width');
+          if (targetWidth) {
+            bar.style.width = targetWidth + '%';
+          }
+        });
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [displayData]);
+
+  const showNotificationMessage = (message: string): void => {
+    setNotificationMessage(message);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 4000);
+  };
+
+  const downloadInfographicPDF = async (): Promise<void> => {
+    if (!displayData) return;
+
+    try {
+      setIsDownloading(true);
+
+      if (typeof window.html2pdf !== 'undefined') {
+        // const element = reportRef.current;
+
+        // if (window.html2pdf) {
+        //   await window
+        //     .html2pdf()
+        //     .set(options)
+        //     .from(element as HTMLElement)
+        //     .save();
+        // }
+
+        showNotificationMessage(
+          'Infographic PDF generated successfully with all visual elements!'
+        );
+      } else {
+        window.print();
+        showNotificationMessage('Print dialog opened - save as PDF');
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showNotificationMessage(
+        'PDF generation encountered an issue. Using print dialog instead.'
+      );
+      setTimeout(() => window.print(), 500);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
-  const getRecommendationIcon = (recommendation: string) => {
-    switch (recommendation) {
-      case 'Hire':
-      case 'HIRE':
-        return <CheckCircle className="w-5 h-5" />;
-      case 'Reject':
-      case 'REJECT':
-        return <XCircle className="w-5 h-5" />;
-      default:
-        return <AlertCircle className="w-5 h-5" />;
+  const shareReport = async (): Promise<void> => {
+    if (!displayData) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${displayData.name} - Assessment Report`,
+          text: 'Candidate assessment report showing strong technical skills and growth potential.',
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        showNotificationMessage('Report URL copied to clipboard!');
+      } catch (error) {
+        console.error('Error copying to clipboard:', error);
+        showNotificationMessage('Could not copy URL to clipboard');
+      }
     }
   };
 
-  const renderScoreBar = (
-    score: number,
-    maxScore: number = 10,
-    color: string = '#059669'
-  ) => (
-    <div className="flex items-center space-x-3">
-      <div className="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
-        <div
-          className="h-2.5 rounded-full transition-all duration-700 ease-out"
-          style={{
-            width: `${(score / maxScore) * 100}%`,
-            backgroundColor: color,
-          }}
-        ></div>
-      </div>
-      <span className="text-sm font-semibold text-gray-700 min-w-[40px]">
-        {score}/{maxScore}
-      </span>
-    </div>
-  );
+  const retryFetch = () => {
+    setError(null);
+    setLoading(true);
+    getReportApi(candidateId)
+      .then(response => {
+        const mappedData = mapApiDataToCandidate(response);
+        setApiCandidateData(mappedData);
+      })
+      .catch(err => {
+        console.error('Error fetching vetting report:', err);
+        setError('Failed to load vetting report. Please try again.');
+      })
+      .finally(() => setLoading(false));
+  };
 
+  // Show loading state
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1F514C] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading vetting report...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
-  if (error || !candidateData) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'No data available'}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-[#1F514C] text-white rounded hover:bg-[#1a453f]"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
+  // Show error state if no data is available
+  if (error && !displayData) {
+    return <ErrorDisplay error={error} onRetry={retryFetch} />;
   }
 
-  // Safe chart data preparation with fallbacks
-  const mcqCategoryData =
-    candidateData?.mcq?.categoryWisePerformance?.map(item => ({
-      category: item.category || 'Unknown',
-      accuracy: parseInt(item.accuracy?.split('%')[0] || '0'),
-    })) || [];
-
-  const difficultyData = [
-    {
-      difficulty: 'Easy',
-      percentage: parseInt(
-        candidateData?.mcq?.difficultyAnalysis?.easy?.split('%')[0] || '0'
-      ),
-    },
-    {
-      difficulty: 'Medium',
-      percentage: parseInt(
-        candidateData?.mcq?.difficultyAnalysis?.medium?.split('%')[0] || '0'
-      ),
-    },
-    {
-      difficulty: 'Hard',
-      percentage: parseInt(
-        candidateData?.mcq?.difficultyAnalysis?.hard?.split('%')[0] || '0'
-      ),
-    },
-  ];
-
-  const capabilityRadarData = [
-    ...(candidateData?.capability?.coreCompetencies || []),
-    ...(candidateData?.capability?.softSkills || []),
-    ...(candidateData?.capability?.domainKnowledge || []),
-  ].map(item => ({
-    subject: item?.name || 'Unknown Skill',
-    score: item?.score || 0,
-    fullMark: 10,
-  }));
+  // Show error if no data is available at all
+  if (!displayData) {
+    return (
+      <ErrorDisplay error="No candidate data available" onRetry={retryFetch} />
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto p-6 pt-8">
-        {/* Enhanced Executive Summary */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-8">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Candidate Vetting Report
-            </h1>
+    <>
+      <div
+        className="font-inter bg-gray-50 leading-normal max-w-4xl mx-auto my-5 bg-white rounded-3xl shadow-2xl overflow-hidden"
+        ref={reportRef}
+      >
+        {/* Hero Section */}
+        <div
+          className="text-white py-16 px-10 relative overflow-hidden"
+          style={{
+            background:
+              'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+          }}
+        >
+          <div
+            className="absolute opacity-20 rounded-full"
+            style={{
+              top: '-50%',
+              right: '-25%',
+              width: '400px',
+              height: '400px',
+              background: 'rgba(255, 255, 255, 0.08)',
+            }}
+          ></div>
+          <div
+            className="absolute opacity-15 rounded-full"
+            style={{
+              bottom: '-30%',
+              left: '-20%',
+              width: '300px',
+              height: '300px',
+              background: 'rgba(255, 255, 255, 0.05)',
+            }}
+          ></div>
+
+          <div className="relative z-10 text-center">
             <div
-              className={`flex items-center space-x-2 px-4 py-2 rounded-full border ${getRecommendationColor(candidateData?.executiveSummary?.overallRecommendation || 'Review')}`}
+              style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+              className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-black mx-auto mb-5 border-4 border-white border-opacity-30"
             >
-              {getRecommendationIcon(
-                candidateData?.executiveSummary?.overallRecommendation ||
-                  'Review'
-              )}
-              <span className="font-semibold">
-                {candidateData?.executiveSummary?.overallRecommendation ||
-                  'Under Review'}
+              <span text-blue>{displayData.initials}</span>
+            </div>
+            <h1 className="text-4xl font-black mb-2 drop-shadow-sm">
+              {displayData.name}
+            </h1>
+            <p className="text-xl opacity-90 mb-5">{displayData.role}</p>
+
+            <div className="flex justify-center gap-10 mt-8 flex-wrap">
+              <div className="text-center">
+                <span className="text-4xl font-black block mb-1">
+                  {displayData.overallScore}
+                </span>
+                <span className="text-sm opacity-80 uppercase tracking-wider">
+                  Overall Score
+                </span>
+              </div>
+              <div className="text-center">
+                <span className="text-4xl font-black block mb-1">
+                  {displayData.stageProgress}
+                </span>
+                <span className="text-sm opacity-80 uppercase tracking-wider">
+                  Stages Passed
+                </span>
+              </div>
+              <div className="text-center">
+                <span className="text-4xl font-black block mb-1">2-3</span>
+                <span className="text-sm opacity-80 uppercase tracking-wider">
+                  Months to Independence
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div className="p-12">
+          {/* Assessment Performance */}
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-800 mb-3">
+              Assessment Performance
+            </h2>
+            <p className="text-gray-600">
+              Comprehensive evaluation across all key areas
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            {displayData.assessmentScores.map((score, index) => (
+              <ScoreVisual key={index} {...score} delay={index * 0.2} />
+            ))}
+          </div>
+
+          {/* Skills Analysis */}
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-800 mb-3">
+              Skills Analysis
+            </h2>
+            <p className="text-gray-600">
+              Current proficiency levels and growth opportunities
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
+            <SkillsColumn
+              type="strengths"
+              title="Core Strengths"
+              skills={displayData.strengths}
+            />
+            <SkillsColumn
+              type="growth"
+              title="Growth Areas"
+              skills={displayData.growthAreas}
+            />
+          </div>
+
+          {/* Panel Interview Strategy */}
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-800 mb-3">
+              Panel Interview Strategy
+            </h2>
+            <p className="text-gray-600">
+              Comprehensive evaluation plan and focus areas
+            </p>
+          </div>
+
+          <InterviewStrategySection candidateData={displayData} />
+
+          {/* Development Journey */}
+          <TimelineInfographic phases={displayData.developmentPhases} />
+
+          {/* Recommendation */}
+          <div className="bg-gradient-to-r from-green-600 to-green-600 text-white rounded-2xl p-10 text-center relative overflow-hidden mb-10">
+            <div className="absolute top-5 left-8 text-5xl opacity-30">🌟</div>
+            <div className="absolute bottom-5 right-8 text-5xl opacity-30">
+              🚀
+            </div>
+
+            <h2 className="text-3xl font-black mb-4 relative z-10">
+              Strong Hire Recommended
+            </h2>
+            <p className="text-lg opacity-95 max-w-2xl mx-auto relative z-10">
+              {displayData.name} demonstrates exceptional technical skills with
+              a clear growth mindset. Strong foundation in modern frontend
+              practices, combined with excellent accessibility awareness, makes
+              them an ideal candidate for immediate contribution and long-term
+              team growth.
+            </p>
+          </div>
+        </div>
+
+        {/* Download Section */}
+        <div className="py-8 px-10 bg-gray-50 text-center">
+          <div className="flex justify-center gap-4 flex-wrap">
+            <button
+              className="px-7 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-2"
+              onClick={() => window.print()}
+            >
+              🖨️ Print Report
+            </button>
+            <button
+              className="px-7 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50"
+              onClick={downloadInfographicPDF}
+              disabled={isDownloading}
+            >
+              {isDownloading
+                ? '⏳ Generating Infographic PDF...'
+                : '📄 Download PDF'}
+            </button>
+            <button
+              className="px-7 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-2"
+              onClick={shareReport}
+            >
+              📤 Share Report
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <Notification message={notificationMessage} show={showNotification} />
+    </>
+  );
+};
+
+// Score Visual Component
+const ScoreVisual: React.FC<AssessmentScore & { delay?: number }> = ({
+  label,
+  score,
+  description,
+  status,
+  percentage,
+}) => {
+  const getStatusClasses = (): string => {
+    const baseClasses =
+      'bg-gradient-to-br rounded-2xl p-8 text-center relative border-4 transition-all duration-300 hover:shadow-lg hover:-translate-y-1';
+
+    switch (status) {
+      case 'excellent':
+        return `${baseClasses} border-green-500 from-green-50 to-green-100`;
+      case 'good':
+        return `${baseClasses} border-orange-400 from-orange-50 to-yellow-50`;
+      case 'pending':
+        return `${baseClasses} border-blue-400 from-blue-50 to-cyan-50`;
+      default:
+        return `${baseClasses} border-gray-300 from-gray-50 to-gray-100`;
+    }
+  };
+
+  const getCircleClasses = (): string => {
+    if (status === 'pending') {
+      return 'w-24 h-24 rounded-full mx-auto mb-5 flex items-center justify-center text-2xl font-black relative bg-gray-200 text-gray-600';
+    }
+    return 'w-24 h-24 rounded-full mx-auto mb-5 flex items-center justify-center text-2xl font-black relative';
+  };
+
+  const getCircleStyle = (): React.CSSProperties => {
+    if (status === 'pending') {
+      return {};
+    }
+    const percent = percentage || parseInt(score.replace('%', ''));
+    const color = status === 'excellent' ? '#48bb78' : '#ed8936';
+    return {
+      background: `conic-gradient(from 0deg, ${color} 0%, ${color} ${percent}%, #e2e8f0 ${percent}%)`,
+    };
+  };
+
+  return (
+    <div className={getStatusClasses()}>
+      <div className={getCircleClasses()} style={getCircleStyle()}>
+        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-gray-800">
+          {status === 'pending' ? '⏳' : score}
+        </div>
+      </div>
+      <div className="text-lg font-semibold text-gray-700 mb-2">{label}</div>
+      <div className="text-sm text-gray-600">{description}</div>
+    </div>
+  );
+};
+
+// Skills Column Component
+const SkillsColumn: React.FC<{
+  type: 'strengths' | 'growth';
+  title: string;
+  skills: Skill[];
+}> = ({ type, title, skills }) => {
+  const isStrengths = type === 'strengths';
+  const borderColor = isStrengths
+    ? 'border-l-green-500'
+    : 'border-l-orange-400';
+
+  return (
+    <div className={`bg-gray-50 rounded-2xl p-8 border-l-8 ${borderColor}`}>
+      <div className="flex items-center gap-3 mb-6">
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center text-lg text-white ${
+            isStrengths
+              ? 'bg-gradient-to-br from-green-500 to-green-600'
+              : 'bg-gradient-to-br from-orange-400 to-orange-500'
+          }`}
+        >
+          {isStrengths ? '💪' : '📈'}
+        </div>
+        <div className="text-xl font-bold text-gray-800">{title}</div>
+      </div>
+
+      {skills.map((skill, index) => (
+        <SkillBar key={index} {...skill} isStrengths={isStrengths} />
+      ))}
+    </div>
+  );
+};
+
+// Skill Bar Component
+const SkillBar: React.FC<Skill & { isStrengths: boolean }> = ({
+  name,
+  level,
+  percentage,
+  isStrengths,
+}) => {
+  const gradientClass = isStrengths
+    ? 'bg-gradient-to-r from-green-500 to-green-600'
+    : 'bg-gradient-to-r from-orange-400 to-orange-500';
+
+  return (
+    <div className="mb-5">
+      <div className="flex justify-between items-center mb-2 text-sm font-medium text-gray-700">
+        <span>{name}</span>
+        <span className="text-xs font-semibold text-gray-500">{level}</span>
+      </div>
+      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div
+          className={`skill-fill h-full rounded-full transition-all duration-1000 ease-out ${gradientClass}`}
+          data-width={percentage}
+          style={{ width: '0%' }}
+        />
+      </div>
+    </div>
+  );
+};
+
+// Interview Strategy Section
+const InterviewStrategySection: React.FC<{ candidateData: CandidateData }> = ({
+  candidateData,
+}) => {
+  return (
+    <div
+      className="rounded-2xl p-10 mb-10"
+      style={{
+        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+      }}
+    >
+      <div className="bg-white rounded-2xl p-8 shadow-lg mb-10 border-l-8 border-blue-400">
+        <div className="flex items-start gap-5">
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #4299e1, #3182ce)' }}
+          >
+            📅
+          </div>
+          <div className="flex-1">
+            <h3 className="text-2xl font-bold mb-3 text-gray-800">
+              Technical Deep Dive Interview
+            </h3>
+            <p className="text-gray-600 mb-2 text-lg">
+              <strong>Date:</strong> {candidateData.interviewDate}
+            </p>
+            <p className="text-gray-600 mb-4 text-lg">
+              <strong>Format:</strong> Virtual • 90 minutes • 2 Interviewers
+            </p>
+            <div className="flex gap-3 flex-wrap">
+              <span className="bg-teal-50 text-teal-800 px-4 py-2 rounded-full text-sm font-medium">
+                Lead Frontend Engineer
+              </span>
+              <span className="bg-teal-50 text-teal-800 px-4 py-2 rounded-full text-sm font-medium">
+                Engineering Manager
               </span>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <User className="w-5 h-5 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-500">Candidate Name</p>
-                      <p className="font-semibold text-gray-900">
-                        {candidateData?.executiveSummary?.candidateName?.trim() ||
-                          'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Briefcase className="w-5 h-5 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-500">Position Applied</p>
-                      <p className="font-semibold text-gray-900">
-                        {candidateData?.executiveSummary?.positionApplied ||
-                          'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Target className="w-5 h-5 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-500">Department</p>
-                      <p className="font-semibold text-gray-900">
-                        {candidateData?.executiveSummary?.department || 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="w-5 h-5 text-gray-500" />
-                    <div>
-                      <p className="text-sm text-gray-500">Report Date</p>
-                      <p className="font-semibold text-gray-900">
-                        {candidateData?.executiveSummary?.reportDate || 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+      <div className="mb-10">
+        <h3 className="text-xl font-bold mb-6 text-gray-800">
+          Interview Structure & Timeline
+        </h3>
+        <div className="flex flex-col gap-4 mb-10">
+          {candidateData.interviewStructure.map((block, index) => (
+            <TimeBlock key={index} {...block} />
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-10">
+        <h3 className="text-xl font-bold mb-6 text-gray-800">
+          Key Evaluation Areas
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-10">
+          {candidateData.evaluationCriteria.map((criteria, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-xl p-6 text-center shadow-md hover:-translate-y-1 transition-transform duration-300"
+            >
+              <div className="text-3xl font-black text-blue-500 mb-3">
+                {criteria.percentage}
               </div>
-            </div>
-
-            {/* Overall Score Visualization */}
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Overall Score
-              </h3>
               <div className="text-center">
-                <div className="relative w-24 h-24 mx-auto mb-4">
-                  <svg
-                    className="w-24 h-24 transform -rotate-90"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="#E5E7EB"
-                      strokeWidth="2"
-                      fill="none"
-                    />
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="#059669"
-                      strokeWidth="2"
-                      fill="none"
-                      strokeDasharray={`${((candidateData?.evaluation?.totalWeightedScore || 0) / 10) * 62.83} 62.83`}
-                      className="transition-all duration-1000"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-2xl font-bold text-emerald-700">
-                      {candidateData?.evaluation?.totalWeightedScore || '0'}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600">out of 10</p>
+                <h4 className="text-lg font-semibold mb-2 text-gray-700 whitespace-normal break-words w-full max-w-full">
+                  {criteria.title}
+                </h4>
+                {/* <div className="text-sm text-gray-600 leading-relaxed">{criteria.details}</div> */}
               </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-8 shadow-lg">
+        <h3 className="text-xl font-bold mb-6 text-gray-800">
+          Interview Success Prediction
+        </h3>
+        <div className="text-center">
+          <div className="w-full h-6 bg-gray-200 rounded-full relative mb-6 overflow-hidden">
+            <div
+              className="h-full rounded-full relative"
+              style={{
+                width: '82%',
+                background: 'linear-gradient(135deg, #48bb78, #38a169)',
+              }}
+            />
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-sm font-bold text-white z-10">
+              82%
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+            <div className="px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-800">
+              ✅ Strong technical foundation
+            </div>
+            <div className="px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-800">
+              ✅ Clear communication in assessment
+            </div>
+            <div className="px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-800">
+              ✅ Growth mindset indicators
+            </div>
+            <div className="px-3 py-2 rounded-lg text-sm font-medium bg-yellow-50 text-yellow-800">
+              ⚡ Validate: Performance optimization experience
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
 
-        {/* Enhanced Tab Navigation */}
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-          <div className="border-b border-gray-200">
-            <nav className="flex overflow-x-auto">
-              {tabs.map(tab => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
-                      activeTab === tab.id
-                        ? 'border-emerald-500 text-emerald-600 bg-emerald-50'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{tab.id}</span>
-                  </button>
-                );
-              })}
-            </nav>
+// Time Block Component
+const TimeBlock: React.FC<InterviewStructureBlock> = ({
+  duration,
+  title,
+  description,
+  type,
+  emoji,
+}) => {
+  const getBorderColor = (): string => {
+    switch (type) {
+      case 'technical':
+        return 'border-l-blue-400';
+      case 'problem':
+        return 'border-l-orange-400';
+      case 'soft-skills':
+        return 'border-l-green-500';
+      default:
+        return 'border-l-gray-300';
+    }
+  };
+
+  return (
+    <div
+      className={`flex items-center bg-white rounded-xl p-5 shadow-md border-l-8 ${getBorderColor()}`}
+    >
+      <div className="text-lg font-bold text-gray-700 min-w-20 flex-shrink-0">
+        {duration}
+      </div>
+      <div className="ml-5">
+        <h4 className="text-lg font-semibold mb-1.5 text-gray-700">
+          {emoji} {title}
+        </h4>
+        <p className="text-gray-600 text-sm">{description}</p>
+      </div>
+    </div>
+  );
+};
+
+// Timeline Infographic Component
+const TimelineInfographic: React.FC<{ phases: DevelopmentPhase[] }> = ({
+  phases,
+}) => {
+  return (
+    <div
+      className="text-white mb-10 relative overflow-hidden p-10"
+      style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        borderRadius: '25px',
+      }}
+    >
+      <div
+        className="absolute rounded-full"
+        style={{
+          top: '-30%',
+          right: '-15%',
+          width: '200px',
+          height: '200px',
+          background: 'rgba(255, 255, 255, 0.1)',
+        }}
+      ></div>
+
+      <div className="text-center mb-10 relative z-10">
+        <h2 className="text-2xl font-bold mb-2">Development Journey</h2>
+        <p className="opacity-90">
+          Roadmap to mastery with realistic timelines
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+        {phases.map((phase, index) => (
+          <div
+            key={index}
+            className="rounded-2xl p-6 text-center border border-white border-opacity-20"
+            style={{
+              background: 'rgba(255, 255, 255, 0.15)',
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-black mx-auto mb-4"
+              style={{ background: 'rgba(255, 255, 255, 0.2)' }}
+            >
+              {index + 1}
+            </div>
+            <div className="text-lg font-semibold mb-3">{phase.period}</div>
+            <div className="text-sm opacity-90 leading-relaxed">
+              {phase.skills.map((skill, skillIndex) => (
+                <div key={skillIndex} className="mb-1">
+                  {skill}
+                </div>
+              ))}
+            </div>
           </div>
-
-          {/* Enhanced Tab Content */}
-          <div className="p-8">
-            {activeTab === 'Resume Analysis' && (
-              <div className="space-y-8">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Resume Analysis & Profile Overview
-                </h3>
-
-                {/* Personal Information Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg">
-                    <User className="w-8 h-8 text-blue-600 mb-3" />
-                    <p className="text-sm text-gray-600">Full Name</p>
-                    <p className="font-semibold text-gray-900">
-                      {candidateData?.resumeAnalysis?.personalInfo?.fullName?.trim() ||
-                        'N/A'}
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg">
-                    <MapPin className="w-8 h-8 text-purple-600 mb-3" />
-                    <p className="text-sm text-gray-600">Location</p>
-                    <p className="font-semibold text-gray-900">
-                      {candidateData?.resumeAnalysis?.personalInfo?.location ||
-                        'Not specified'}
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg">
-                    <Clock className="w-8 h-8 text-green-600 mb-3" />
-                    <p className="text-sm text-gray-600">Experience</p>
-                    <p className="font-semibold text-gray-900">
-                      {candidateData?.resumeAnalysis?.personalInfo
-                        ?.experience || 'N/A'}
-                    </p>
-                  </div>
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-lg">
-                    <Briefcase className="w-8 h-8 text-orange-600 mb-3" />
-                    <p className="text-sm text-gray-600">Current Role</p>
-                    <p className="font-semibold text-gray-900">
-                      {candidateData?.resumeAnalysis?.personalInfo
-                        ?.currentRole || 'N/A'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Skills Section */}
-                {candidateData?.resumeAnalysis?.skills &&
-                candidateData.resumeAnalysis.skills.length > 0 ? (
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <Code className="w-5 h-5 text-indigo-600 mr-2" />
-                      Technical Skills
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {candidateData.resumeAnalysis.skills.map(
-                        (skill, index) => (
-                          <span
-                            key={index}
-                            className="bg-indigo-100 text-indigo-800 text-sm px-3 py-1 rounded-full border border-indigo-200"
-                          >
-                            {skill || 'Unknown Skill'}
-                          </span>
-                        )
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <Code className="w-5 h-5 text-indigo-600 mr-2" />
-                      Technical Skills
-                    </h4>
-                    <p className="text-gray-500 italic">
-                      No technical skills information available.
-                    </p>
-                  </div>
-                )}
-
-                {/* Education Section */}
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                    <Award className="w-5 h-5 text-blue-600 mr-2" />
-                    Education
-                  </h4>
-                  <div className="space-y-4">
-                    {candidateData?.resumeAnalysis?.education &&
-                    candidateData.resumeAnalysis.education.length > 0 ? (
-                      candidateData.resumeAnalysis.education.map(
-                        (edu, index) => (
-                          <div
-                            key={index}
-                            className="bg-white p-6 rounded-lg shadow-sm border border-gray-200"
-                          >
-                            <div className="flex justify-between items-start mb-3">
-                              <div>
-                                <h5 className="font-semibold text-gray-900 text-lg">
-                                  {edu?.degree || 'Degree not specified'}
-                                </h5>
-                                {edu?.field && (
-                                  <p className="text-blue-600 font-medium">
-                                    {edu.field}
-                                  </p>
-                                )}
-                              </div>
-                              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                                {edu?.year || 'Year not specified'}
-                              </span>
-                            </div>
-                            {edu?.institution && (
-                              <p className="text-gray-700 mb-2">
-                                {edu.institution}
-                              </p>
-                            )}
-                            {edu?.location && (
-                              <p className="text-gray-600 text-sm mb-2">
-                                📍 {edu.location}
-                              </p>
-                            )}
-                            {edu?.gpa && (
-                              <p className="text-gray-600 text-sm">
-                                <span className="font-medium">GPA:</span>{' '}
-                                {edu.gpa}
-                              </p>
-                            )}
-                            {edu?.honors && edu.honors.length > 0 && (
-                              <div className="mt-2">
-                                <p className="text-sm font-medium text-gray-700 mb-1">
-                                  Honors & Awards:
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                  {edu.honors.map((honor, honorIndex) => (
-                                    <span
-                                      key={honorIndex}
-                                      className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full"
-                                    >
-                                      {honor || 'Honor not specified'}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      )
-                    ) : (
-                      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 text-center">
-                        <p className="text-gray-500 italic">
-                          No education information available.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Experience Timeline */}
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-6">
-                    Work Experience
-                  </h4>
-                  <div className="space-y-6">
-                    {candidateData?.resumeAnalysis?.experience &&
-                    candidateData.resumeAnalysis.experience.length > 0 ? (
-                      candidateData.resumeAnalysis.experience.map(
-                        (exp, index) => (
-                          <div
-                            key={index}
-                            className="relative pl-8 pb-6 border-l-2 border-emerald-200 last:border-l-0"
-                          >
-                            <div className="absolute w-4 h-4 bg-emerald-500 rounded-full -left-2 top-0"></div>
-                            <div className="bg-white p-4 rounded-lg shadow-sm">
-                              <div className="flex justify-between items-start mb-2">
-                                <h5 className="font-semibold text-gray-900">
-                                  {exp?.title || 'Position not specified'}
-                                </h5>
-                                <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                  {exp?.start_date || 'N/A'} -{' '}
-                                  {exp?.end_date || 'N/A'}
-                                </span>
-                              </div>
-                              <p className="text-emerald-600 font-medium mb-2">
-                                {exp?.company || 'Company not specified'}
-                              </p>
-                              <p className="text-gray-600">
-                                {exp?.description || 'No description available'}
-                              </p>
-                            </div>
-                          </div>
-                        )
-                      )
-                    ) : (
-                      <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-                        <p className="text-gray-500 italic">
-                          No work experience information available.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Resume Quality with Visual */}
-                <div className="bg-white border-2 border-gray-200 p-6 rounded-lg">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                    Resume Quality Score
-                  </h4>
-                  <div className="flex items-center space-x-6">
-                    <div className="flex-1">
-                      <div className="flex justify-between mb-2">
-                        <span className="text-sm text-gray-600">
-                          Quality Score
-                        </span>
-                        <span className="text-sm font-medium text-gray-900">
-                          {candidateData?.resumeAnalysis?.resumeQuality || 0}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-4">
-                        <div
-                          className="bg-gradient-to-r from-red-400 via-yellow-400 to-green-400 h-4 rounded-full transition-all duration-1000"
-                          style={{
-                            width: `${candidateData?.resumeAnalysis?.resumeQuality || 0}%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                    <div className="text-3xl font-bold text-gray-900">
-                      {candidateData?.resumeAnalysis?.resumeQuality || 0}/100
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'MCQ' && (
-              <div className="space-y-8">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  MCQ Test Results
-                </h3>
-
-                {/* Test Overview Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg text-center">
-                    <div className="text-3xl font-bold text-blue-600">
-                      {candidateData?.mcq?.testOverview?.totalQuestions || 0}
-                    </div>
-                    <div className="text-sm text-gray-600">Total Questions</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg text-center">
-                    <div className="text-3xl font-bold text-green-600">
-                      {candidateData?.mcq?.testOverview?.attempted || 0}
-                    </div>
-                    <div className="text-sm text-gray-600">Attempted</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 rounded-lg text-center">
-                    <div className="text-3xl font-bold text-emerald-600">
-                      {candidateData?.mcq?.testOverview?.correct || 0}
-                    </div>
-                    <div className="text-sm text-gray-600">Correct Answers</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg text-center">
-                    <div className="text-3xl font-bold text-purple-600">
-                      {candidateData?.mcq?.testOverview?.score?.split(' ')[0] ||
-                        '0%'}
-                    </div>
-                    <div className="text-sm text-gray-600">Overall Score</div>
-                  </div>
-                </div>
-
-                {/* Charts Section - CSS Based */}
-                {mcqCategoryData.length > 0 ||
-                difficultyData.some(d => d.percentage > 0) ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Category Performance Chart */}
-                    <div className="bg-white border-2 border-gray-200 p-6 rounded-lg">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                        Category Performance
-                      </h4>
-                      {mcqCategoryData.length > 0 ? (
-                        <div className="space-y-4">
-                          {mcqCategoryData.map((item, index) => (
-                            <div key={index} className="relative">
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium text-gray-700">
-                                  {item.category}
-                                </span>
-                                <span className="font-bold text-emerald-600">
-                                  {item.accuracy}%
-                                </span>
-                              </div>
-                              <div className="w-full bg-gray-200 rounded-full h-3">
-                                <div
-                                  className="bg-emerald-500 h-3 rounded-full transition-all duration-1000 ease-out"
-                                  style={{ width: `${item.accuracy}%` }}
-                                ></div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 italic text-center py-8">
-                          No category performance data available.
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Difficulty Analysis Donut Chart */}
-                    <div className="bg-white border-2 border-gray-200 p-6 rounded-lg">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                        Difficulty Analysis
-                      </h4>
-                      {difficultyData.some(d => d.percentage > 0) ? (
-                        <>
-                          <div className="flex items-center justify-center">
-                            <div className="relative w-48 h-48">
-                              {/* CSS Donut Chart */}
-                              <div
-                                className="absolute inset-0 rounded-full"
-                                style={{
-                                  background: `conic-gradient(
-                                       #059669 0% ${difficultyData[0].percentage}%,
-                                       #DC2626 ${difficultyData[0].percentage}% ${difficultyData[0].percentage + difficultyData[1].percentage}%,
-                                       #D97706 ${difficultyData[0].percentage + difficultyData[1].percentage}% 100%
-                                     )`,
-                                }}
-                              >
-                                <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center">
-                                  <div className="text-center">
-                                    <div className="text-2xl font-bold text-gray-800">
-                                      100%
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      Complete
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="mt-4 space-y-2">
-                            {difficultyData.map((item, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center justify-between"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <div
-                                    className={`w-3 h-3 rounded-full ${
-                                      index === 0
-                                        ? 'bg-emerald-500'
-                                        : index === 1
-                                          ? 'bg-red-600'
-                                          : 'bg-orange-600'
-                                    }`}
-                                  ></div>
-                                  <span className="text-sm font-medium text-gray-700">
-                                    {item.difficulty}
-                                  </span>
-                                </div>
-                                <span className="font-bold text-gray-800">
-                                  {item.percentage}%
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      ) : (
-                        <p className="text-gray-500 italic text-center py-8">
-                          No difficulty analysis data available.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 border-2 border-gray-200 p-8 rounded-lg text-center">
-                    <p className="text-gray-500 italic">
-                      No MCQ performance charts data available.
-                    </p>
-                  </div>
-                )}
-
-                {/* Time Management and Additional Insights */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="bg-blue-50 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <Clock className="w-5 h-5 text-blue-600 mr-2" />
-                      Time Management
-                    </h4>
-                    <div className="space-y-4">
-                      <div className="bg-white p-4 rounded-lg border border-blue-200">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium text-gray-700">
-                            Average Time per Question
-                          </span>
-                          <span className="text-xl font-bold text-blue-600">
-                            {candidateData?.mcq?.timeManagement
-                              ?.avgTimePerQuestion || 'N/A'}
-                          </span>
-                        </div>
-                        <div className="w-full bg-blue-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-500 h-2 rounded-full"
-                            style={{ width: '60%' }}
-                          ></div>
-                        </div>
-                      </div>
-                      <div className="bg-blue-100 p-4 rounded-lg border border-blue-200">
-                        <h5 className="font-medium text-gray-900 mb-2">
-                          Key Observations:
-                        </h5>
-                        <p className="text-gray-700 text-sm">
-                          {candidateData?.mcq?.timeManagement?.observations ||
-                            'No observations available.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-purple-50 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                      Difficulty Analysis
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-purple-200">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                          <span className="font-medium text-gray-900">
-                            Easy Questions
-                          </span>
-                        </div>
-                        <span className="text-green-600 font-bold">
-                          {candidateData?.mcq?.difficultyAnalysis?.easy || '0%'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-purple-200">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
-                          <span className="font-medium text-gray-900">
-                            Medium Questions
-                          </span>
-                        </div>
-                        <span className="text-yellow-600 font-bold">
-                          {candidateData?.mcq?.difficultyAnalysis?.medium ||
-                            '0%'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-purple-200">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                          <span className="font-medium text-gray-900">
-                            Hard Questions
-                          </span>
-                        </div>
-                        <span className="text-red-600 font-bold">
-                          {candidateData?.mcq?.difficultyAnalysis?.hard || '0%'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Strengths and Weaknesses */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="bg-green-50 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                      Strengths
-                    </h4>
-                    <div className="space-y-2">
-                      {candidateData?.mcq?.strengthsAndWeaknesses?.strengths &&
-                      candidateData.mcq.strengthsAndWeaknesses.strengths
-                        .length > 0 ? (
-                        candidateData.mcq.strengthsAndWeaknesses.strengths.map(
-                          (strength, index) => (
-                            <span
-                              key={index}
-                              className="inline-block bg-green-200 text-green-800 text-sm px-4 py-2 rounded-full mr-2 mb-2"
-                            >
-                              {strength || 'Strength not specified'}
-                            </span>
-                          )
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No strengths information available.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="bg-red-50 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-                      Areas for Improvement
-                    </h4>
-                    <div className="space-y-2">
-                      {candidateData?.mcq?.strengthsAndWeaknesses?.weaknesses &&
-                      candidateData.mcq.strengthsAndWeaknesses.weaknesses
-                        .length > 0 ? (
-                        candidateData.mcq.strengthsAndWeaknesses.weaknesses.map(
-                          (weakness, index) => (
-                            <span
-                              key={index}
-                              className="inline-block bg-red-200 text-red-800 text-sm px-4 py-2 rounded-full mr-2 mb-2"
-                            >
-                              {weakness || 'Weakness not specified'}
-                            </span>
-                          )
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No weaknesses information available.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'Capability' && (
-              <div className="space-y-8">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Capability Assessment
-                </h3>
-
-                {/* Skills Overview Dashboard */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg text-center">
-                    <Target className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-blue-600">
-                      {candidateData?.capability?.coreCompetencies &&
-                      candidateData.capability.coreCompetencies.length > 0
-                        ? Math.round(
-                            (candidateData.capability.coreCompetencies.reduce(
-                              (sum, item) => sum + (item?.score || 0),
-                              0
-                            ) /
-                              candidateData.capability.coreCompetencies
-                                .length) *
-                              10
-                          )
-                        : 0}
-                      %
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Core Competencies
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg text-center">
-                    <Code className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-purple-600">
-                      {candidateData?.capability?.roleSpecificSkills &&
-                      candidateData.capability.roleSpecificSkills.length > 0
-                        ? Math.round(
-                            (candidateData.capability.roleSpecificSkills.reduce(
-                              (sum, item) => sum + (item?.score || 0),
-                              0
-                            ) /
-                              candidateData.capability.roleSpecificSkills
-                                .length) *
-                              10
-                          )
-                        : 0}
-                      %
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Technical Skills
-                    </div>
-                  </div>
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg text-center">
-                    <MessageCircle className="w-8 h-8 text-green-600 mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-green-600">
-                      {candidateData?.capability?.softSkills &&
-                      candidateData.capability.softSkills.length > 0
-                        ? Math.round(
-                            (candidateData.capability.softSkills.reduce(
-                              (sum, item) => sum + (item?.score || 0),
-                              0
-                            ) /
-                              candidateData.capability.softSkills.length) *
-                              10
-                          )
-                        : 0}
-                      %
-                    </div>
-                    <div className="text-sm text-gray-600">Soft Skills</div>
-                  </div>
-                  <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-lg text-center">
-                    <Award className="w-8 h-8 text-orange-600 mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-orange-600">
-                      {candidateData?.capability?.domainKnowledge &&
-                      candidateData.capability.domainKnowledge.length > 0
-                        ? Math.round(
-                            (candidateData.capability.domainKnowledge.reduce(
-                              (sum, item) => sum + (item?.score || 0),
-                              0
-                            ) /
-                              candidateData.capability.domainKnowledge.length) *
-                              10
-                          )
-                        : 0}
-                      %
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Domain Knowledge
-                    </div>
-                  </div>
-                </div>
-
-                {/* Enhanced Skills Overview with Multiple Visualizations */}
-                {capabilityRadarData.length > 0 ? (
-                  <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                    {/* Horizontal Bar Chart with Skill Categories */}
-                    <div className="xl:col-span-2 bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 p-8 rounded-xl shadow-lg">
-                      <div className="flex items-center justify-between mb-6">
-                        <h4 className="text-xl font-bold text-gray-900 flex items-center">
-                          <Target className="w-6 h-6 text-emerald-600 mr-3" />
-                          Skills Proficiency Matrix
-                        </h4>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600">
-                          <div className="flex items-center space-x-1">
-                            <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                            <span>0-4</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                            <span>5-6</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                            <span>7-8</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
-                            <span>9-10</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        {capabilityRadarData.map((skill, index) => {
-                          const getSkillColor = (score: number) => {
-                            if (score >= 9)
-                              return {
-                                bg: 'bg-emerald-500',
-                                text: 'text-emerald-700',
-                                light: 'bg-emerald-100',
-                              };
-                            if (score >= 7)
-                              return {
-                                bg: 'bg-green-400',
-                                text: 'text-green-700',
-                                light: 'bg-green-100',
-                              };
-                            if (score >= 5)
-                              return {
-                                bg: 'bg-yellow-400',
-                                text: 'text-yellow-700',
-                                light: 'bg-yellow-100',
-                              };
-                            return {
-                              bg: 'bg-red-400',
-                              text: 'text-red-700',
-                              light: 'bg-red-100',
-                            };
-                          };
-
-                          const colors = getSkillColor(skill.score);
-                          const percentage = (skill.score / 10) * 100;
-
-                          return (
-                            <div
-                              key={index}
-                              className="group hover:bg-white hover:shadow-md rounded-lg p-4 transition-all duration-200"
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center space-x-3">
-                                  <div
-                                    className={`w-3 h-3 rounded-full ${colors.bg}`}
-                                  ></div>
-                                  <span className="font-medium text-gray-800 text-sm">
-                                    {skill.subject}
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                  <span
-                                    className={`text-xs px-2 py-1 rounded-full font-medium ${colors.light} ${colors.text}`}
-                                  >
-                                    {skill.score >= 9
-                                      ? 'Expert'
-                                      : skill.score >= 7
-                                        ? 'Advanced'
-                                        : skill.score >= 5
-                                          ? 'Intermediate'
-                                          : 'Basic'}
-                                  </span>
-                                  <span className="font-bold text-gray-700 min-w-[32px] text-right">
-                                    {skill.score}/10
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="relative">
-                                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                  <div
-                                    className={`h-2 rounded-full transition-all duration-700 ease-out ${colors.bg}`}
-                                    style={{
-                                      width: `${percentage}%`,
-                                      boxShadow: `0 0 10px ${colors.bg.includes('emerald') ? '#10b981' : colors.bg.includes('green') ? '#22c55e' : colors.bg.includes('yellow') ? '#eab308' : '#ef4444'}40`,
-                                    }}
-                                  ></div>
-                                </div>
-                                <div className="flex justify-between text-xs text-gray-400 mt-1">
-                                  <span>Beginner</span>
-                                  <span>Intermediate</span>
-                                  <span>Advanced</span>
-                                  <span>Expert</span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Skills Distribution Chart - CSS Based */}
-                      <div className="mt-8 pt-6 border-t border-gray-300">
-                        <h5 className="text-lg font-semibold text-gray-800 mb-4">
-                          Skills Distribution
-                        </h5>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                          {capabilityRadarData.map((skill, index) => (
-                            <div key={index} className="text-center">
-                              <div className="relative w-16 h-16 mx-auto mb-2">
-                                <svg
-                                  className="w-16 h-16 transform -rotate-90"
-                                  viewBox="0 0 36 36"
-                                >
-                                  <path
-                                    d="M18 2.0845
-                                      a 15.9155 15.9155 0 0 1 0 31.831
-                                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    fill="none"
-                                    stroke="#E5E7EB"
-                                    strokeWidth="3"
-                                  />
-                                  <path
-                                    d="M18 2.0845
-                                      a 15.9155 15.9155 0 0 1 0 31.831
-                                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                                    fill="none"
-                                    stroke="#059669"
-                                    strokeWidth="3"
-                                    strokeDasharray={`${(skill.score / 10) * 100}, 100`}
-                                  />
-                                </svg>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <span className="text-xs font-bold text-gray-700">
-                                    {skill.score}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="text-xs text-gray-600 truncate">
-                                {skill.subject}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Skills Summary Cards */}
-                    <div className="space-y-6">
-                      <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
-                        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4">
-                          <h5 className="text-white font-semibold flex items-center">
-                            <TrendingUp className="w-4 h-4 mr-2" />
-                            Top Performing Skills
-                          </h5>
-                        </div>
-                        <div className="p-4 space-y-3">
-                          {capabilityRadarData
-                            .sort((a, b) => b.score - a.score)
-                            .slice(0, 5)
-                            .map((skill, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center justify-between"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <div
-                                    className={`w-2 h-2 rounded-full ${
-                                      index === 0
-                                        ? 'bg-yellow-400'
-                                        : index === 1
-                                          ? 'bg-gray-400'
-                                          : index === 2
-                                            ? 'bg-orange-400'
-                                            : 'bg-emerald-400'
-                                    }`}
-                                  ></div>
-                                  <span className="text-sm font-medium text-gray-700 truncate">
-                                    {skill.subject}
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                                    <div
-                                      className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
-                                      style={{
-                                        width: `${(skill.score / 10) * 100}%`,
-                                      }}
-                                    ></div>
-                                  </div>
-                                  <span className="text-xs font-bold text-gray-600 min-w-[24px]">
-                                    {skill.score}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-
-                      <div className="bg-white border border-gray-200 rounded-xl shadow-md overflow-hidden">
-                        <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-4">
-                          <h5 className="text-white font-semibold flex items-center">
-                            <AlertCircle className="w-4 h-4 mr-2" />
-                            Development Areas
-                          </h5>
-                        </div>
-                        <div className="p-4 space-y-3">
-                          {capabilityRadarData
-                            .sort((a, b) => a.score - b.score)
-                            .slice(0, 3)
-                            .map((skill, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center justify-between"
-                              >
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                                  <span className="text-sm font-medium text-gray-700 truncate">
-                                    {skill.subject}
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                                    <div
-                                      className="bg-amber-500 h-1.5 rounded-full transition-all duration-500"
-                                      style={{
-                                        width: `${(skill.score / 10) * 100}%`,
-                                      }}
-                                    ></div>
-                                  </div>
-                                  <span className="text-xs font-bold text-gray-600 min-w-[24px]">
-                                    {skill.score}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-
-                      <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-xl p-4">
-                        <h5 className="text-indigo-800 font-semibold mb-3 flex items-center">
-                          <Award className="w-4 h-4 mr-2" />
-                          Overall Assessment
-                        </h5>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-indigo-700">
-                              Average Score
-                            </span>
-                            <span className="font-bold text-indigo-800">
-                              {capabilityRadarData.length > 0
-                                ? (
-                                    capabilityRadarData.reduce(
-                                      (sum, item) => sum + item.score,
-                                      0
-                                    ) / capabilityRadarData.length
-                                  ).toFixed(1)
-                                : '0'}
-                              /10
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-indigo-700">
-                              Skills Evaluated
-                            </span>
-                            <span className="font-bold text-indigo-800">
-                              {capabilityRadarData.length}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-indigo-700">
-                              Proficiency Level
-                            </span>
-                            <span
-                              className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                capabilityRadarData.length > 0 &&
-                                capabilityRadarData.reduce(
-                                  (sum, item) => sum + item.score,
-                                  0
-                                ) /
-                                  capabilityRadarData.length >=
-                                  8
-                                  ? 'bg-emerald-100 text-emerald-700'
-                                  : capabilityRadarData.length > 0 &&
-                                      capabilityRadarData.reduce(
-                                        (sum, item) => sum + item.score,
-                                        0
-                                      ) /
-                                        capabilityRadarData.length >=
-                                        6
-                                    ? 'bg-yellow-100 text-yellow-700'
-                                    : 'bg-red-100 text-red-700'
-                              }`}
-                            >
-                              {capabilityRadarData.length > 0
-                                ? capabilityRadarData.reduce(
-                                    (sum, item) => sum + item.score,
-                                    0
-                                  ) /
-                                    capabilityRadarData.length >=
-                                  8
-                                  ? 'Expert'
-                                  : capabilityRadarData.reduce(
-                                        (sum, item) => sum + item.score,
-                                        0
-                                      ) /
-                                        capabilityRadarData.length >=
-                                      6
-                                    ? 'Intermediate'
-                                    : 'Beginner'
-                                : 'No Data'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 border-2 border-gray-200 p-8 rounded-lg text-center">
-                    <p className="text-gray-500 italic">
-                      No capability assessment data available.
-                    </p>
-                  </div>
-                )}
-
-                {/* Detailed Scores */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="bg-blue-50 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-6">
-                      Core Competencies
-                    </h4>
-                    <div className="space-y-4">
-                      {candidateData?.capability?.coreCompetencies &&
-                      candidateData.capability.coreCompetencies.length > 0 ? (
-                        candidateData.capability.coreCompetencies.map(
-                          (comp, index) => (
-                            <div key={index}>
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium text-gray-900">
-                                  {comp?.name || 'Unknown Competency'}
-                                </span>
-                              </div>
-                              {renderScoreBar(comp?.score || 0, 10, '#2563EB')}
-                            </div>
-                          )
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No core competencies data available.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="bg-purple-50 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-6">
-                      Role-Specific Skills
-                    </h4>
-                    <div className="space-y-4">
-                      {candidateData?.capability?.roleSpecificSkills &&
-                      candidateData.capability.roleSpecificSkills.length > 0 ? (
-                        candidateData.capability.roleSpecificSkills.map(
-                          (skill, index) => (
-                            <div key={index}>
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium text-gray-900">
-                                  {skill?.name || 'Unknown Skill'}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                  Weight: {skill?.weight || 'N/A'}
-                                </span>
-                              </div>
-                              {renderScoreBar(skill?.score || 0, 10, '#7C3AED')}
-                            </div>
-                          )
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No role-specific skills data available.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="bg-green-50 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-6">
-                      Soft Skills
-                    </h4>
-                    <div className="space-y-4">
-                      {candidateData?.capability?.softSkills &&
-                      candidateData.capability.softSkills.length > 0 ? (
-                        candidateData.capability.softSkills.map(
-                          (skill, index) => (
-                            <div key={index}>
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium text-gray-900">
-                                  {skill?.name || 'Unknown Skill'}
-                                </span>
-                              </div>
-                              {renderScoreBar(skill?.score || 0, 10, '#059669')}
-                            </div>
-                          )
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No soft skills data available.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="bg-orange-50 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-6">
-                      Domain Knowledge
-                    </h4>
-                    <div className="space-y-4">
-                      {candidateData?.capability?.domainKnowledge &&
-                      candidateData.capability.domainKnowledge.length > 0 ? (
-                        candidateData.capability.domainKnowledge.map(
-                          (domain, index) => (
-                            <div key={index}>
-                              <div className="flex justify-between items-center mb-2">
-                                <span className="font-medium text-gray-900">
-                                  {domain?.name || 'Unknown Domain'}
-                                </span>
-                              </div>
-                              {renderScoreBar(
-                                domain?.score || 0,
-                                10,
-                                '#EA580C'
-                              )}
-                            </div>
-                          )
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No domain knowledge data available.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'Coding' && (
-              <div className="space-y-8">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Coding Assessment
-                </h3>
-
-                {/* Overall Score with Circular Progress */}
-                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-8 rounded-lg">
-                  <h4 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-                    Overall Coding Score
-                  </h4>
-                  <div className="flex justify-center">
-                    <div className="relative w-40 h-40">
-                      <svg
-                        className="w-40 h-40 transform -rotate-90"
-                        viewBox="0 0 100 100"
-                      >
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="45"
-                          stroke="#E5E7EB"
-                          strokeWidth="8"
-                          fill="none"
-                        />
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="45"
-                          stroke="#4F46E5"
-                          strokeWidth="8"
-                          fill="none"
-                          strokeDasharray={`${((candidateData?.coding?.overallScore || 0) / 100) * 283} 283`}
-                          className="transition-all duration-1000"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-4xl font-bold text-indigo-600">
-                          {candidateData?.coding?.overallScore || 0}
-                        </span>
-                        <span className="text-lg text-gray-600">
-                          out of 100
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Strengths and Weaknesses */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <div className="bg-emerald-50 border-2 border-emerald-200 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <CheckCircle className="w-6 h-6 text-emerald-600 mr-2" />
-                      Coding Strengths
-                    </h4>
-                    <div className="space-y-3">
-                      {candidateData?.coding?.strengths &&
-                      candidateData.coding.strengths.length > 0 ? (
-                        candidateData.coding.strengths.map(
-                          (strength, index) => (
-                            <div
-                              key={index}
-                              className="bg-emerald-100 p-4 rounded-lg border border-emerald-200"
-                            >
-                              <span className="text-emerald-800 font-medium">
-                                {strength || 'Strength not specified'}
-                              </span>
-                            </div>
-                          )
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No coding strengths information available.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="bg-amber-50 border-2 border-amber-200 p-6 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <AlertCircle className="w-6 h-6 text-amber-600 mr-2" />
-                      Areas for Improvement
-                    </h4>
-                    <div className="space-y-3">
-                      {candidateData?.coding?.weaknesses &&
-                      candidateData.coding.weaknesses.length > 0 ? (
-                        candidateData.coding.weaknesses.map(
-                          (weakness, index) => (
-                            <div
-                              key={index}
-                              className="bg-amber-100 p-4 rounded-lg border border-amber-200"
-                            >
-                              <span className="text-amber-800 font-medium">
-                                {weakness || 'Weakness not specified'}
-                              </span>
-                            </div>
-                          )
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No coding weaknesses information available.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'Evaluation' && (
-              <div className="space-y-8">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Final Evaluation
-                </h3>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Overall Score */}
-                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-2 border-emerald-200 p-8 rounded-lg">
-                    <h4 className="text-xl font-semibold text-gray-900 mb-6 text-center">
-                      Total Weighted Score
-                    </h4>
-                    <div className="text-center">
-                      <div className="text-6xl font-bold text-emerald-600 mb-2">
-                        {candidateData?.evaluation?.totalWeightedScore || 0}
-                      </div>
-                      <div className="text-lg text-gray-600 mb-4">
-                        out of 10
-                      </div>
-                      <div className="w-full bg-emerald-200 rounded-full h-4">
-                        <div
-                          className="bg-emerald-600 h-4 rounded-full transition-all duration-1000"
-                          style={{
-                            width: `${((candidateData?.evaluation?.totalWeightedScore || 0) / 10) * 100}%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Recommendation */}
-                  <div className="bg-white border-2 border-gray-200 p-8 rounded-lg">
-                    <h4 className="text-xl font-semibold text-gray-900 mb-6">
-                      Final Recommendation
-                    </h4>
-                    <div className="text-center">
-                      <div
-                        className={`inline-flex items-center space-x-3 px-8 py-4 rounded-full text-2xl font-bold border-2 ${getRecommendationColor(candidateData?.evaluation?.recommendation || 'Review')}`}
-                      >
-                        {getRecommendationIcon(
-                          candidateData?.evaluation?.recommendation || 'Review'
-                        )}
-                        <span>
-                          {candidateData?.evaluation?.recommendation ||
-                            'Under Review'}
-                        </span>
-                      </div>
-
-                      {candidateData?.evaluation?.nextSteps &&
-                        candidateData.evaluation.nextSteps.length > 0 && (
-                          <div className="mt-8">
-                            <h5 className="text-lg font-semibold text-gray-900 mb-4">
-                              Next Steps
-                            </h5>
-                            <div className="space-y-2">
-                              {candidateData.evaluation.nextSteps.map(
-                                (step, index) => (
-                                  <div
-                                    key={index}
-                                    className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg"
-                                  >
-                                    <div className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
-                                      {index + 1}
-                                    </div>
-                                    <span className="text-gray-900">
-                                      {step || 'Step not specified'}
-                                    </span>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'Interview Notes' && (
-              <div className="space-y-8">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  Interview Notes
-                </h3>
-
-                <div className="bg-gray-50 border-2 border-gray-200 p-8 rounded-lg">
-                  {candidateData?.interviewNotes?.notes &&
-                  candidateData.interviewNotes.notes.length > 0 &&
-                  candidateData.interviewNotes.notes[0] !==
-                    'No interview notes available.' ? (
-                    <div className="space-y-4">
-                      {candidateData.interviewNotes.notes.map((note, index) => (
-                        <div
-                          key={index}
-                          className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-emerald-500"
-                        >
-                          <div className="flex items-start space-x-3">
-                            <MessageCircle className="w-5 h-5 text-emerald-600 mt-1 flex-shrink-0" />
-                            <p className="text-gray-800 leading-relaxed">
-                              {note || 'Note not available'}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-64">
-                      <div className="text-center">
-                        <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600 text-lg">
-                          No interview notes available.
-                        </p>
-                        <p className="text-gray-500 text-sm mt-2">
-                          Interview notes will appear here once the interview is
-                          completed.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );

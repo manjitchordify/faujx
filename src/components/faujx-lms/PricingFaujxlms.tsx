@@ -73,7 +73,7 @@ const PricingFaujxlms = () => {
           </div>
 
           {/* CTA Button */}
-          <Link href="#explore-courses" passHref>
+          <Link href="faujx-lms/courses" passHref>
             <button className="w-full bg-gradient-to-r from-[#1F514C] to-[#2a837a] hover:bg-[#207068] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg cursor-pointer">
               Start Learning
             </button>

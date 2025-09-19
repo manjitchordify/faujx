@@ -16,7 +16,7 @@ const CodeSandboxInstructions: React.FC<CodeSandboxInstructionsProps> = ({
 
   return (
     <div className="min-h-screen flex items-center justify-center p-5">
-      <div className="bg-white rounded-3xl shadow-2xl p-16 max-w-4xl w-full text-center relative overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-2xl p-16 max-w-7xl w-full text-center relative overflow-hidden">
         {/* Icon */}
         <div className="w-20 h-20 mx-auto mb-8 bg-[#1F514C] rounded-full flex items-center justify-center">
           <svg
@@ -37,11 +37,11 @@ const CodeSandboxInstructions: React.FC<CodeSandboxInstructionsProps> = ({
         </h1>
         <p className="text-xl text-gray-600 mb-10 leading-relaxed">
           Follow these steps to complete your coding assessment in our
-          integrated environment
+          integrated environment.
         </p>
 
-        {/* Instructions List */}
-        <div className="space-y-5 mb-10 text-left">
+        {/* Instructions Grid - First 4 instructions in 2x2 grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 text-left">
           <div className="flex items-start bg-gray-50 p-6 rounded-xl border-l-4 border-blue-500 hover:translate-x-1 transition-transform duration-200">
             <div className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-4 mt-0.5 flex-shrink-0">
               1
@@ -51,9 +51,8 @@ const CodeSandboxInstructions: React.FC<CodeSandboxInstructionsProps> = ({
                 Review the Problem Statement
               </div>
               <div className="text-gray-600 leading-relaxed">
-                Read the task description carefully. You need to create a React
-                component for a simple to-do list with the ability to add and
-                display tasks.
+                Carefully read the task description. Your goal is to implement
+                the required functionality according to the given instructions.
               </div>
             </div>
           </div>
@@ -67,9 +66,9 @@ const CodeSandboxInstructions: React.FC<CodeSandboxInstructionsProps> = ({
                 Use the File Explorer
               </div>
               <div className="text-gray-600 leading-relaxed">
-                Navigate through files using the left panel. Click on App.js to
-                start coding. Use &quot;New File&quot; button to create
-                additional components if needed.
+                Navigate through files using the top panel. Open the appropriate
+                file or another relevant file to begin coding. Use the &quot;New
+                File&quot; button to create additional files if required.
               </div>
             </div>
           </div>
@@ -83,8 +82,9 @@ const CodeSandboxInstructions: React.FC<CodeSandboxInstructionsProps> = ({
                 Code in the Editor
               </div>
               <div className="text-gray-600 leading-relaxed">
-                Write your React component code in the main editor. The platform
-                auto-saves your progress. Use React hooks for state management.
+                Write your code in the main editor. The platform auto-saves your
+                progress. Use appropriate tools, frameworks, or libraries based
+                on the task requirements.
               </div>
             </div>
           </div>
@@ -98,49 +98,86 @@ const CodeSandboxInstructions: React.FC<CodeSandboxInstructionsProps> = ({
                 Monitor Live Preview
               </div>
               <div className="text-gray-600 leading-relaxed">
-                Your code runs automatically in the right panel. Test your
-                component functionality and watch for any errors in the browser
-                console.
+                Your code runs automatically in the preview panel. Test your
+                implementation and check for errors in the console.
               </div>
             </div>
           </div>
+        </div>
 
+        {/* Instructions 5 & 6 in a row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 text-left">
           <div className="flex items-start bg-gray-50 p-6 rounded-xl border-l-4 border-blue-500 hover:translate-x-1 transition-transform duration-200">
             <div className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-4 mt-0.5 flex-shrink-0">
               5
             </div>
             <div className="flex-1">
               <div className="font-semibold text-gray-800 mb-1 text-lg">
+                Test Your Implementation
+              </div>
+              <div className="text-gray-600 leading-relaxed">
+                Use the console panel to debug any issues. Test different
+                scenarios and edge cases to ensure your solution is robust and
+                handles all requirements correctly.
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start bg-gray-50 p-6 rounded-xl border-l-4 border-blue-500 hover:translate-x-1 transition-transform duration-200">
+            <div className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-semibold mr-4 mt-0.5 flex-shrink-0">
+              6
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold text-gray-800 mb-1 text-lg">
                 Submit Your Solution
               </div>
               <div className="text-gray-600 leading-relaxed">
-                Click the &quot;Submit Code&quot; button when you are satisfied
-                with your solution. Make sure your to-do list works correctly
-                before submitting.
+                Click the &quot;Submit Code&quot; button once you are satisfied
+                with your solution. Ensure that your implementation works
+                correctly before submitting.
               </div>
             </div>
           </div>
         </div>
 
-        {/* Warning Box */}
-        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 mb-10 text-left">
-          <div className="font-semibold text-red-700 mb-3 flex items-center">
-            <span className="mr-2">⚠️</span>
-            Platform Features & Tips
+        {/* Tips and Video - Responsive Layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-10">
+          {/* Platform Tips */}
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6 text-left">
+            <div className="font-semibold text-red-700 mb-3 flex items-center">
+              <span className="mr-2">⚠️</span>
+              Platform Features & Tips
+            </div>
+            <div className="text-red-800 leading-relaxed">
+              • Your work is auto-saved, but click &quot;Submit Code&quot; to
+              finalize your submission
+              <br />
+              • Use the live preview on the right to test your component as you
+              code
+              <br />
+              • If you encounter errors, check the browser console in the
+              preview panel
+              <br />
+              • Use &quot;New File&quot; to add files or to add files or
+              &quot;Delete Current&quot; button to remove files
+              <br />• The refresh button helps reload the preview if needed
+            </div>
           </div>
-          <div className="text-red-800 leading-relaxed">
-            • Your work is auto-saved, but click &quot;Submit Code&quot; to
-            finalize your submission
-            <br />
-            • Use the live preview on the right to test your component as you
-            code
-            <br />
-            • If you encounter errors, check the browser console in the preview
-            panel
-            <br />
-            • Use &quot;New File&quot; to add files or to add files or
-            &quot;Delete Current&quot; button to remove files
-            <br />• The refresh button helps reload the preview if needed
+
+          {/* Video Tutorial */}
+          <div className="flex flex-col">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+              Watch the CodeSandbox Tutorial
+            </h2>
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg bg-gray-100">
+              <iframe
+                src="https://www.youtube.com/embed/SOjotAjH5Yo"
+                title="CodeSandbox Tutorial"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="w-full h-full border-0"
+              ></iframe>
+            </div>
           </div>
         </div>
 

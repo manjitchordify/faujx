@@ -8,6 +8,7 @@ import { useAppSelector } from '@/store/store';
 import { useParams } from 'next/navigation';
 import { submitInterviewFeedback } from '@/services/admin-panelist-services/panelistService';
 import { FeedbackModal } from './feedbackModal';
+import { CustomerFeedbackModal } from './customerFeedbackModal';
 import { type Role } from '@/constants/capability';
 import { updateProfileStage } from '@/services/engineerService';
 
@@ -23,8 +24,6 @@ interface JitsiMeetExternalAPI {
   ) => void;
 }
 
-// Feedback Modal Component
-
 export default function JitsiMeetingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,6 +32,8 @@ export default function JitsiMeetingPage() {
   const [roomName, setRoomName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showCustomerFeedbackModal, setShowCustomerFeedbackModal] =
+    useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const { loggedInUser } = useAppSelector(state => state.user);
   const interviewId = useParams<{ interviewId: string }>().interviewId;
@@ -50,19 +51,53 @@ export default function JitsiMeetingPage() {
     }, 100);
   };
 
+  // Function to handle customer modal close without submitting
+  const handleCustomerModalClose = () => {
+    setShowCustomerFeedbackModal(false);
+    // Dispose of Jitsi meeting when modal is closed without submitting
+    if (apiRef.current) {
+      apiRef.current.dispose();
+      apiRef.current = null;
+    }
+    setTimeout(() => {
+      router.push('/customer/browse-engineers/dashboard');
+    }, 100);
+  };
+
+  // Function to handle successful customer feedback submission
+  const handleCustomerFeedbackSuccess = () => {
+    // Show success toast notification
+    setShowSuccessToast(true);
+    setShowCustomerFeedbackModal(false);
+
+    // Dispose of Jitsi meeting
+    if (apiRef.current) {
+      apiRef.current.dispose();
+      apiRef.current = null;
+    }
+
+    // Show toast for 2 seconds, then navigate
+    setTimeout(() => {
+      setShowSuccessToast(false);
+      router.push('/customer/interviews');
+    }, 2000);
+  };
+
   // Function to handle feedback submission with actual API call
   const handleFeedbackSubmit = async (feedback: {
     rating: number;
     comment: Record<string, number>;
     evaluationStatus: string;
+    comments: string;
   }) => {
     try {
       console.log('submitted feedback', feedback);
-      // Call the actual API with correct parameters
+      // Call the actual API with correct parameters including comments
       const response = await submitInterviewFeedback(interviewId, {
         feedback: feedback.comment,
         rating: feedback.rating,
         evaluationStatus: feedback.evaluationStatus,
+        comments: feedback.comments,
       });
 
       console.log('Feedback submitted successfully:', response);
@@ -121,9 +156,12 @@ export default function JitsiMeetingPage() {
       }, 100);
     }
   };
+  const raw = searchParams.get('customerInterview');
+  const customerInterview = raw?.toLowerCase() === 'true';
 
   useEffect(() => {
     const room = searchParams.get('room');
+
     if (!room) {
       router.push('/');
       return;
@@ -190,10 +228,17 @@ export default function JitsiMeetingPage() {
       apiRef.current = new window.JitsiMeetExternalAPI(domain, options);
       apiRef.current?.addEventListener('readyToClose', async () => {
         if (loggedInUser?.userType === 'candidate') {
-          await updateProfileStage('interview', 'passed');
-          router.push(`/engineer/interview/${interviewId}/session-completed`);
+          if (customerInterview) {
+            router.push('/engineer/my-interviews');
+          } else {
+            await updateProfileStage('interview', 'passed');
+            router.push(`/engineer/interview/${interviewId}/session-completed`);
+          }
         } else if (loggedInUser?.userType === 'expert') {
           router.push(`/expert/interview/${interviewId}/session-completed`);
+        } else if (loggedInUser?.userType === 'customer') {
+          // Show customer feedback modal
+          setShowCustomerFeedbackModal(true);
         } else {
           // Show feedback modal for panelist
           setShowFeedbackModal(true);
@@ -218,7 +263,13 @@ export default function JitsiMeetingPage() {
         apiRef.current = null;
       }
     };
-  }, [loggedInUser?.userType, interviewId, roomName, router]);
+  }, [
+    loggedInUser?.userType,
+    interviewId,
+    roomName,
+    router,
+    customerInterview,
+  ]);
 
   return (
     <>
@@ -230,11 +281,20 @@ export default function JitsiMeetingPage() {
         {loading && <Loader text="Loading meeting..." />}
       </div>
 
+      {/* Panelist Feedback Modal */}
       <FeedbackModal
         isOpen={showFeedbackModal}
         onClose={handleModalClose}
         onSubmit={handleFeedbackSubmit}
         roleTitle={(Cookies.get('roleTitle') as Role) ?? 'Front-end'}
+      />
+
+      {/* Customer Feedback Modal */}
+      <CustomerFeedbackModal
+        isOpen={showCustomerFeedbackModal}
+        onClose={handleCustomerModalClose}
+        onSuccess={handleCustomerFeedbackSuccess}
+        interviewId={interviewId}
       />
 
       {/* Success Toast Notification */}

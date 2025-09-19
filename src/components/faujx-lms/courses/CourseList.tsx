@@ -23,11 +23,11 @@ const CourseList = () => {
           {Object.entries(courseData).map(([key, course]) => (
             <div
               key={key}
-              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden"
+              className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden flex flex-col"
             >
               {/* Course Image */}
               <div
-                className="h-48 flex items-center justify-center bg-[#1F514C]"
+                className="h-48 flex items-center justify-center bg-[#1F514C] flex-shrink-0"
                 style={{
                   backgroundImage:
                     'linear-gradient(135deg, #1F514C 0%, #2A6B65 50%, #1F514C 100%)',
@@ -52,14 +52,14 @@ const CourseList = () => {
               </div>
 
               {/* Course Content */}
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-grow">
                 {/* Description */}
                 <p className="text-gray-600 text-sm mb-4 line-clamp-3">
                   {course.description}
                 </p>
 
                 {/* Technologies */}
-                <div className="mb-4">
+                <div className="mb-4 flex-grow">
                   <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                     Key Technologies
                   </h4>
@@ -106,7 +106,7 @@ const CourseList = () => {
                 </div>
 
                 {/* Price and CTA */}
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
                   <div>
                     <p className="text-2xl font-bold text-[#1F514C]">
                       {course.price.global}
@@ -114,8 +114,8 @@ const CourseList = () => {
                     <p className="text-xs text-gray-500">Full Course</p>
                   </div>
                   <button
-                    onClick={() => router.push(`/faujx-lms/${key}`)}
-                    className="px-4 py-2 bg-[#1F514C] text-white rounded-lg hover:bg-[#2A6B65] transition-all font-medium hover:shadow-lg hover:-translate-y-0.5 shadow-[#1F514C]/20"
+                    onClick={() => router.push(`/faujx-lms/courses/${key}`)}
+                    className="px-4 py-2 cursor-pointer bg-[#1F514C] text-white rounded-lg hover:bg-[#2A6B65] transition-all font-medium hover:shadow-lg hover:-translate-y-0.5 shadow-[#1F514C]/20"
                   >
                     View
                   </button>

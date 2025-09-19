@@ -8,6 +8,7 @@ import {
   SandpackPreview,
   SandpackConsole,
   useSandpack,
+  type SandpackPredefinedTemplate,
 } from '@codesandbox/sandpack-react';
 import { useRouter } from 'next/navigation';
 import {
@@ -36,6 +37,17 @@ interface SandpackIDEProps {
   assignments: CodingAssignmentsResponse;
   disabled?: boolean;
   readOnly?: boolean;
+}
+
+// Template configuration based on engineer role
+interface TemplateConfig {
+  template: string;
+  files: SandpackFiles;
+  customSetup: {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+    entry?: string;
+  };
 }
 
 function useDebouncedSave<T>(
@@ -121,8 +133,8 @@ async function submitToBackend(
     const response = await submitCodingTestToAI(submissionData);
     const codingParams = {
       question: submissionData?.problem_statement,
-      answerFiles: submissionData?.files,
-      url: sandboxUrl || '',
+      files: submissionData?.files,
+      link: sandboxUrl || '',
       evaluationResult: response,
       totalScore: response?.overall_score,
     };
@@ -138,12 +150,11 @@ async function submitToBackend(
   }
 }
 
-// Main SandpackIDE component - wrapped with React.memo to prevent unnecessary re-renders
-const SandpackIDE: React.FC<SandpackIDEProps> = React.memo(
-  ({ assignments, disabled = false, readOnly = false }) => {
-    const [mounted, setMounted] = useState(false);
-
-    const defaultFiles = {
+// Template configurations for different roles
+function getTemplateConfig(enginnerRole: string): TemplateConfig {
+  const frontendConfig: TemplateConfig = {
+    template: 'react',
+    files: {
       '/index.js': {
         code: [
           `import React from "react";`,
@@ -156,24 +167,176 @@ const SandpackIDE: React.FC<SandpackIDEProps> = React.memo(
         code: `export default function App(){ return <h1>Hello from Faujx!</h1> }`,
         active: true,
       },
-    };
+    },
+    customSetup: {
+      dependencies: {
+        react: 'latest',
+        'react-dom': 'latest',
+      },
+    },
+  };
 
-    const [initialFiles, setInitialFiles] = useState(defaultFiles);
+  const backendConfig: TemplateConfig = {
+    template: 'node',
+    files: {
+      '/package.json': {
+        code: JSON.stringify(
+          {
+            name: 'faujx-backend-assessment',
+            version: '1.0.0',
+            description: 'Backend coding assessment',
+            main: 'index.js',
+            type: 'module',
+            scripts: {
+              start: 'node index.js',
+              dev: 'node index.js',
+            },
+            dependencies: {
+              express: '^4.18.2',
+              cors: '^2.8.5',
+            },
+          },
+          null,
+          2
+        ),
+      },
+      '/index.js': {
+        code: [
+          `import express from "express";`,
+          `import cors from "cors";`,
+          ``,
+          `// Start server`,
+          `app.listen(PORT, () => {`,
+          `  console.log(\`🚀 Server running on http://localhost:\${PORT}\`);`,
+          `});`,
+        ].join('\n'),
+        active: true,
+      },
+    },
+    customSetup: {
+      dependencies: {
+        express: '^4.18.2',
+        cors: '^2.8.5',
+      },
+      entry: '/index.js',
+    },
+  };
+
+  const fullstackConfig: TemplateConfig = {
+    template: 'react',
+    files: {
+      '/package.json': {
+        code: JSON.stringify(
+          {
+            name: 'faujx-fullstack-assessment',
+            version: '1.0.0',
+            description: 'Fullstack coding assessment',
+            main: 'index.js',
+            scripts: {
+              start: 'concurrently "npm run server" "npm run client"',
+              server: 'node server.js',
+              client: 'parcel index.html',
+              dev: 'npm start',
+            },
+            dependencies: {
+              react: '^18.2.0',
+              'react-dom': '^18.2.0',
+              express: '^4.18.2',
+              cors: '^2.8.5',
+              concurrently: '^7.6.0',
+            },
+          },
+          null,
+          2
+        ),
+      },
+      '/server.js': {
+        code: [
+          `import express from "express";`,
+          `import cors from "cors";`,
+          ``,
+          `const app = express();`,
+          `const PORT = 3001;`,
+          ``,
+          `app.use(cors());`,
+          `app.use(express.json());`,
+          ``,
+          `app.listen(PORT, () => {`,
+          `  console.log(\`🚀 API Server running on http://localhost:\${PORT}\`);`,
+          `});`,
+        ].join('\n'),
+      },
+      '/index.js': {
+        code: [
+          `import React from "react";`,
+          `import { createRoot } from "react-dom/client";`,
+          `import App from "./App";`,
+          ``,
+          `createRoot(document.getElementById("root")).render(<App />);`,
+        ].join('\n'),
+      },
+      '/App.js': {
+        code: [
+          ``,
+          `export default function App(){ return <h1>Hello from Faujx!</h1> }`,
+        ].join('\n'),
+        active: true,
+      },
+    },
+    customSetup: {
+      dependencies: {
+        react: '^18.2.0',
+        'react-dom': '^18.2.0',
+        express: '^4.18.2',
+        cors: '^2.8.5',
+      },
+    },
+  };
+
+  switch (enginnerRole) {
+    case 'backend':
+      return backendConfig;
+    case 'fullstack':
+      return fullstackConfig;
+    case 'frontend':
+    default:
+      return frontendConfig;
+  }
+}
+
+// Main SandpackIDE component
+const SandpackIDE: React.FC<SandpackIDEProps> = React.memo(
+  ({ assignments, disabled = false, readOnly = false }) => {
+    const [mounted, setMounted] = useState(false);
+    const { enginnerRole } = useAppSelector(state => state.persist);
+
+    const [templateConfig, setTemplateConfig] = useState<TemplateConfig>(() =>
+      getTemplateConfig(enginnerRole || 'frontend')
+    );
 
     // Load from localStorage only after mounting
     useEffect(() => {
       setMounted(true);
+
+      const config = getTemplateConfig(enginnerRole || 'frontend');
+
       try {
         const raw = localStorage.getItem(LS_KEY);
         if (raw) {
           const parsedFiles = JSON.parse(raw);
           console.log('📁 Loaded saved files from localStorage');
-          setInitialFiles(parsedFiles);
+          setTemplateConfig({
+            ...config,
+            files: parsedFiles,
+          });
+        } else {
+          setTemplateConfig(config);
         }
       } catch (error) {
         console.error('Error loading from localStorage:', error);
+        setTemplateConfig(config);
       }
-    }, []);
+    }, [enginnerRole]);
 
     // Don't render until mounted to avoid hydration mismatch
     if (!mounted) {
@@ -190,11 +353,9 @@ const SandpackIDE: React.FC<SandpackIDEProps> = React.memo(
     return (
       <div className="w-full">
         <SandpackProvider
-          template="react"
-          files={initialFiles}
-          customSetup={{
-            dependencies: { react: 'latest', 'react-dom': 'latest' },
-          }}
+          template={templateConfig.template as SandpackPredefinedTemplate}
+          files={templateConfig.files}
+          customSetup={templateConfig.customSetup}
         >
           {/* Toolbar */}
           <Toolbar assignments={assignments} disabled={disabled || readOnly} />
@@ -247,13 +408,6 @@ function Toolbar({
     }
     if (!name) return;
     const path = name.startsWith('/') ? name : `/${name}`;
-    const starter =
-      path.endsWith('.jsx') || path.endsWith('.tsx')
-        ? `export default function New(){ return <div>${path}</div> }`
-        : path.endsWith('.css')
-          ? `/* ${path} */`
-          : `// ${path}\n`;
-    sandpack.addFile(path, starter);
     sandpack.openFile(path);
   };
 
@@ -268,6 +422,8 @@ function Toolbar({
 
   const generateSandboxUrl = async (): Promise<string> => {
     try {
+      const template = enginnerRole === 'backend' ? 'node' : 'react';
+
       const res = await fetch(
         'https://codesandbox.io/api/v1/sandboxes/define?json=1',
         {
@@ -280,7 +436,7 @@ function Toolbar({
                 { content: f.code },
               ])
             ),
-            template: 'react',
+            template,
           }),
         }
       );
@@ -310,7 +466,8 @@ function Toolbar({
       return (
         code.length > 0 &&
         !code.includes('Hello from Faujx!') &&
-        code !== '// Your code here'
+        code !== '// Your code here' &&
+        !code.includes('TODO: Add your')
       );
     });
 
@@ -371,8 +528,9 @@ function Toolbar({
   return (
     <div className="border-b bg-white">
       <div className="flex items-center justify-between px-3 py-2">
-        <div className="text-sm text-gray-600">
-          Sandpack {disabled ? '(Time Up - Read Only)' : '(auto-saved)'}
+        <div className="text-sm text-gray-600 flex items-center gap-2">
+          <span>Sandpack ({enginnerRole || 'frontend'})</span>
+          {disabled ? '(Time Up - Read Only)' : '(auto-saved)'}
         </div>
         <div className="flex gap-2">
           <button

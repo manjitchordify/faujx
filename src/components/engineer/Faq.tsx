@@ -33,42 +33,36 @@ export default function Faq() {
   };
 
   return (
-    <section
-      className="py-12 md:py-16 lg:py-20 bg-gradient-to-b from-gray-50 to-white"
-      id="faq"
-    >
-      <div className="w-full max-w-3xl mx-auto px-6 lg:px-8">
-        {/* Heading */}
-        <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-semibold text-gray-900 mb-4 leading-tight sm:leading-tight md:leading-tight">
+    <section id="frequently-asked-questions" className="py-16 md:py-20">
+      <div className="w-full max-w-4xl mx-auto px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center ">
+          <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight sm:leading-tight md:leading-tight lg:leading-tight font-semibold text-[#1F514C] tracking-tight">
             Frequently Asked Questions
           </h2>
-          <p className="text-gray-600 font-normal text-base sm:text-lg md:text-xl max-w-xl mx-auto leading-relaxed sm:leading-relaxed md:leading-relaxed">
-            Here are the top questions our community asks before getting
-            started.
-          </p>
         </div>
+        <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-center font-normal text-[#1F514C] mb-4 sm:mb-5 md:mt-6 lg:mt-8 md:mb-3 leading-relaxed sm:leading-relaxed md:leading-relaxed">
+          Here are the top questions our community asks before getting started.
+        </p>
 
-        {/* Accordion */}
-        <div className="space-y-4">
-          {faqs.map((faq, i) => {
-            const isOpen = openIndex === i;
+        <div className="mt-12 space-y-4" id="accordion">
+          {faqs.map((faq, index) => {
+            const isOpen = openIndex === index;
             return (
               <div
-                key={i}
-                className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md"
+                key={index}
+                className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md"
               >
                 <button
-                  onClick={() => toggleAccordion(i)}
-                  className="w-full flex justify-between items-center px-6 py-4 text-left focus:outline-none"
+                  className="w-full text-left px-6 py-4 flex justify-between items-center focus:outline-none"
+                  onClick={() => toggleAccordion(index)}
                 >
                   <span className="text-lg font-medium text-gray-900">
                     {faq.question}
                   </span>
                   {isOpen ? (
-                    <ChevronUp className="w-5 h-5 text-[#1F514C]" />
+                    <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-[#1F514C] flex-shrink-0" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-500" />
+                    <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
                   )}
                 </button>
 
@@ -80,12 +74,12 @@ export default function Faq() {
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <div className="px-6 pb-4 text-gray-700 leading-relaxed text-sm">
+                    <div className="px-6 pb-4 text-gray-700 text-sm leading-relaxed">
                       {(Array.isArray(faq.answer)
                         ? faq.answer
                         : [faq.answer]
-                      ).map((paragraph, j) => (
-                        <p key={j} className="mb-2 last:mb-0">
+                      ).map((paragraph, i) => (
+                        <p key={i} className="mb-2 last:mb-0">
                           {paragraph}
                         </p>
                       ))}

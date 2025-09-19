@@ -2,6 +2,7 @@ import React, { FC, useState } from 'react';
 import { Star, Calendar, Clock } from 'lucide-react';
 import { InterviewCandidate } from '@/types/customer';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface InterviewFeedbackCardProps {
   candidate: InterviewCandidate;
@@ -13,6 +14,7 @@ const InterviewFeedbackCard: FC<InterviewFeedbackCardProps> = ({
   const [rating, setRating] = useState(0);
   const [isHire, setIsHire] = useState('');
   const [feedback, setFeedback] = useState('');
+  const router = useRouter();
 
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 w-full max-w-sm ">
@@ -60,7 +62,14 @@ const InterviewFeedbackCard: FC<InterviewFeedbackCardProps> = ({
 
           {/* Action Buttons */}
           <div className="space-y-2">
-            <button className="w-full py-2 px-3 bg-green-500 text-white rounded-lg text-xs font-semibold hover:bg-green-600 transition-colors">
+            <button
+              onClick={() =>
+                router.push(
+                  `/customer/browse-engineers/${candidate.id}/candidate-pricing`
+                )
+              }
+              className="w-full py-2 px-3 bg-green-500 text-white rounded-lg text-xs font-semibold hover:bg-green-600 transition-colors"
+            >
               Proceed to Hire
             </button>
             <button className="w-full py-2 px-3 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors">

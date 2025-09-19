@@ -303,14 +303,14 @@ export default function NotificationDropdown({
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer"
                 >
                   Mark all read
                 </button>
               )}
               <button
                 onClick={handleRefresh}
-                className="p-1 rounded hover:bg-gray-100"
+                className="p-1 rounded hover:bg-gray-100 cursor-pointer"
                 title="Refresh"
               >
                 <FiRefreshCw
@@ -319,7 +319,7 @@ export default function NotificationDropdown({
               </button>
               <button
                 onClick={() => setShowNotifications(false)}
-                className="p-1 rounded hover:bg-gray-100"
+                className="p-1 rounded hover:bg-gray-100 cursor-pointer"
               >
                 <FiX className="w-4 h-4 text-gray-500" />
               </button>

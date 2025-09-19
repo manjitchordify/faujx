@@ -22,6 +22,7 @@ export const getNextRouteFromStages = (
   profileStages: ProfileStages | null | undefined
 ): string => {
   if (!profileStages) {
+    console.log('No profileStages, returning knowbetter');
     return '/engineer/knowbetter';
   }
 
@@ -72,6 +73,11 @@ export const getNextRouteFromStages = (
     if (nextStageIndex >= stageOrder.length) {
       console.log('All stages completed, redirecting to dashboard');
       return '/engineer/dashboard';
+    }
+    // Special case: If resumeUpload just passed, show success component first
+    if (lastStage === 'resumeUpload') {
+      console.log('Resume upload passed, showing success component first');
+      return stageRoutes.resumeUpload;
     }
 
     // Return next stage route

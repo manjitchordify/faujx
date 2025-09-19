@@ -14,7 +14,7 @@ const CourseDetails: React.FC = () => {
 
   useEffect(() => {
     const path = window.location.pathname;
-    const routeMatch = path.match(/faujx-lms\/(.+)/);
+    const routeMatch = path.match(/faujx-lms\/courses\/([^/]+)/);
     if (routeMatch && courseData[routeMatch[1]]) {
       setCurrentRoute(routeMatch[1]);
     }

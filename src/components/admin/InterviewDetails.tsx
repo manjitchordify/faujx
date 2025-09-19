@@ -24,6 +24,7 @@ import {
   FiRepeat,
   FiUsers,
   FiSearch,
+  FiMessageCircle,
 } from 'react-icons/fi';
 import {
   getInterviewDetails,
@@ -768,7 +769,7 @@ function InterviewDetails() {
                                 {getMyActionDisplayText(status.action)}
                               </span>
                             </span>
-                            {feedbackScores && (
+                            {(feedbackScores || status.comments) && (
                               <button
                                 onClick={() => toggleFeedbackExpansion(index)}
                                 className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full transition-colors ${
@@ -790,90 +791,169 @@ function InterviewDetails() {
                         </div>
 
                         {/* Expanded Feedback Details */}
-                        {expandedFeedback[index] && feedbackScores && (
-                          <div
-                            className={`border-t bg-white p-4 ${
-                              isCurrentUser
-                                ? 'border-blue-200'
-                                : 'border-gray-200'
-                            }`}
-                          >
-                            <h5 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                              <FiStar className="w-4 h-4 mr-1" />
-                              Detailed Evaluation Scores
-                              {isCurrentUser && (
-                                <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full border border-blue-200">
-                                  Your Feedback
-                                </span>
-                              )}
-                            </h5>
-                            <div className="grid grid-cols-1 gap-3">
-                              {feedbackScores.map(
-                                ({ criterion, score }, scoreIndex) => (
-                                  <div
-                                    key={scoreIndex}
-                                    className={`flex items-center justify-between p-3 rounded-md ${
-                                      isCurrentUser
-                                        ? 'bg-blue-50 border border-blue-100'
-                                        : 'bg-gray-50'
-                                    }`}
-                                  >
-                                    <div className="flex-1">
-                                      <span className="text-sm text-gray-700">
-                                        {criterion}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                                        <div
-                                          className={`h-2 rounded-full transition-all duration-300 ${
-                                            isCurrentUser
-                                              ? 'bg-blue-600'
-                                              : 'bg-blue-600'
-                                          }`}
-                                          style={{
-                                            width: `${(score / 10) * 100}%`,
-                                          }}
-                                        ></div>
-                                      </div>
-                                      <span
-                                        className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getScoreColor(score)}`}
-                                      >
-                                        {score}/10
-                                      </span>
-                                    </div>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                            {averageScore && (
-                              <div
-                                className={`mt-4 p-3 border rounded-lg ${
-                                  isCurrentUser
-                                    ? 'bg-blue-50 border-blue-200'
-                                    : 'bg-blue-50 border-blue-200'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-medium text-blue-900">
-                                    Overall Average Score
+                        {expandedFeedback[index] &&
+                          (feedbackScores || status.comments) && (
+                            <div
+                              className={`border-t bg-white p-4 space-y-4 ${
+                                isCurrentUser
+                                  ? 'border-blue-200'
+                                  : 'border-gray-200'
+                              }`}
+                            >
+                              {/* Detailed Evaluation Scores */}
+                              {feedbackScores && (
+                                <div>
+                                  <h5 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                                    <FiStar className="w-4 h-4 mr-1" />
+                                    Detailed Evaluation Scores
                                     {isCurrentUser && (
-                                      <span className="ml-2 text-xs text-blue-600">
-                                        (Your Rating)
+                                      <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full border border-blue-200">
+                                        Your Feedback
                                       </span>
                                     )}
-                                  </span>
-                                  <span className="text-lg font-bold text-blue-900">
-                                    {averageScore}/10
-                                  </span>
+                                  </h5>
+                                  <div className="grid grid-cols-1 gap-3">
+                                    {feedbackScores.map(
+                                      ({ criterion, score }, scoreIndex) => (
+                                        <div
+                                          key={scoreIndex}
+                                          className={`flex items-center justify-between p-3 rounded-md ${
+                                            isCurrentUser
+                                              ? 'bg-blue-50 border border-blue-100'
+                                              : 'bg-gray-50'
+                                          }`}
+                                        >
+                                          <div className="flex-1">
+                                            <span className="text-sm text-gray-700">
+                                              {criterion}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                                              <div
+                                                className={`h-2 rounded-full transition-all duration-300 ${
+                                                  isCurrentUser
+                                                    ? 'bg-blue-600'
+                                                    : 'bg-blue-600'
+                                                }`}
+                                                style={{
+                                                  width: `${(score / 10) * 100}%`,
+                                                }}
+                                              ></div>
+                                            </div>
+                                            <span
+                                              className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getScoreColor(score)}`}
+                                            >
+                                              {score}/10
+                                            </span>
+                                          </div>
+                                        </div>
+                                      )
+                                    )}
+                                  </div>
+                                  {averageScore && (
+                                    <div
+                                      className={`mt-4 p-3 border rounded-lg ${
+                                        isCurrentUser
+                                          ? 'bg-blue-50 border-blue-200'
+                                          : 'bg-blue-50 border-blue-200'
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium text-blue-900">
+                                          Overall Average Score
+                                          {isCurrentUser && (
+                                            <span className="ml-2 text-xs text-blue-600">
+                                              (Your Rating)
+                                            </span>
+                                          )}
+                                        </span>
+                                        <span className="text-lg font-bold text-blue-900">
+                                          {averageScore}/10
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                              )}
+
+                              {/* Comments Section */}
+                              {status.comments && status.comments.trim() && (
+                                <div>
+                                  <h5 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                                    <FiMessageCircle className="w-4 h-4 mr-1" />
+                                    Comments
+                                    {isCurrentUser && (
+                                      <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full border border-blue-200">
+                                        Your Comments
+                                      </span>
+                                    )}
+                                  </h5>
+                                  <div
+                                    className={`p-4 rounded-lg border ${
+                                      isCurrentUser
+                                        ? 'bg-blue-50 border-blue-200'
+                                        : 'bg-gray-50 border-gray-200'
+                                    }`}
+                                  >
+                                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                      {status.comments}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            </div>
+
+            {/* Candidate Submitted Code */}
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h3 className="text-lg leading-6 font-medium text-gray-900 flex items-center">
+                  <FiHash className="mr-2 h-5 w-5" />
+                  Candidate Submitted Code
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Review the candidate&apos;s submitted code and implementation
+                </p>
+              </div>
+              <div className="px-6 py-5">
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                  <iframe
+                    src="https://codesandbox.io/s/ls7yy7"
+                    title="Sandbox Environment"
+                    className="w-full h-96 border-0 rounded-lg"
+                    style={{
+                      minHeight: '500px',
+                      border: 'none',
+                      outline: 'none',
+                    }}
+                    allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+                    sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+                  />
+                </div>
+                <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
+                  <div className="flex items-center space-x-4">
+                    <span className="flex items-center">
+                      <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                      CodeSandbox: Active
+                    </span>
+                    <span>Sandbox ID: ls7yy7</span>
+                  </div>
+                  <button
+                    onClick={() =>
+                      window.open('https://codesandbox.io/s/ls7yy7', '_blank')
+                    }
+                    className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    <FiRefreshCw className="w-3 h-3 mr-1" />
+                    Open in New Tab
+                  </button>
                 </div>
               </div>
             </div>

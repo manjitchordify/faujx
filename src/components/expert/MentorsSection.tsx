@@ -35,8 +35,8 @@ const MentorsSection = () => {
 
     {
       id: 2,
-      name: 'Karthikeyan',
-      image: '/images/expert/mentor[2].jpeg',
+      name: 'Karthikeyan Dharmalingam',
+      image: '/images/expert/mentor[6].jpeg',
       alt: 'Karthikeyan Dharmalingam - Full-Stack Expert',
       role: 'Enterprise Solutions Architect',
       company: 'TritonTech & Services Pvt Ltd',
@@ -112,7 +112,7 @@ const MentorsSection = () => {
                 </div>
 
                 {/* Bio Card */}
-                <div className="p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-4">
+                <div className="p-4 sm:p-5 md:p-4 space-y-3 sm:space-y-4">
                   {/* Name */}
                   <h3 className="text-gray-900 font-semibold text-base sm:text-lg md:text-xl">
                     {mentor.name}
@@ -128,7 +128,7 @@ const MentorsSection = () => {
                   {/* Bio Description with Tooltip */}
                   <div className="relative">
                     <p
-                      className="text-gray-700 text-sm leading-relaxed line-clamp-4 cursor-pointer hover:text-gray-900 transition-colors duration-200"
+                      className="text-gray-700 text-sm leading-relaxed line-clamp-4 cursor-pointer hover:text-gray-900 transition-colors duration-200 text-left"
                       onMouseEnter={() => setHoveredBio(mentor.id)}
                       onMouseLeave={() => setHoveredBio(null)}
                     >
@@ -138,12 +138,14 @@ const MentorsSection = () => {
                     {/* Bio Tooltip */}
                     {hoveredBio === mentor.id && (
                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50 pointer-events-none">
-                        <div className="bg-gray-900 text-white p-4 rounded-lg shadow-xl max-w-sm w-80">
-                          <div className="text-sm leading-relaxed">
-                            <div className="font-semibold mb-2 text-blue-300">
+                        <div className="bg-gray-900 text-white p-6 rounded-lg shadow-xl max-w-sm w-80">
+                          <div className="text-sm leading-relaxed text-left space-y-3">
+                            <div className="font-semibold mb-3 text-blue-300">
                               About {mentor.name}
                             </div>
-                            <div className="text-gray-100">{mentor.bio}</div>
+                            <div className="text-gray-100 text-left">
+                              {mentor.bio}
+                            </div>
                           </div>
                           {/* Arrow */}
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-gray-900"></div>
@@ -168,13 +170,15 @@ const MentorsSection = () => {
                 {/* Main Tooltip (for card hover) */}
                 {hoveredMentor === mentor.id && (
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-40">
-                    <div className="bg-gray-900 text-white p-4 rounded-lg shadow-xl max-w-xs w-64">
-                      <div className="text-sm leading-relaxed">
-                        <div className="font-semibold mb-2">{mentor.name}</div>
-                        <div className="text-gray-300 text-xs mb-2">
+                    <div className="bg-gray-900 text-white p-6 rounded-lg shadow-xl max-w-xs w-64">
+                      <div className="text-sm leading-relaxed text-left space-y-3">
+                        <div className="font-semibold mb-3">{mentor.name}</div>
+                        <div className="text-gray-300 text-xs mb-3">
                           {mentor.role} at {mentor.company}
                         </div>
-                        <div className="text-gray-100">{mentor.bio}</div>
+                        <div className="text-gray-100 text-left">
+                          {mentor.bio}
+                        </div>
                         {mentor.expertise.length > 0 && (
                           <div className="mt-3">
                             <div className="text-xs text-gray-400 mb-1">

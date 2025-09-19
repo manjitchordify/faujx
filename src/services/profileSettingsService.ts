@@ -40,20 +40,75 @@ export interface ProfileUpdateResponse {
   };
 }
 
+export interface CandidateProfile {
+  id: string;
+  userId: string;
+  preferredMonthlySalary?: string | null;
+  currencyType?: string | null;
+  workMode?: string[];
+  experienceYears?: number;
+  currentDesignation?: string | null;
+  currentCompany?: string | null;
+  expectedSalary?: number;
+  preferredLocations?: string[];
+  skills?: string[];
+  linkedinUrl?: string | null;
+  githubUrl?: string | null;
+  portfolioUrl?: string | null;
+  roleTitle?: string | null;
+  joiningPeriod?: string | null;
+  summary?: string | null;
+  parsedEducation?: Array<{
+    gpa?: string | null;
+    year?: string | null;
+    degree?: string | null;
+    field?: string | null;
+    institution?: string | null;
+  }>;
+  parsedExperience?: Array<{
+    title?: string;
+    company?: string;
+    start_date?: string;
+    end_date?: string;
+    description?: string;
+  }>;
+  parsedProjects?: Array<{
+    title?: string;
+    description?: string;
+    technologies?: string[];
+  }>;
+  parsedSkills?: Record<string, string[]>;
+
+  // Additional fields used in the UI components
+  category?: string;
+  vettingStatus?: 'passed' | 'pending' | 'failed';
+  vettingScore?: number;
+  phone?: string;
+  location?: string;
+  resumeUrl?: string | null;
+  isPublished?: boolean;
+  isHired?: boolean;
+}
+
 // ----------------------
 // Profile Get Response Types
 // ----------------------
 export interface ProfileGetResponse {
   message: string;
   data: {
+    id: string;
+    email: string;
     firstName: string;
     lastName: string;
-    email: string;
+    fullName?: string | null;
     phone: string;
-    preferredLocations: Array<string> | null;
-    candidate?: {
-      expectedSalary: number;
-    };
+    profilePic?: string | null;
+    profilePicKey?: string | null;
+    profileVideo?: string | null;
+    profileVideoKey?: string | null;
+    currentStatus?: string;
+    isVerified?: boolean;
+    candidate?: CandidateProfile | null;
   };
 }
 

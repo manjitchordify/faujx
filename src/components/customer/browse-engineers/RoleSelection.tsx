@@ -11,6 +11,7 @@ interface Role {
 
 const RoleSelection: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [selectedRoleName, setSelectedRoleName] = useState<string | null>(null);
   const router = useRouter();
 
   const roles: Role[] = [
@@ -135,15 +136,18 @@ const RoleSelection: React.FC = () => {
     },
   ];
 
-  const selectRole = (roleId: string): void => {
+  const handleRoleSelect = (roleId: string, roleName: string): void => {
     setSelectedRole(roleId);
+    setSelectedRoleName(roleName);
   };
 
   const handleNext = (): void => {
-    if (selectedRole) {
-      console.log('Selected role:', selectedRole);
+    if (selectedRoleName) {
+      console.log('Selected role:', selectedRoleName);
       // Navigate to dashboard
-      router.push('/customer/browse-engineers/dashboard');
+      router.push(
+        `/customer/browse-engineers/dashboard?role=${selectedRoleName}`
+      );
     }
   };
 
@@ -161,7 +165,7 @@ const RoleSelection: React.FC = () => {
           {roles.map((role: Role) => (
             <button
               key={role.id}
-              onClick={() => selectRole(role.id)}
+              onClick={() => handleRoleSelect(role.id, role.name)}
               className={`group relative p-6 sm:p-8 rounded-2xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg ${
                 selectedRole === role.id
                   ? 'border-green-500 bg-green-50'

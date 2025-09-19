@@ -10,6 +10,7 @@ interface FeedbackModalProps {
     comment: Record<string, number>;
     rating: number;
     evaluationStatus: string;
+    comments: string;
   }) => void;
   roleTitle: Role;
 }
@@ -25,9 +26,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [status, setStatus] = useState(false);
+  const [comments, setComments] = useState('');
 
   // const handleCloseFeedbackModal = () => {
   //   setRatings({});
+  //   setComments('');
   //   onClose();
   // };
 
@@ -41,8 +44,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
         comment: capabilityRatings,
         rating: overall,
         evaluationStatus: status == true ? 'passed' : 'failed',
+        comments: comments.trim(),
       });
       setRatings({});
+      setComments('');
       onClose();
     } catch (error) {
       console.error('Error submitting feedback:', error);
@@ -194,6 +199,33 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
               <span className="text-sm text-gray-700">
                 {status ? 'Pass' : 'Fail'}
               </span>
+            </div>
+          </div>
+
+          {/* Comments Section */}
+          <div className="space-y-3">
+            <label
+              htmlFor="comments"
+              className="block text-sm font-bold text-gray-700"
+            >
+              Comments
+            </label>
+            <p className="text-xs text-gray-500 mb-2">
+              Optional: Provide any additional feedback or observations about
+              the candidate&apos;s performance
+            </p>
+            <textarea
+              id="comments"
+              rows={4}
+              value={comments}
+              onChange={e => setComments(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-vertical"
+              placeholder="Enter any additional comments, observations, or specific feedback about the candidate's performance, communication skills, problem-solving approach, etc..."
+              maxLength={1000}
+            />
+            <div className="flex justify-between items-center text-xs text-gray-500">
+              <span>Optional field</span>
+              <span>{comments.length}/1000 characters</span>
             </div>
           </div>
         </div>

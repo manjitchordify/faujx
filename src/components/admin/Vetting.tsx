@@ -21,14 +21,18 @@ import {
   FiChevronsLeft,
   FiChevronsRight,
   FiAlertCircle,
+  FiAward,
 } from 'react-icons/fi';
 import {
   getAllCandidates,
   updateCandidatePublishStatus,
   getCandidateStatsWorkaround,
+  getAllHiredCandidates,
   type Candidate,
   type PaginatedCandidatesResponse,
-} from '@/services/candidateService';
+  type HiredCandidate,
+  type PaginatedHiredCandidatesResponse,
+} from '@/services/admin-panelist-services/candidateService';
 
 // Confirmation Modal Component
 function ConfirmationModal({
@@ -381,8 +385,192 @@ function ViewCandidateModal({
   );
 }
 
+// View Hired Engineer Details Modal
+function ViewHiredEngineerModal({
+  engineer,
+  onClose,
+}: {
+  engineer: HiredCandidate;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 backdrop-blur-sm bg-white/10 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {engineer.fullName} - Hired Engineer Details
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <FiX className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Basic Information */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Basic Information
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Full Name
+                  </label>
+                  <p className="text-gray-900">{engineer.fullName}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <p className="text-gray-900">{engineer.email}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Phone
+                  </label>
+                  <p className="text-gray-900">{engineer.phone}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Location
+                  </label>
+                  <p className="text-gray-900">{engineer.location}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Current Role
+                  </label>
+                  <p className="text-gray-900">
+                    {engineer.currentDesignation} at {engineer.currentCompany}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Experience
+                  </label>
+                  <p className="text-gray-900">
+                    {engineer.experienceYears} years
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Preferred Salary
+                  </label>
+                  <p className="text-gray-900">
+                    {engineer.currencyType} {engineer.preferredMonthlySalary}
+                    /month
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Hire Status
+                  </label>
+                  <span className="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    {engineer.hireStatus}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Skills & Links
+              </h3>
+              <div className="space-y-4">
+                {/* Skills */}
+                <div>
+                  <h4 className="font-medium text-gray-700 mb-2">
+                    Technical Skills
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {engineer.skills.map((skill, index) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded"
+                      >
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Links */}
+                <div className="space-y-2">
+                  {engineer.linkedinUrl && (
+                    <a
+                      href={engineer.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline block"
+                    >
+                      LinkedIn Profile
+                    </a>
+                  )}
+                  {engineer.githubUrl && (
+                    <a
+                      href={engineer.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline block"
+                    >
+                      GitHub Profile
+                    </a>
+                  )}
+                  {engineer.portfolioUrl && (
+                    <a
+                      href={engineer.portfolioUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline block"
+                    >
+                      Portfolio
+                    </a>
+                  )}
+                  {engineer.resumeUrl && (
+                    <a
+                      href={engineer.resumeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline block"
+                    >
+                      Resume
+                    </a>
+                  )}
+                </div>
+
+                {/* Interview Feedback */}
+                {engineer.interviewFeedback && (
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-2">
+                      Interview Feedback
+                    </h4>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm text-gray-600">Rating:</span>
+                      <span className="font-bold text-lg">
+                        {engineer.interviewFeedback.rating}/5
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {engineer.interviewFeedback.comments}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Vetting() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [hiredEngineers, setHiredEngineers] = useState<HiredCandidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -390,7 +578,10 @@ function Vetting() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(
     null
   );
+  const [selectedHiredEngineer, setSelectedHiredEngineer] =
+    useState<HiredCandidate | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isViewHiredModalOpen, setIsViewHiredModalOpen] = useState(false);
 
   // Confirmation modal state
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -411,22 +602,41 @@ function Vetting() {
     failedCandidates: 0,
   });
 
-  // Filter candidates locally for search (like users component)
-  const filteredCandidates = useMemo(() => {
-    return candidates.filter(candidate => {
-      const matchesSearch =
-        candidate.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        candidate.email.toLowerCase().includes(searchTerm.toLowerCase());
+  // FIXED: Filter candidates/engineers locally for search with proper null checks
+  const filteredData = useMemo(() => {
+    if (statusFilter === 'hired') {
+      // Filter hired engineers - add null/undefined check
+      if (!hiredEngineers || !Array.isArray(hiredEngineers)) {
+        return [];
+      }
+      return hiredEngineers.filter(engineer => {
+        const matchesSearch =
+          engineer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          engineer.email.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesSearch;
+      });
+    } else {
+      // Filter regular candidates - add null/undefined check
+      if (!candidates || !Array.isArray(candidates)) {
+        return [];
+      }
+      return candidates.filter(candidate => {
+        const matchesSearch =
+          candidate.firstName
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          candidate.email.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesStatus =
-        statusFilter === 'all' ||
-        (statusFilter === 'passed' && candidate.interviewPassed) ||
-        (statusFilter === 'failed' && !candidate.interviewPassed) ||
-        (statusFilter === 'published' && candidate.isPublished);
+        const matchesStatus =
+          statusFilter === 'all' ||
+          (statusFilter === 'passed' && candidate.interviewPassed) ||
+          (statusFilter === 'failed' && !candidate.interviewPassed) ||
+          (statusFilter === 'published' && candidate.isPublished);
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [candidates, searchTerm, statusFilter]);
+        return matchesSearch && matchesStatus;
+      });
+    }
+  }, [candidates, hiredEngineers, searchTerm, statusFilter]);
 
   // Fetch total stats separately
   const fetchTotalStats = async () => {
@@ -447,7 +657,6 @@ function Vetting() {
       setLoading(true);
       setError(null);
 
-      // Only pass pagination parameters, search will be handled locally
       const response: PaginatedCandidatesResponse = await getAllCandidates(
         page,
         perPage,
@@ -455,7 +664,8 @@ function Vetting() {
         'all'
       );
 
-      setCandidates(response.data);
+      // FIXED: Ensure we always set an array, never undefined
+      setCandidates(response.data || []);
       setCurrentPage(response.page);
       setTotalItems(response.total);
       setTotalPages(response.totalPages);
@@ -467,22 +677,65 @@ function Vetting() {
       setError(
         err instanceof Error ? err.message : 'Failed to fetch candidates'
       );
+      // FIXED: Set empty array on error
+      setCandidates([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Initial fetch
+  const fetchHiredEngineers = async (
+    page: number = 1,
+    perPage: number = 10
+  ) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response: PaginatedHiredCandidatesResponse =
+        await getAllHiredCandidates(page, perPage, '');
+
+      // FIXED: Ensure we always set an array, never undefined
+      setHiredEngineers(response.data || []);
+      setCurrentPage(response.page);
+      setTotalItems(response.total);
+      setTotalPages(response.totalPages);
+      setItemsPerPage(response.perPage);
+    } catch (err: unknown) {
+      console.error(
+        err instanceof Error
+          ? err.message
+          : 'Unknown error fetching hired engineers'
+      );
+      setError(
+        err instanceof Error ? err.message : 'Failed to fetch hired engineers'
+      );
+      // FIXED: Set empty array on error
+      setHiredEngineers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch data based on filter
   useEffect(() => {
-    fetchTotalStats();
-    fetchCandidates(1, itemsPerPage);
-  }, [itemsPerPage]);
+    if (statusFilter === 'hired') {
+      fetchHiredEngineers(1, itemsPerPage);
+    } else {
+      fetchTotalStats();
+      fetchCandidates(1, itemsPerPage);
+    }
+  }, [statusFilter, itemsPerPage]);
 
   // Handle pagination changes
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
-      fetchCandidates(newPage, itemsPerPage);
+      if (statusFilter === 'hired') {
+        fetchHiredEngineers(newPage, itemsPerPage);
+      } else {
+        fetchCandidates(newPage, itemsPerPage);
+      }
     }
   };
 
@@ -490,13 +743,23 @@ function Vetting() {
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1);
-    fetchCandidates(1, newItemsPerPage);
+    if (statusFilter === 'hired') {
+      fetchHiredEngineers(1, newItemsPerPage);
+    } else {
+      fetchCandidates(1, newItemsPerPage);
+    }
   };
 
   // Handle view candidate
   const handleViewCandidate = (candidate: Candidate) => {
     setSelectedCandidate(candidate);
     setIsViewModalOpen(true);
+  };
+
+  // Handle view hired engineer
+  const handleViewHiredEngineer = (engineer: HiredCandidate) => {
+    setSelectedHiredEngineer(engineer);
+    setIsViewHiredModalOpen(true);
   };
 
   // Handle publish confirmation
@@ -657,13 +920,14 @@ function Vetting() {
   };
 
   // Loading state
-  if (loading && candidates.length === 0) {
+  if (loading && candidates.length === 0 && hiredEngineers.length === 0) {
     return (
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <FiLoader className="w-12 h-12 text-gray-400 mx-auto mb-4 animate-spin" />
           <h2 className="text-lg font-medium text-gray-900 mb-2">
-            Loading Candidates
+            Loading{' '}
+            {statusFilter === 'hired' ? 'Hired Engineers' : 'Candidates'}
           </h2>
           <p className="text-gray-600">
             Please wait while we fetch the data...
@@ -680,11 +944,16 @@ function Vetting() {
         <div className="text-center">
           <FiXCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-lg font-medium text-gray-900 mb-2">
-            Error Loading Candidates
+            Error Loading{' '}
+            {statusFilter === 'hired' ? 'Hired Engineers' : 'Candidates'}
           </h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => fetchCandidates(currentPage, itemsPerPage)}
+            onClick={() =>
+              statusFilter === 'hired'
+                ? fetchHiredEngineers(currentPage, itemsPerPage)
+                : fetchCandidates(currentPage, itemsPerPage)
+            }
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Retry
@@ -693,6 +962,28 @@ function Vetting() {
       </div>
     );
   }
+
+  // Determine the correct text to display based on current filter
+  const getEmptyStateText = () => {
+    if (statusFilter === 'hired') {
+      return {
+        type: 'hired engineers',
+        message: searchTerm
+          ? 'Try adjusting your search criteria'
+          : 'No hired engineers available at this time',
+      };
+    } else {
+      return {
+        type: 'candidates',
+        message:
+          searchTerm || statusFilter !== 'all'
+            ? 'Try adjusting your search or filter criteria'
+            : 'No candidates available at this time',
+      };
+    }
+  };
+
+  const emptyStateText = getEmptyStateText();
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -706,44 +997,46 @@ function Vetting() {
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Candidates</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {totalStats.totalCandidates}
-              </p>
+      {/* Stats Cards - Only show for non-hired view */}
+      {statusFilter !== 'hired' && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Candidates</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {totalStats.totalCandidates}
+                </p>
+              </div>
+              <FiUsers className="w-8 h-8 text-gray-600" />
             </div>
-            <FiUsers className="w-8 h-8 text-gray-600" />
           </div>
-        </div>
 
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Interview Passed</p>
-              <p className="text-2xl font-bold text-green-600">
-                {totalStats.passedCandidates}
-              </p>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Interview Passed</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {totalStats.passedCandidates}
+                </p>
+              </div>
+              <FiCheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <FiCheckCircle className="w-8 h-8 text-green-600" />
           </div>
-        </div>
 
-        <div className="bg-white p-4 rounded-lg shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Interview Failed</p>
-              <p className="text-2xl font-bold text-red-600">
-                {totalStats.failedCandidates}
-              </p>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Interview Failed</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {totalStats.failedCandidates}
+                </p>
+              </div>
+              <FiXCircle className="w-8 h-8 text-red-600" />
             </div>
-            <FiXCircle className="w-8 h-8 text-red-600" />
           </div>
         </div>
-      </div>
+      )}
 
       {/* Search and Filter */}
       <div className="bg-white rounded-lg p-4 shadow mb-6">
@@ -761,18 +1054,22 @@ function Vetting() {
 
           <select
             value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
+            onChange={e => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1); // Reset to first page on filter change
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Candidates</option>
             <option value="passed">Interview Passed</option>
             <option value="failed">Interview Failed</option>
             <option value="published">Published</option>
+            <option value="hired">Hired Engineers</option>
           </select>
         </div>
       </div>
 
-      {/* Candidates Table */}
+      {/* Table - Different columns for hired engineers */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -784,151 +1081,221 @@ function Vetting() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   EMAIL
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  INTERVIEW STATUS
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  PUBLISHED
-                </th>
+                {statusFilter === 'hired' ? (
+                  <>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ROLE
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      EXPERIENCE
+                    </th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      INTERVIEW STATUS
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      PUBLISHED
+                    </th>
+                  </>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   ACTIONS
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCandidates.map(candidate => {
-                const canPublishProfile =
-                  candidate.interviewPassed && !candidate.isPublished;
-
-                return (
-                  <tr
-                    key={candidate.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                          {candidate.profilePic ? (
-                            <Image
-                              src={candidate.profilePic}
-                              alt={candidate.firstName || 'Candidate'}
-                              width={40}
-                              height={40}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <FiUser className="w-5 h-5 text-gray-600" />
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {candidate.firstName}
+              {statusFilter === 'hired' && filteredData.length > 0
+                ? // Render hired engineers
+                  filteredData.map(item => {
+                    const engineer = item as HiredCandidate;
+                    return (
+                      <tr
+                        key={engineer.userId}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                              <FiAward className="w-5 h-5 text-green-600" />
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {engineer.fullName}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </td>
+                        </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">
-                        {candidate.email}
-                      </div>
-                    </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-600">
+                            {engineer.email}
+                          </div>
+                        </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {candidate.interviewPassed ? (
-                          <>
-                            <FiCheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                            <span className="text-green-700 font-medium">
-                              Passed
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <FiXCircle className="w-4 h-4 text-red-500 mr-2" />
-                            <span className="text-red-700 font-medium">
-                              Failed
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {engineer.currentDesignation}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {engineer.currentCompany}
+                          </div>
+                        </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {candidate.isPublished ? (
-                          <>
-                            <FiGlobe className="w-4 h-4 text-blue-500 mr-2" />
-                            <span className="text-blue-700 font-medium">
-                              Published
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <FiX className="w-4 h-4 text-gray-400 mr-2" />
-                            <span className="text-gray-500 font-medium">
-                              Not Published
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                            {engineer.experienceYears} years
+                          </span>
+                        </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleViewCandidate(candidate)}
-                          className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => handleViewHiredEngineer(engineer)}
+                            className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                          >
+                            <FiEye className="w-3 h-3" />
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                : statusFilter !== 'hired' && filteredData.length > 0
+                  ? // Render regular candidates
+                    filteredData.map(item => {
+                      const candidate = item as Candidate;
+                      const canPublishProfile =
+                        candidate.interviewPassed && !candidate.isPublished;
+
+                      return (
+                        <tr
+                          key={candidate.id}
+                          className="hover:bg-gray-50 transition-colors"
                         >
-                          <FiEye className="w-3 h-3" />
-                          View
-                        </button>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                {candidate.profilePic ? (
+                                  <Image
+                                    src={candidate.profilePic}
+                                    alt={candidate.firstName || 'Candidate'}
+                                    width={40}
+                                    height={40}
+                                    className="w-10 h-10 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <FiUser className="w-5 h-5 text-gray-600" />
+                                )}
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {candidate.firstName}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
 
-                        <button
-                          onClick={() => handlePublishClick(candidate)}
-                          disabled={!canPublishProfile}
-                          className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded transition-colors min-w-[80px] justify-center ${
-                            candidate.isPublished
-                              ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                              : canPublishProfile
-                                ? 'bg-green-600 text-white hover:bg-green-700'
-                                : 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                          }`}
-                        >
-                          <FiGlobe className="w-3 h-3" />
-                          {candidate.isPublished ? 'Published' : 'Publish'}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-600">
+                              {candidate.email}
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              {candidate.interviewPassed ? (
+                                <>
+                                  <FiCheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                                  <span className="text-green-700 font-medium">
+                                    Passed
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <FiXCircle className="w-4 h-4 text-red-500 mr-2" />
+                                  <span className="text-red-700 font-medium">
+                                    Failed
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              {candidate.isPublished ? (
+                                <>
+                                  <FiGlobe className="w-4 h-4 text-blue-500 mr-2" />
+                                  <span className="text-blue-700 font-medium">
+                                    Published
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <FiX className="w-4 h-4 text-gray-400 mr-2" />
+                                  <span className="text-gray-500 font-medium">
+                                    Not Published
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleViewCandidate(candidate)}
+                                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors"
+                              >
+                                <FiEye className="w-3 h-3" />
+                                View
+                              </button>
+
+                              <button
+                                onClick={() => handlePublishClick(candidate)}
+                                disabled={!canPublishProfile}
+                                className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded transition-colors min-w-[80px] justify-center ${
+                                  candidate.isPublished
+                                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                                    : canPublishProfile
+                                      ? 'bg-green-600 text-white hover:bg-green-700'
+                                      : 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                                }`}
+                              >
+                                <FiGlobe className="w-3 h-3" />
+                                {candidate.isPublished
+                                  ? 'Published'
+                                  : 'Publish'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  : null}
             </tbody>
           </table>
         </div>
 
         {/* Empty State */}
-        {filteredCandidates.length === 0 && !loading && (
+        {filteredData.length === 0 && !loading && (
           <div className="text-center py-12">
             <FiUsers className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No candidates found
+              No {emptyStateText.type} found
             </h3>
-            <p className="text-gray-600">
-              {searchTerm || statusFilter !== 'all'
-                ? 'Try adjusting your search or filter criteria'
-                : 'No candidates available at this time'}
-            </p>
+            <p className="text-gray-600">{emptyStateText.message}</p>
           </div>
         )}
 
         {/* Simplified Pagination */}
-        {filteredCandidates.length > 0 && (
+        {filteredData.length > 0 && (
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-6 py-4 border-t border-gray-200">
             <div className="text-sm text-gray-600">
               Showing {(currentPage - 1) * itemsPerPage + 1}-
               {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems}{' '}
-              candidates
+              {statusFilter === 'hired' ? 'engineers' : 'candidates'}
             </div>
 
             <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -1001,6 +1368,14 @@ function Vetting() {
           candidate={selectedCandidate}
           onClose={() => setIsViewModalOpen(false)}
           onPublishProfile={handlePublishClick}
+        />
+      )}
+
+      {/* View Hired Engineer Modal */}
+      {isViewHiredModalOpen && selectedHiredEngineer && (
+        <ViewHiredEngineerModal
+          engineer={selectedHiredEngineer}
+          onClose={() => setIsViewHiredModalOpen(false)}
         />
       )}
 

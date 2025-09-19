@@ -19,6 +19,11 @@ interface UserData {
   profileVideo?: string | null;
   profileSetup?: boolean;
   phase1Completed?: boolean | null;
+  isPremium?: boolean | undefined;
+  profileStages?: {
+    lastStage: string;
+    lastStatus: string;
+  } | null;
 }
 
 interface userState {
@@ -42,8 +47,16 @@ const userSlice = createSlice({
         state.loggedInUser.profileSetup = action.payload;
       }
     },
+
+    updateIsPremium: (state, action: PayloadAction<boolean>) => {
+      if (state.loggedInUser) {
+        state.loggedInUser.isPremium = action.payload;
+      }
+    },
   },
 });
 
-export const { setLoggedInUser, updateProfileSetup } = userSlice.actions;
+export const { setLoggedInUser, updateProfileSetup, updateIsPremium } =
+  userSlice.actions;
+
 export default userSlice.reducer;
