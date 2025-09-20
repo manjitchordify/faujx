@@ -33,7 +33,7 @@ export const metadata = {
     siteName: 'FaujX',
     images: [
       {
-        url: '/logo.png',
+        url: '/favicon.ico',
         width: 1200,
         height: 630,
         alt: 'FaujX - Mission-Driven Tech Hiring Platform',
@@ -46,7 +46,7 @@ export const metadata = {
     title: 'FaujX - Mission-Driven Tech Hiring Platform',
     description:
       'Discover, vet, upskill, and deploy Foundation Engineers. Accelerate careers, enable teams, and empower experts.',
-    images: ['/logo.png'],
+    images: ['/favicon.ico'],
     site: '@faujx',
     creator: '@faujx',
   },
@@ -96,7 +96,7 @@ export default function RootLayout({
               '@type': 'Organization',
               name: 'FaujX',
               url: 'https://faujx.com',
-              logo: 'https://faujx.com/logo.png',
+              logo: 'https://faujx.com/favicon.ico',
               description:
                 'Mission-driven tech hiring platform that discovers, vets, upskills, and deploys Foundation Engineers',
               foundingDate: '2024',

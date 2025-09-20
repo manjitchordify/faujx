@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     url: 'https://faujx.com/',
     images: [
       {
-        url: '/logo.png',
+        url: '/favicon.ico',
         width: 1200,
         height: 630,
         alt: 'FaujX - Tech Hiring Platform',
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     title: 'FaujX - Mission-Driven Tech Hiring Platform',
     description:
       'Choose your role: Customer, Engineer, or Expert. Discover, vet, upskill, and deploy Foundation Engineers.',
-    images: ['/logo.png'],
+    images: ['/favicon.ico'],
   },
   alternates: {
     canonical: 'https://faujx.com/',
