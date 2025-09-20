@@ -147,7 +147,7 @@ const profiles: Developer[] = [
     role: 'expert',
   },
   {
-    name: 'Emma Thompson',
+    name: 'Andy Branson',
     image: '/images/customer/image 11.png',
     skills: [
       'Python',
