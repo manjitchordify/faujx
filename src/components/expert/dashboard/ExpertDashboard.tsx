@@ -11,25 +11,62 @@ const ExpertDashboard: React.FC = () => {
   const {
     pendingSessions,
     confirmedSessions,
+    declinedSessions,
     confirmedCount,
     loading,
     error,
     refetch,
+    acceptSession,
+    declineSession,
   } = useInterviews();
   const { loggedInUser } = useAppSelector(state => state.user);
+
   // Current view sessions - memoized to prevent recalculation
   const currentSessions = useMemo(() => {
-    return showMySessions ? confirmedSessions : pendingSessions;
-  }, [showMySessions, confirmedSessions, pendingSessions]);
+    if (showMySessions) {
+      // Show confirmed and declined sessions in "My Sessions" view
+      return [...confirmedSessions, ...declinedSessions];
+    }
+    return pendingSessions;
+  }, [showMySessions, confirmedSessions, declinedSessions, pendingSessions]);
+
+  // Get button type based on session status
+  const getButtonType = useCallback(
+    (session: Session): 'pending' | 'accepted' | 'declined' => {
+      if (session.status === 'accepted') return 'accepted';
+      if (session.status === 'declined') return 'declined';
+      return 'pending';
+    },
+    []
+  );
 
   // Memoized handlers to prevent child re-renders
-  const handleAccept = useCallback((session: Session): void => {
-    console.log('Accepted session:', session);
-  }, []);
+  const handleAccept = useCallback(
+    async (session: Session): Promise<void> => {
+      try {
+        await acceptSession(session.id);
+        console.log('Accepted session:', session);
+      } catch (error) {
+        const message = (error as Error)?.message || 'Failed to accept session';
+        alert(`Error: ${message}`);
+      }
+    },
+    [acceptSession]
+  );
 
-  const handleDecline = useCallback((session: Session): void => {
-    console.log('Declined session:', session);
-  }, []);
+  const handleDecline = useCallback(
+    async (session: Session): Promise<void> => {
+      try {
+        await declineSession(session.id);
+        console.log('Declined session:', session);
+      } catch (error) {
+        const message =
+          (error as Error)?.message || 'Failed to decline session';
+        alert(`Error: ${message}`);
+      }
+    },
+    [declineSession]
+  );
 
   const handleJoin = useCallback(
     async (session: Session): Promise<void> => {
@@ -60,7 +97,23 @@ const ExpertDashboard: React.FC = () => {
 
   // Helper function to extract sessionId from meetingLink
   const extractSessionId = (meetingLink: string): string => {
-    return meetingLink.substring(meetingLink.lastIndexOf('/') + 1);
+    // Add safety checks for null/undefined/empty strings
+    if (
+      !meetingLink ||
+      typeof meetingLink !== 'string' ||
+      meetingLink.trim() === ''
+    ) {
+      return '';
+    }
+
+    // Extract the session ID from the meeting link
+    const lastSlashIndex = meetingLink.lastIndexOf('/');
+    if (lastSlashIndex === -1) {
+      // No slash found, return the entire string (might be just the session ID)
+      return meetingLink.trim();
+    }
+
+    return meetingLink.substring(lastSlashIndex + 1).trim();
   };
 
   const handleBackToDashboard = useCallback(() => {
@@ -166,14 +219,11 @@ const ExpertDashboard: React.FC = () => {
   }
 
   const viewTitle = showMySessions
-    ? 'My Interview Sessions'
+    ? 'My Sessions'
     : 'Pending Interview Requests';
   const viewDescription = showMySessions
-    ? 'Your confirmed interview sessions'
+    ? 'Your confirmed and declined interview sessions'
     : 'Review and respond to interview requests';
-  const buttonType: 'pending' | 'accepted' = showMySessions
-    ? 'accepted'
-    : 'pending';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -207,7 +257,7 @@ const ExpertDashboard: React.FC = () => {
               <SessionCard
                 key={session.id}
                 session={session}
-                buttonType={buttonType}
+                buttonType={getButtonType(session)}
                 onAccept={handleAccept}
                 onDecline={handleDecline}
                 onJoin={handleJoin}

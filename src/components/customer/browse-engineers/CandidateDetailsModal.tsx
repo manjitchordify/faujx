@@ -22,7 +22,6 @@ const CandidateDetailsModal: FC<CandidateDetailsModalProps> = ({
   isOpen,
   onClose,
   candidate,
-  onViewReport,
 }) => {
   //   console.log('candidate', candidate);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -66,9 +65,13 @@ const CandidateDetailsModal: FC<CandidateDetailsModalProps> = ({
     : 0;
 
   const handleViewReport = () => {
-    if (onViewReport && candidate.id) {
-      onViewReport(candidate.id);
-    }
+    console.log('Vetting report commented');
+    // if (candidate?.id) {
+    //   window.open(
+    //     `http://localhost:3000/summary-report/candidate/${candidate.id}`,
+    //     '_blank'
+    //   );
+    // }
   };
 
   return (

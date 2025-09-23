@@ -16,6 +16,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
+import { clearAuthCookies } from '@/services/authService';
 
 interface SidebarProps {
   activeItem?: string;
@@ -229,8 +230,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
   );
 
   const handleLogout = useCallback(() => {
-    console.log('Logout clicked');
-    localStorage.clear();
+    clearAuthCookies();
     document.cookie.split(';').forEach(cookie => {
       document.cookie = cookie
         .replace(/^ +/, '') // trim spaces
@@ -294,7 +294,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
       <button
         id="mobile-menu-button"
         onClick={toggleMobileMenu}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors duration-200"
+        className="text-gray-600 md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors duration-200"
         aria-label="Toggle menu"
       >
         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}

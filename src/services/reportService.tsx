@@ -231,6 +231,7 @@ export interface DifficultyAnalysis {
 }
 
 export interface MCQAnalysis {
+  finalScore: string;
   testOverview: MCQTestOverview;
   categoryWisePerformance: CategoryWisePerformance[];
   strengthsAndWeaknesses: StrengthsAndWeaknesses;

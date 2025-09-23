@@ -60,6 +60,7 @@ const publicPaths: (string | RegExp)[] = [
   '/customer/browse-engineers',
   '/admin/login',
   /^\/vetting-report\/candidate\/[a-zA-Z0-9-]+$/,
+  /^\/summary-report\/candidate\/[a-zA-Z0-9-]+$/,
   '/payment/success',
   '/payment/failure',
   '/subscription/success',

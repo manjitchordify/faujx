@@ -12,7 +12,7 @@ export interface Session {
   time: string;
   duration: string;
   avatar?: string | null;
-  status: 'pending' | 'accepted' | 'declined';
+  status: 'pending' | 'accepted' | 'declined' | 'cancelled';
   meetingLink?: string;
   interviewType?: string;
   department?: string;
@@ -20,7 +20,7 @@ export interface Session {
 
 export interface SessionCardProps {
   session: Session;
-  buttonType?: 'pending' | 'accepted';
+  buttonType?: 'pending' | 'accepted' | 'declined';
   onAccept?: (session: Session) => void;
   onDecline?: (session: Session) => void;
   onJoin?: (session: Session) => void;
@@ -84,6 +84,18 @@ const SessionCard: React.FC<SessionCardProps> = memo(
               </button>
             </div>
           );
+        case 'declined':
+          return (
+            <div className="flex space-x-3">
+              <button
+                type="button"
+                disabled
+                className="flex-1 bg-gray-400 text-white py-2 px-4 rounded-lg font-medium cursor-not-allowed opacity-60"
+              >
+                Session Declined
+              </button>
+            </div>
+          );
         default:
           return null;
       }
@@ -123,7 +135,11 @@ const SessionCard: React.FC<SessionCardProps> = memo(
     );
 
     return (
-      <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-lg mx-auto">
+      <div
+        className={`bg-white rounded-2xl shadow-2xl p-6 max-w-lg mx-auto ${
+          buttonType === 'declined' ? 'opacity-75' : ''
+        }`}
+      >
         <div className="flex items-start space-x-4 mb-4 pl-4">
           {/* Avatar */}
           {avatar}
