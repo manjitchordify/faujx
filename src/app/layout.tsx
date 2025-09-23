@@ -33,7 +33,7 @@ export const metadata = {
     siteName: 'FaujX',
     images: [
       {
-        url: '/favicon.ico',
+        url: '/social-share.png',
         width: 1200,
         height: 630,
         alt: 'FaujX - Mission-Driven Tech Hiring Platform',
@@ -46,7 +46,7 @@ export const metadata = {
     title: 'FaujX - Mission-Driven Tech Hiring Platform',
     description:
       'Discover, vet, upskill, and deploy Foundation Engineers. Accelerate careers, enable teams, and empower experts.',
-    images: ['/favicon.ico'],
+    images: ['/social-share.png'],
     site: '@faujx',
     creator: '@faujx',
   },
@@ -76,7 +76,7 @@ export default function RootLayout({
         {/* Favicon and App Icons */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/favicon-192x192.png" />
         <link rel="manifest" href="/manifest.json" />
 
         {/* Preconnect to external domains for performance */}
