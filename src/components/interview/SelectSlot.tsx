@@ -18,6 +18,8 @@ import React, { useState } from 'react';
 import { MdCancel } from 'react-icons/md';
 import { useSelector } from 'react-redux';
 import AlternativeSlots from './selected-slot/AlternativeSlots';
+import usePreventBackNavigation from '@/app/hooks/usePreventBackNavigation';
+import { completeInterviewStage } from '@/services/engineerService';
 
 const SelectSlot = () => {
   const [showCalendar, setShowCalendar] = useState(false);
@@ -28,7 +30,7 @@ const SelectSlot = () => {
   const [slots, setSlots] = useState<InterviewSlot[]>([]);
   const [loader, setLoader] = useState<boolean>(false);
   const router = useRouter();
-
+  usePreventBackNavigation();
   function convertDateToUTCObject(
     date: Date,
     normalize: boolean
@@ -70,7 +72,6 @@ const SelectSlot = () => {
 
   const CalendarDateSelect = (data: CalendarType) => {
     setSelectedDate(data.dateObject);
-    console.log('data dateobject : ', data.dateObject);
     setSlots(() => [convertDateToUTCObject(data.dateObject, true)]);
     // setShowClock(true);
     setShowCalendar(false);
@@ -85,14 +86,10 @@ const SelectSlot = () => {
       setLoader(true);
       const res: FailedInterviewResponse | SuccessInterviewScheduleResponse =
         await submitInterviewSlots(slots, userType);
-      console.log('INTERCIEW BOOKING DATA : ', res);
-      // const res: InterviewResponse = await delayReturn(
-      //   fake_slotBookingAlternative,
-      //   4
-      // );
       if (res.success) {
         dispatch(setInterviewSlots(res));
         setShowAlternateSlots(false);
+        await completeInterviewStage(null, 'scheduled');
         const redirectPath =
           userType === 'expert' ? '/expert/interview' : '/engineer/interview';
         router.push(redirectPath);
@@ -100,11 +97,7 @@ const SelectSlot = () => {
         showToast('Select Slot', 'success');
         setSlots([]);
         setShowAlternateSlots(true);
-        if (userType === 'expert') {
-          setAlternateSlots(res.alternativeSlots);
-        } else {
-          setAlternateSlots(res.data.alternativeSlots);
-        }
+        setAlternateSlots(res.data.alternativeSlots);
       }
     } catch (error) {
       console.log(error);
@@ -131,8 +124,6 @@ const SelectSlot = () => {
     const filter = slots.filter(items => items.startTime !== item.startTime);
     setSlots(filter);
   };
-
-  console.log('SELECTED SLOTS : ', slots);
 
   return (
     <div className="w-full min-h-[calc(100vh-230px)] flex justify-center items-center px-4 sm:px-6 lg:px-8">

@@ -17,28 +17,33 @@ import {
   FiHash,
   FiRefreshCw,
   FiStar,
-  FiEye,
-  FiChevronDown,
-  FiChevronUp,
   FiFileText,
   FiRepeat,
   FiUsers,
-  FiSearch,
+  FiTrendingUp,
   FiMessageCircle,
+  FiAward,
+  FiChevronDown,
+  FiChevronUp,
+  FiAlertTriangle,
+  FiInfo,
 } from 'react-icons/fi';
 import {
   getInterviewDetails,
   confirmInterview,
   rejectInterview,
-  getAvailablePanelists,
-  transferInterview,
+  acceptInvitation,
+  declineInvitation,
   type InterviewDetails as InterviewDetailsType,
-  type AvailablePanelist,
 } from '@/services/admin-panelist-services/interviewPanelService';
 import { showToast } from '@/utils/toast/Toast';
 import { jitsiLiveUrl } from '@/services/jitsiService';
 import { useAppSelector } from '@/store/store';
 import Cookies from 'js-cookie';
+
+// Import our separate modal components
+import TransferInterviewModal from './Transferinterviewmodal';
+import InviteInterviewersModal from './Inviteinterviewersmodal';
 
 function InterviewDetails() {
   const router = useRouter();
@@ -48,26 +53,21 @@ function InterviewDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Modal State
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+
+  // Expanded feedback state
   const [expandedFeedback, setExpandedFeedback] = useState<{
     [key: number]: boolean;
   }>({});
 
-  // Transfer Modal State
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [availablePanelists, setAvailablePanelists] = useState<
-    AvailablePanelist[]
-  >([]);
-  const [transferLoading, setTransferLoading] = useState(false);
-  const [selectedPanelist, setSelectedPanelist] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Confirmation Modal State
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-
   const { loggedInUser } = useAppSelector(state => state.user);
 
-  // Enhanced validation helper
+  // Enhanced validation helper - fixed to use correct field names
   const validateInterviewState = (data: InterviewDetailsType) => {
     const validMyActions = [
       'pending',
@@ -75,6 +75,7 @@ function InterviewDetails() {
       'rejected',
       'completed',
       'transferred',
+      'no_action',
     ];
     const validInterviewStatuses = [
       'pending',
@@ -82,28 +83,16 @@ function InterviewDetails() {
       'rejected',
       'completed',
       'in_progress',
+      'cancelled',
     ];
 
     return {
       isValidMyAction: validMyActions.includes(data.myAction?.toLowerCase()),
       isValidInterviewStatus: validInterviewStatuses.includes(
-        data.interviewstatus?.toLowerCase()
+        data.interviewStatus?.toLowerCase() // Fixed field name
       ),
-      hasRequiredData: !!(data.myAction && data.interviewstatus),
+      hasRequiredData: !!(data.myAction && data.interviewStatus), // Fixed field name
     };
-  };
-
-  // Function to parse and display feedback scores
-  const parseFeedbackNote = (noteString: string) => {
-    try {
-      const parsed = JSON.parse(noteString);
-      return Object.entries(parsed).map(([criterion, score]) => ({
-        criterion,
-        score: Number(score),
-      }));
-    } catch {
-      return null;
-    }
   };
 
   // Function to calculate average score
@@ -119,13 +108,26 @@ function InterviewDetails() {
     }
   };
 
-  // Function to get score color based on value
-  const getScoreColor = (score: number, maxScore: number = 10) => {
-    const percentage = (score / maxScore) * 100;
-    if (percentage >= 80) return 'text-green-600 bg-green-50';
-    if (percentage >= 60) return 'text-yellow-600 bg-yellow-50';
-    if (percentage >= 40) return 'text-orange-600 bg-orange-50';
-    return 'text-red-600 bg-red-50';
+  // Function to parse detailed scores
+  const parseDetailedScores = (noteString: string) => {
+    try {
+      const parsed = JSON.parse(noteString);
+      return Object.entries(parsed).map(([criteria, score]) => ({
+        criteria,
+        score: Number(score),
+      }));
+    } catch {
+      return null;
+    }
+  };
+
+  // Function to get score color based on rating
+  const getScoreColor = (score: number) => {
+    if (score >= 9) return 'text-green-700 bg-green-100 border-green-300';
+    if (score >= 7) return 'text-blue-700 bg-blue-100 border-blue-300';
+    if (score >= 5) return 'text-yellow-700 bg-yellow-100 border-yellow-300';
+    if (score >= 3) return 'text-orange-700 bg-orange-100 border-orange-300';
+    return 'text-red-700 bg-red-100 border-red-300';
   };
 
   // Toggle feedback expansion
@@ -135,85 +137,6 @@ function InterviewDetails() {
       [index]: !prev[index],
     }));
   };
-
-  // Fetch available panelists function using real API
-  const fetchAvailablePanelists = useCallback(async () => {
-    try {
-      setTransferLoading(true);
-
-      // Use real API call - response is array directly, not wrapped in data property
-      const response = await getAvailablePanelists();
-      setAvailablePanelists(response);
-    } catch (error) {
-      console.error('Error fetching available panelists:', error);
-      showToast('Failed to load available panelists', 'error');
-    } finally {
-      setTransferLoading(false);
-    }
-  }, []);
-
-  // Handle transfer interview using real API with success toast
-  const handleTransferInterview = async () => {
-    if (!selectedPanelist || !interviewId) return;
-
-    const selectedPanelistData = availablePanelists.find(
-      p => p.id === selectedPanelist
-    );
-    if (!selectedPanelistData) return;
-
-    const panelistName =
-      `${selectedPanelistData.user.firstName} ${selectedPanelistData.user.lastName}`.trim();
-
-    try {
-      setTransferLoading(true);
-
-      // Use real API call for transfer
-      await transferInterview(interviewId, selectedPanelist);
-
-      // Close modal and refresh data
-      setShowTransferModal(false);
-      setSelectedPanelist('');
-      setSearchQuery('');
-
-      // Refresh interview data
-      await fetchInterviewDetails();
-
-      // Show success toast
-      showToast(
-        `Interview successfully transferred to ${panelistName}!`,
-        'success'
-      );
-
-      // Optionally redirect back to interviews list
-      router.push('/panelist/interviews');
-    } catch (error: unknown) {
-      const message =
-        (error as { message?: string })?.message ||
-        'Failed to transfer interview';
-
-      // Show error toast
-      showToast(`Transfer failed: ${message}`, 'error');
-    } finally {
-      setTransferLoading(false);
-    }
-  };
-
-  // Filter panelists based on search query - Updated for new API structure
-  const filteredPanelists = availablePanelists.filter(panelist => {
-    const fullName =
-      `${panelist.user.firstName} ${panelist.user.lastName}`.toLowerCase();
-    const email = panelist.user.email.toLowerCase();
-    const role = panelist.designation.toLowerCase();
-    const department = panelist.department.toLowerCase();
-    const query = searchQuery.toLowerCase();
-
-    return (
-      fullName.includes(query) ||
-      email.includes(query) ||
-      role.includes(query) ||
-      department.includes(query)
-    );
-  });
 
   // Memoized function using useCallback for fetching interview details
   const fetchInterviewDetails = useCallback(async () => {
@@ -226,7 +149,7 @@ function InterviewDetails() {
       console.log('Fetching interview details for ID:', interviewId);
       const response = await getInterviewDetails(interviewId);
       console.log('response', response);
-      setInterviewData(response);
+      setInterviewData(response as InterviewDetailsType);
     } catch (err: unknown) {
       let errorMessage = 'Failed to fetch interview details';
 
@@ -295,7 +218,6 @@ function InterviewDetails() {
 
   const handleReportDownload = () => {
     if (interviewData?.candidateReport) {
-      // Open the report URL in a new tab
       window.open(interviewData.candidateReport, '_blank');
       showToast('Report opened in new tab', 'success');
     } else {
@@ -323,7 +245,7 @@ function InterviewDetails() {
     }
   };
 
-  // Handle interview confirmation with server data refresh
+  // Handle interview confirmation (for regular interviews)
   const handleConfirmInterview = async () => {
     if (!interviewId) return;
 
@@ -331,27 +253,20 @@ function InterviewDetails() {
       setActionLoading(true);
       await confirmInterview(interviewId);
 
-      // Close modal
       setShowConfirmModal(false);
-
-      // Refresh the interview data from server to get updated state
       await fetchInterviewDetails();
-
-      // Show success toast
       showToast('Interview confirmed successfully!', 'success');
     } catch (error: unknown) {
       const message =
         (error as { message?: string })?.message ||
         'Failed to confirm interview';
-
-      // Show error toast
       showToast(`Confirmation failed: ${message}`, 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Handle interview rejection with server data refresh
+  // Handle interview rejection (for regular interviews)
   const handleRejectInterview = async () => {
     if (!interviewId) return;
 
@@ -359,21 +274,58 @@ function InterviewDetails() {
       setActionLoading(true);
       await rejectInterview(interviewId);
 
-      // Close modal
       setShowRejectModal(false);
-
-      // Refresh the interview data from server to get updated state
       await fetchInterviewDetails();
-
-      // Show success toast
       showToast('Interview rejected successfully!', 'success');
     } catch (error: unknown) {
       const message =
         (error as { message?: string })?.message ||
         'Failed to reject interview';
-
-      // Show error toast
       showToast(`Rejection failed: ${message}`, 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // NEW: Handle invitation acceptance
+  const handleAcceptInvitation = async () => {
+    if (!interviewId) return;
+
+    try {
+      setActionLoading(true);
+      // Using interviewId as invitationId (assuming they are the same)
+      await acceptInvitation(interviewId);
+
+      setShowConfirmModal(false);
+      await fetchInterviewDetails();
+      showToast('Invitation accepted successfully!', 'success');
+    } catch (error: unknown) {
+      const message =
+        (error as { message?: string })?.message ||
+        'Failed to accept invitation';
+      showToast(`Accept failed: ${message}`, 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // NEW: Handle invitation decline
+  const handleDeclineInvitation = async () => {
+    if (!interviewId) return;
+
+    try {
+      setActionLoading(true);
+      // Using interviewId as invitationId (assuming they are the same)
+      await declineInvitation(interviewId);
+
+      setShowRejectModal(false);
+      await fetchInterviewDetails();
+      showToast('Invitation declined successfully!', 'success');
+    } catch (error: unknown) {
+      const message =
+        (error as { message?: string })?.message ||
+        'Failed to decline invitation';
+      showToast(`Decline failed: ${message}`, 'error');
     } finally {
       setActionLoading(false);
     }
@@ -393,6 +345,10 @@ function InterviewDetails() {
         return 'bg-amber-100 text-amber-800 border border-amber-200';
       case 'transferred':
         return 'bg-purple-100 text-purple-800 border border-purple-200';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-800 border border-gray-300';
+      case 'no_action':
+        return 'bg-blue-100 text-blue-800 border border-blue-200';
       default:
         return 'bg-gray-100 text-gray-800 border border-gray-200';
     }
@@ -410,6 +366,10 @@ function InterviewDetails() {
         return <FiClock className="w-4 h-4" />;
       case 'transferred':
         return <FiRepeat className="w-4 h-4" />;
+      case 'cancelled':
+        return <FiX className="w-4 h-4" />;
+      case 'no_action':
+        return <FiInfo className="w-4 h-4" />;
       default:
         return <FiClock className="w-4 h-4" />;
     }
@@ -427,37 +387,48 @@ function InterviewDetails() {
         return 'Completed';
       case 'transferred':
         return 'Transferred';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'no_action':
+        return 'Invited';
       default:
         return myAction.replace('_', ' ');
     }
   };
 
-  // Use interview status directly from API
+  // Fixed to use the correct field name: interviewStatus
   const interviewStatus =
-    interviewData?.interviewstatus?.toLowerCase() || 'pending';
-  const isPendingConfirmation =
-    interviewData?.myAction?.toLowerCase() === 'pending';
+    interviewData?.interviewStatus?.toLowerCase() || 'pending';
+  const myAction = interviewData?.myAction?.toLowerCase();
 
-  // Meeting should be enabled when interview status is confirmed
-  const isMeetingEnabled = interviewStatus === 'confirmed';
+  // Check if interview is cancelled - all actions should be disabled
+  const isCancelled = interviewStatus === 'cancelled';
+
+  // Check if user is invited (isInvited flag determines which APIs to use)
+  const isInvited = interviewData?.isInvited || false;
+
+  // UPDATED JOIN MEETING LOGIC - Handle invited users differently
+  const isMeetingEnabled =
+    interviewStatus === 'confirmed' &&
+    !isCancelled &&
+    (isInvited ? myAction === 'confirmed' : true);
+
   const hasMeetingLink =
     interviewData?.meetingLink && interviewData.meetingLink.trim() !== '';
 
-  // Check if transfer is allowed (only when myAction is pending)
-  const isTransferAllowed =
-    interviewData?.myAction?.toLowerCase() === 'pending';
+  // Check if transfer is allowed (only when myAction is pending and not cancelled)
+  const isTransferAllowed = myAction === 'pending' && !isCancelled;
 
-  // Debug logging
-  console.log('Enhanced Button Logic Debug:', {
-    myAction: interviewData?.myAction,
-    interviewstatus: interviewData?.interviewstatus,
-    calculatedStatus: interviewStatus,
-    isPendingConfirmation,
-    isMeetingEnabled: `Interview status: ${interviewStatus} - Meeting enabled: ${isMeetingEnabled}`,
-    hasMeetingLink,
-    isTransferAllowed: `MyAction: ${interviewData?.myAction} - Transfer allowed: ${isTransferAllowed} (only for pending)`,
-    allPanelistActions: interviewData?.attendees.map(a => a.status?.action),
-  });
+  // Check if invite is allowed - disabled if already invited or cancelled
+  // Also check canInviteOthers flag if available
+  const isInviteAllowed =
+    isMeetingEnabled && !isInvited && interviewData?.canInviteOthers !== false;
+
+  // UPDATED LOGIC: Check if confirm/reject actions are allowed based on invitation status
+  // For invitations: Enable when myAction is 'no_action' or 'pending' and not cancelled
+  // For regular interviews: Enable when myAction is 'pending' and not cancelled
+  const areResponseActionsAllowed =
+    (myAction === 'no_action' || myAction === 'pending') && !isCancelled;
 
   // Loading state
   if (loading) {
@@ -506,8 +477,9 @@ function InterviewDetails() {
     );
   }
 
+  // Fixed to use the correct field name: scheduledDateAndTime
   const { date, time, day } = formatDateTime(
-    interviewData.scheduledDateandTime
+    interviewData.scheduledDateAndTime
   );
 
   // Validate interview state
@@ -540,6 +512,55 @@ function InterviewDetails() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Cancelled Interview Alert */}
+        {isCancelled && (
+          <div className="mb-6 bg-gray-50 border-l-4 border-gray-400 p-4 rounded-r-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <FiAlertTriangle className="h-5 w-5 text-gray-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-gray-800">
+                  Interview Cancelled
+                </h3>
+                <div className="mt-2 text-sm text-gray-700">
+                  <p>
+                    This interview has been cancelled. No further actions are
+                    available.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Invited Interview Alert */}
+        {isInvited && interviewData.invitedBy && (
+          <div className="mb-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <FiInfo className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Interview Invitation
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>
+                    You have been invited to this interview by{' '}
+                    <span className="font-semibold">
+                      {interviewData.invitedBy}
+                    </span>
+                    .
+                    {areResponseActionsAllowed &&
+                      ' Please respond to the invitation below.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -553,7 +574,11 @@ function InterviewDetails() {
               <div className="px-6 py-5">
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0">
-                    <div className="h-16 w-16 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <div
+                      className={`h-16 w-16 rounded-lg flex items-center justify-center ${
+                        isCancelled ? 'bg-gray-600' : 'bg-blue-600'
+                      }`}
+                    >
                       <FiUser className="h-8 w-8 text-white" />
                     </div>
                   </div>
@@ -570,11 +595,13 @@ function InterviewDetails() {
                         )}
                       </div>
                       <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(interviewStatus)}`}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(
+                          myAction || 'pending'
+                        )}`}
                       >
-                        {getMyActionIcon(interviewStatus)}
+                        {getMyActionIcon(myAction || 'pending')}
                         <span className="ml-1">
-                          {getMyActionDisplayText(interviewStatus)}
+                          {getMyActionDisplayText(myAction || 'pending')}
                         </span>
                       </span>
                     </div>
@@ -641,19 +668,52 @@ function InterviewDetails() {
                 </h3>
               </div>
               <div className="px-6 py-5">
-                <div className="bg-gray-50 rounded-lg p-6 text-center">
-                  <div className="text-3xl font-bold text-gray-900 mb-2">
+                <div
+                  className={`rounded-lg p-6 text-center ${
+                    isCancelled ? 'bg-gray-100' : 'bg-gray-50'
+                  }`}
+                >
+                  <div
+                    className={`text-3xl font-bold mb-2 ${
+                      isCancelled ? 'text-gray-600' : 'text-gray-900'
+                    }`}
+                  >
                     {time}
                   </div>
-                  <div className="text-lg font-medium text-gray-700 mb-1">
+                  <div
+                    className={`text-lg font-medium mb-1 ${
+                      isCancelled ? 'text-gray-500' : 'text-gray-700'
+                    }`}
+                  >
                     {day}
                   </div>
-                  <div className="text-sm text-gray-500">{date}</div>
+                  <div
+                    className={`text-sm ${
+                      isCancelled ? 'text-gray-400' : 'text-gray-500'
+                    }`}
+                  >
+                    {date}
+                  </div>
+
+                  {/* Duration */}
+                  <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                    <FiClock className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">
+                      {interviewData.durationMinutes} minutes
+                    </span>
+                  </div>
+
+                  {isCancelled && (
+                    <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600">
+                      <FiX className="w-3 h-3 mr-1" />
+                      Cancelled
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Panelist Evaluations & Feedback */}
+            {/* Enhanced Panelist Evaluations & Feedback */}
             <div className="bg-white shadow rounded-lg">
               <div className="px-6 py-5 border-b border-gray-200">
                 <h3 className="text-lg leading-6 font-medium text-gray-900 flex items-center">
@@ -661,14 +721,12 @@ function InterviewDetails() {
                   Panelist Evaluations & Feedback
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  Review panelist responses, ratings, and detailed feedback
-                  scores
+                  Detailed interview assessments from panelists
                 </p>
               </div>
               <div className="px-6 py-5">
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {interviewData.attendees.map((attendee, index) => {
-                    // Get the attendee key (attendee1, attendee2, etc.)
                     const attendeeKey = Object.keys(attendee).find(key =>
                       key.startsWith('attendee')
                     );
@@ -688,272 +746,198 @@ function InterviewDetails() {
                     const typedAttendeeInfo = attendeeInfo as {
                       email: string;
                       interviewerName: string;
+                      participationType?: string;
                     };
 
-                    // Check if this is the current user (compare emails)
                     const isCurrentUser =
                       loggedInUser?.email === typedAttendeeInfo.email;
-
-                    // Parse feedback scores if available
-                    const feedbackScores = status.note
-                      ? parseFeedbackNote(status.note)
-                      : null;
                     const averageScore = status.note
                       ? calculateAverageScore(status.note)
                       : null;
+                    const detailedScores = status.note
+                      ? parseDetailedScores(status.note)
+                      : null;
+                    const isExpanded = expandedFeedback[index] || false;
 
                     return (
                       <div
                         key={index}
-                        className={`border rounded-lg overflow-hidden transition-all duration-200 ${
+                        className={`border rounded-xl overflow-hidden transition-all duration-200 ${
                           isCurrentUser
                             ? 'border-blue-300 bg-blue-50/30 ring-2 ring-blue-200 shadow-md'
-                            : 'border-gray-200 hover:border-gray-300'
+                            : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                         }`}
                       >
+                        {/* Panelist Header */}
                         <div
-                          className={`flex items-center justify-between p-4 ${
-                            isCurrentUser ? 'bg-blue-50' : 'bg-gray-50'
+                          className={`flex items-center justify-between p-6 ${
+                            isCurrentUser ? 'bg-blue-50/50' : 'bg-gray-50'
                           }`}
                         >
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-4">
                             <div
-                              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              className={`w-12 h-12 rounded-full flex items-center justify-center ${
                                 isCurrentUser
                                   ? 'bg-blue-600 ring-2 ring-blue-300'
                                   : 'bg-blue-600'
                               }`}
                             >
-                              <FiUser className="w-5 h-5 text-white" />
+                              <FiUser className="w-6 h-6 text-white" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-medium text-gray-900">
+                                <h4 className="text-lg font-semibold text-gray-900">
                                   {typedAttendeeInfo.interviewerName}
-                                </span>
+                                </h4>
                                 {isCurrentUser && (
                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
                                     You
                                   </span>
                                 )}
+                                {typedAttendeeInfo.participationType && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300 capitalize">
+                                    {typedAttendeeInfo.participationType}
+                                  </span>
+                                )}
                               </div>
-                              <div className="text-sm text-gray-500">
+                              <p className="text-sm text-gray-600">
                                 {typedAttendeeInfo.email}
-                              </div>
-                              {(status.rating || averageScore) && (
-                                <div className="flex items-center text-sm text-gray-600 mt-1">
-                                  <FiStar className="w-4 h-4 mr-1 fill-current text-yellow-400" />
-                                  {averageScore ? (
-                                    <span className="font-medium">
-                                      {averageScore}/10
-                                    </span>
-                                  ) : status.rating ? (
-                                    <span className="font-medium">
-                                      {status.rating}/10
-                                    </span>
-                                  ) : null}
-                                </div>
-                              )}
+                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
                             <span
-                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                isCurrentUser
-                                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                                  : getStatusBadgeColor(status.action)
-                              }`}
+                              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(status.action)}`}
                             >
                               {getMyActionIcon(status.action)}
                               <span className="ml-1">
                                 {getMyActionDisplayText(status.action)}
                               </span>
                             </span>
-                            {(feedbackScores || status.comments) && (
-                              <button
-                                onClick={() => toggleFeedbackExpansion(index)}
-                                className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full transition-colors ${
-                                  isCurrentUser
-                                    ? 'text-blue-700 bg-blue-100 hover:bg-blue-200'
-                                    : 'text-blue-600 bg-blue-50 hover:bg-blue-100'
-                                }`}
-                              >
-                                <FiEye className="w-3 h-3 mr-1" />
-                                Details
-                                {expandedFeedback[index] ? (
-                                  <FiChevronUp className="w-3 h-3 ml-1" />
-                                ) : (
-                                  <FiChevronDown className="w-3 h-3 ml-1" />
-                                )}
-                              </button>
-                            )}
                           </div>
                         </div>
 
-                        {/* Expanded Feedback Details */}
-                        {expandedFeedback[index] &&
-                          (feedbackScores || status.comments) && (
-                            <div
-                              className={`border-t bg-white p-4 space-y-4 ${
-                                isCurrentUser
-                                  ? 'border-blue-200'
-                                  : 'border-gray-200'
-                              }`}
-                            >
-                              {/* Detailed Evaluation Scores */}
-                              {feedbackScores && (
-                                <div>
-                                  <h5 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                                    <FiStar className="w-4 h-4 mr-1" />
-                                    Detailed Evaluation Scores
-                                    {isCurrentUser && (
-                                      <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full border border-blue-200">
-                                        Your Feedback
-                                      </span>
-                                    )}
-                                  </h5>
-                                  <div className="grid grid-cols-1 gap-3">
-                                    {feedbackScores.map(
-                                      ({ criterion, score }, scoreIndex) => (
-                                        <div
-                                          key={scoreIndex}
-                                          className={`flex items-center justify-between p-3 rounded-md ${
-                                            isCurrentUser
-                                              ? 'bg-blue-50 border border-blue-100'
-                                              : 'bg-gray-50'
-                                          }`}
-                                        >
-                                          <div className="flex-1">
-                                            <span className="text-sm text-gray-700">
-                                              {criterion}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <div className="w-16 bg-gray-200 rounded-full h-2">
-                                              <div
-                                                className={`h-2 rounded-full transition-all duration-300 ${
-                                                  isCurrentUser
-                                                    ? 'bg-blue-600'
-                                                    : 'bg-blue-600'
-                                                }`}
-                                                style={{
-                                                  width: `${(score / 10) * 100}%`,
-                                                }}
-                                              ></div>
-                                            </div>
-                                            <span
-                                              className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getScoreColor(score)}`}
-                                            >
-                                              {score}/10
-                                            </span>
-                                          </div>
-                                        </div>
-                                      )
-                                    )}
+                        {/* Feedback Content */}
+                        {(detailedScores ||
+                          status.rating ||
+                          status.comments) && (
+                          <div className="px-6 pb-6">
+                            {/* Overall Rating Display */}
+                            {averageScore && (
+                              <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    <FiAward className="w-5 h-5 text-blue-600" />
+                                    <span className="font-medium text-gray-900">
+                                      Overall Rating
+                                    </span>
                                   </div>
-                                  {averageScore && (
-                                    <div
-                                      className={`mt-4 p-3 border rounded-lg ${
-                                        isCurrentUser
-                                          ? 'bg-blue-50 border-blue-200'
-                                          : 'bg-blue-50 border-blue-200'
-                                      }`}
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <span className="text-sm font-medium text-blue-900">
-                                          Overall Average Score
-                                          {isCurrentUser && (
-                                            <span className="ml-2 text-xs text-blue-600">
-                                              (Your Rating)
-                                            </span>
-                                          )}
-                                        </span>
-                                        <span className="text-lg font-bold text-blue-900">
-                                          {averageScore}/10
-                                        </span>
-                                      </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-2xl font-bold text-blue-600">
+                                      {averageScore}
                                     </div>
-                                  )}
+                                    <div className="text-gray-500">/10</div>
+                                  </div>
                                 </div>
-                              )}
+                              </div>
+                            )}
 
-                              {/* Comments Section */}
-                              {status.comments && status.comments.trim() && (
-                                <div>
-                                  <h5 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                                    <FiMessageCircle className="w-4 h-4 mr-1" />
-                                    Comments
-                                    {isCurrentUser && (
-                                      <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full border border-blue-200">
-                                        Your Comments
-                                      </span>
-                                    )}
-                                  </h5>
-                                  <div
-                                    className={`p-4 rounded-lg border ${
-                                      isCurrentUser
-                                        ? 'bg-blue-50 border-blue-200'
-                                        : 'bg-gray-50 border-gray-200'
-                                    }`}
-                                  >
-                                    <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                            {/* Detailed Scores */}
+                            {detailedScores && detailedScores.length > 0 && (
+                              <div className="mb-4">
+                                <button
+                                  onClick={() => toggleFeedbackExpansion(index)}
+                                  className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <FiTrendingUp className="w-4 h-4 text-gray-600" />
+                                    <span className="font-medium text-gray-900">
+                                      Detailed Evaluation
+                                    </span>
+                                  </div>
+                                  {isExpanded ? (
+                                    <FiChevronUp className="w-4 h-4 text-gray-600" />
+                                  ) : (
+                                    <FiChevronDown className="w-4 h-4 text-gray-600" />
+                                  )}
+                                </button>
+
+                                {isExpanded && (
+                                  <div className="mt-3 space-y-2">
+                                    {detailedScores.map((item, scoreIndex) => (
+                                      <div
+                                        key={scoreIndex}
+                                        className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200"
+                                      >
+                                        <div className="flex-1">
+                                          <p className="text-sm font-medium text-gray-900">
+                                            {item.criteria}
+                                          </p>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span
+                                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold border ${getScoreColor(item.score)}`}
+                                          >
+                                            {item.score}/10
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Comments Section */}
+                            {status.comments && (
+                              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                <div className="flex items-start gap-3">
+                                  <FiMessageCircle className="w-5 h-5 text-gray-600 mt-0.5" />
+                                  <div>
+                                    <h5 className="font-medium text-gray-900 mb-2">
+                                      Interview Comments
+                                    </h5>
+                                    <p className="text-sm text-gray-700 leading-relaxed">
                                       {status.comments}
                                     </p>
                                   </div>
                                 </div>
-                              )}
+                              </div>
+                            )}
+
+                            {/* Legacy Rating Display (if no detailed scores) */}
+                            {status.rating && !detailedScores && (
+                              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <div className="flex items-center gap-3">
+                                  <FiStar className="w-5 h-5 text-yellow-500 fill-current" />
+                                  <span className="font-medium text-gray-900">
+                                    Rating:
+                                  </span>
+                                  <span className="text-lg font-semibold text-blue-600">
+                                    {status.rating}/10
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* No feedback available state */}
+                        {!detailedScores &&
+                          !status.rating &&
+                          !status.comments && (
+                            <div className="px-6 pb-6">
+                              <div className="text-center py-8 text-gray-500">
+                                <FiMessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                <p className="text-sm">
+                                  No feedback available yet
+                                </p>
+                              </div>
                             </div>
                           )}
                       </div>
                     );
                   })}
-                </div>
-              </div>
-            </div>
-
-            {/* Candidate Submitted Code */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-5 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                  <FiHash className="mr-2 h-5 w-5" />
-                  Candidate Submitted Code
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Review the candidate&apos;s submitted code and implementation
-                </p>
-              </div>
-              <div className="px-6 py-5">
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <iframe
-                    src="https://codesandbox.io/s/ls7yy7"
-                    title="Sandbox Environment"
-                    className="w-full h-96 border-0 rounded-lg"
-                    style={{
-                      minHeight: '500px',
-                      border: 'none',
-                      outline: 'none',
-                    }}
-                    allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
-                    sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
-                  />
-                </div>
-                <div className="mt-4 flex items-center justify-between text-sm text-gray-500">
-                  <div className="flex items-center space-x-4">
-                    <span className="flex items-center">
-                      <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                      CodeSandbox: Active
-                    </span>
-                    <span>Sandbox ID: ls7yy7</span>
-                  </div>
-                  <button
-                    onClick={() =>
-                      window.open('https://codesandbox.io/s/ls7yy7', '_blank')
-                    }
-                    className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                  >
-                    <FiRefreshCw className="w-3 h-3 mr-1" />
-                    Open in New Tab
-                  </button>
                 </div>
               </div>
             </div>
@@ -969,7 +953,7 @@ function InterviewDetails() {
                 </h3>
               </div>
               <div className="px-6 py-5 space-y-4">
-                {/* Meeting Button - Only enabled when interview status is confirmed */}
+                {/* Meeting Button - Updated logic: Only enabled when interviewStatus is "confirmed" */}
                 {hasMeetingLink && isMeetingEnabled ? (
                   <button
                     onClick={() =>
@@ -983,54 +967,39 @@ function InterviewDetails() {
                     <FiVideo className="mr-2 h-4 w-4" />
                     Join Meeting
                   </button>
-                ) : hasMeetingLink && !isMeetingEnabled ? (
-                  <div className="w-full text-center space-y-2">
-                    <div className="w-full inline-flex justify-center items-center px-4 py-3 border-2 border-dashed border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-gray-50">
-                      <FiVideo className="mr-2 h-4 w-4" />
-                      Meeting Unavailable
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Meeting available when status is confirmed
-                      <br />
-                      <span className="font-mono text-xs">
-                        Current Status: {interviewStatus}
-                      </span>
-                    </p>
-                  </div>
                 ) : (
                   <div className="w-full text-center space-y-2">
                     <div className="w-full inline-flex justify-center items-center px-4 py-3 border-2 border-dashed border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-gray-50">
                       <FiVideo className="mr-2 h-4 w-4" />
-                      No Meeting Link
+                      {isCancelled
+                        ? 'Meeting Cancelled'
+                        : hasMeetingLink
+                          ? isInvited && myAction !== 'confirmed'
+                            ? 'Accept Invitation to Join'
+                            : 'Meeting Unavailable'
+                          : 'No Meeting Link'}
                     </div>
                     <p className="text-xs text-gray-500">
-                      Meeting link not available
+                      {isCancelled
+                        ? 'Interview has been cancelled'
+                        : hasMeetingLink
+                          ? isInvited && myAction !== 'confirmed'
+                            ? 'Meeting available after accepting invitation'
+                            : `Meeting available when interview status is confirmed`
+                          : 'Meeting link not available'}
                     </p>
                   </div>
                 )}
 
-                {/* Transfer Interview Button - Show when myAction is pending OR confirmed */}
+                {/* Transfer Interview Button */}
                 {isTransferAllowed ? (
                   <button
-                    onClick={() => {
-                      setShowTransferModal(true);
-                      fetchAvailablePanelists();
-                    }}
+                    onClick={() => setShowTransferModal(true)}
                     className="w-full inline-flex justify-center items-center px-4 py-3 border border-orange-300 text-sm font-medium rounded-md text-orange-700 bg-orange-50 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 shadow-sm transition-colors"
                   >
                     <FiRepeat className="mr-2 h-4 w-4" />
                     Transfer Interview
                   </button>
-                ) : interviewData?.myAction?.toLowerCase() === 'transferred' ? (
-                  <div className="w-full text-center space-y-2">
-                    <div className="w-full inline-flex justify-center items-center px-4 py-3 border-2 border-dashed border-purple-300 text-sm font-medium rounded-md text-purple-500 bg-purple-50">
-                      <FiRepeat className="mr-2 h-4 w-4" />
-                      Already Transferred
-                    </div>
-                    <p className="text-xs text-purple-600">
-                      This interview has been transferred to another panelist
-                    </p>
-                  </div>
                 ) : (
                   <div className="w-full text-center space-y-2">
                     <div className="w-full inline-flex justify-center items-center px-4 py-3 border-2 border-dashed border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-gray-50">
@@ -1038,36 +1007,76 @@ function InterviewDetails() {
                       Transfer Not Available
                     </div>
                     <p className="text-xs text-gray-500">
-                      Transfer only available when your status is pending{' '}
+                      {isCancelled
+                        ? 'Transfer not available for cancelled interviews'
+                        : 'Transfer only available when status is pending'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Invite Interviewers/Panelists Button */}
+                {isInviteAllowed ? (
+                  <button
+                    onClick={() => setShowInviteModal(true)}
+                    className="w-full inline-flex justify-center items-center px-4 py-3 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-sm transition-colors"
+                  >
+                    <FiUsers className="mr-2 h-4 w-4" />
+                    Invite Interviewers/Panelists
+                  </button>
+                ) : (
+                  <div className="w-full text-center space-y-2">
+                    <div className="w-full inline-flex justify-center items-center px-4 py-3 border-2 border-dashed border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-gray-50">
+                      <FiUsers className="mr-2 h-4 w-4" />
+                      Invite Not Available
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {isCancelled
+                        ? 'Invite not available for cancelled interviews'
+                        : isInvited
+                          ? `Already invited by ${interviewData.invitedBy}`
+                          : 'Invite feature available when interview status is confirmed'}
                     </p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Interview Response Actions */}
+            {/* UPDATED: Interview Response Actions - Different UI based on invitation status */}
             <div className="bg-white shadow rounded-lg">
               <div className="px-6 py-5 border-b border-gray-200">
                 <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Interview Response
+                  {/* UPDATED: Different title based on invitation status */}
+                  {isInvited ? 'Invitation Response' : 'Interview Response'}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  {isPendingConfirmation
-                    ? 'Please respond to this interview invitation'
-                    : 'Interview response status'}
+                  {isCancelled
+                    ? 'Interview has been cancelled'
+                    : areResponseActionsAllowed
+                      ? isInvited
+                        ? 'Please respond to this interview invitation'
+                        : 'Please respond to this interview request'
+                      : isInvited
+                        ? 'Invitation response status'
+                        : 'Interview response status'}
                 </p>
               </div>
               <div className="px-6 py-5 space-y-4">
-                {/* Enhanced Confirm/Reject Button Logic */}
-                {isPendingConfirmation ? (
+                {areResponseActionsAllowed ? (
                   <>
+                    {/* UPDATED: Different buttons based on invitation status */}
                     <button
                       onClick={() => setShowConfirmModal(true)}
                       disabled={actionLoading}
                       className="w-full inline-flex justify-center items-center px-6 py-4 border border-transparent text-base font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       <FiUserCheck className="mr-2 h-5 w-5" />
-                      {actionLoading ? 'Confirming...' : 'Confirm Interview'}
+                      {actionLoading
+                        ? isInvited
+                          ? 'Accepting...'
+                          : 'Confirming...'
+                        : isInvited
+                          ? 'Accept Invitation'
+                          : 'Confirm Interview'}
                     </button>
                     <button
                       onClick={() => setShowRejectModal(true)}
@@ -1075,347 +1084,113 @@ function InterviewDetails() {
                       className="w-full inline-flex justify-center items-center px-6 py-4 border border-red-300 text-base font-medium rounded-lg text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       <FiUserX className="mr-2 h-5 w-5" />
-                      {actionLoading ? 'Rejecting...' : 'Reject Interview'}
+                      {actionLoading
+                        ? isInvited
+                          ? 'Declining...'
+                          : 'Rejecting...'
+                        : isInvited
+                          ? 'Decline Invitation'
+                          : 'Reject Interview'}
                     </button>
                   </>
                 ) : (
                   <div className="text-center py-6">
                     <div
                       className={`mx-auto h-12 w-12 rounded-full flex items-center justify-center mb-3 ${
-                        interviewData.myAction.toLowerCase() === 'transferred'
-                          ? 'bg-purple-100'
-                          : 'bg-green-100'
+                        isCancelled
+                          ? 'bg-gray-100'
+                          : interviewData.myAction.toLowerCase() ===
+                              'transferred'
+                            ? 'bg-purple-100'
+                            : isInvited
+                              ? 'bg-blue-100'
+                              : 'bg-green-100'
                       }`}
                     >
                       <div
                         className={
-                          interviewData.myAction.toLowerCase() === 'transferred'
-                            ? 'text-purple-600'
-                            : 'text-green-600'
+                          isCancelled
+                            ? 'text-gray-600'
+                            : interviewData.myAction.toLowerCase() ===
+                                'transferred'
+                              ? 'text-purple-600'
+                              : isInvited
+                                ? 'text-blue-600'
+                                : 'text-green-600'
                         }
                       >
-                        {getMyActionIcon(interviewData.myAction)}
+                        {getMyActionIcon(
+                          isCancelled
+                            ? 'cancelled'
+                            : isInvited
+                              ? 'no_action'
+                              : interviewData.myAction
+                        )}
                       </div>
                     </div>
                     <p
                       className={`text-sm font-medium mb-1 ${
-                        interviewData.myAction.toLowerCase() === 'transferred'
-                          ? 'text-purple-900'
-                          : 'text-green-900'
+                        isCancelled
+                          ? 'text-gray-700'
+                          : interviewData.myAction.toLowerCase() ===
+                              'transferred'
+                            ? 'text-purple-900'
+                            : isInvited
+                              ? 'text-blue-900'
+                              : 'text-green-900'
                       }`}
                     >
-                      {getMyActionDisplayText(interviewData.myAction)}
+                      {getMyActionDisplayText(
+                        isCancelled
+                          ? 'cancelled'
+                          : isInvited
+                            ? 'no_action'
+                            : interviewData.myAction
+                      )}
                     </p>
-                    <p
-                      className={`text-xs mt-1 ${
-                        interviewData.myAction.toLowerCase() === 'transferred'
-                          ? 'text-purple-500'
-                          : 'text-green-500'
-                      }`}
-                    >
-                      Your Response:{' '}
-                      {interviewData.myAction.charAt(0).toUpperCase() +
-                        interviewData.myAction.slice(1)}
-                    </p>
+                    {isCancelled && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        No actions available for cancelled interviews
+                      </p>
+                    )}
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Status Information Card */}
-            <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-5 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
-                  Status Information
-                </h3>
-              </div>
-              <div className="px-6 py-5 space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Interview Status:</span>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadgeColor(interviewStatus)}`}
-                  >
-                    {interviewStatus.replace('_', ' ')}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">My Action:</span>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(interviewData.myAction)}`}
-                  >
-                    {getMyActionDisplayText(interviewData.myAction)}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Transfer Modal remains the same... */}
-      {showTransferModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-          <div className="relative bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-2xl h-[700px] flex flex-col">
-            {/* Modal Header - Fixed */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-orange-100">
-                  <FiRepeat className="h-6 w-6 text-orange-600" />
-                </div>
-                <div className="ml-4">
-                  <h3 className="text-lg leading-6 font-semibold text-gray-900">
-                    Transfer Interview
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Select a panelist to transfer this interview to
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setShowTransferModal(false);
-                  setSelectedPanelist('');
-                  setSearchQuery('');
-                }}
-                className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors rounded-lg p-2 hover:bg-gray-100"
-              >
-                <FiX className="h-5 w-5" />
-              </button>
-            </div>
+      {/* Modals */}
+      <TransferInterviewModal
+        isOpen={showTransferModal}
+        onClose={() => setShowTransferModal(false)}
+        interviewId={interviewId}
+        candidateName={interviewData.candidateName}
+        scheduledDate={date}
+        scheduledTime={time}
+        onTransferSuccess={() => {
+          fetchInterviewDetails();
+          router.push('/panelist/interviews');
+        }}
+      />
 
-            {/* Interview Info - Fixed */}
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex-shrink-0">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600 font-medium">Candidate:</span>
-                  <span className="font-semibold text-gray-900 truncate ml-2">
-                    {interviewData.candidateName}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600 font-medium">Scheduled:</span>
-                  <span className="font-semibold text-gray-900 truncate ml-2">
-                    {date} at {time}
-                  </span>
-                </div>
-              </div>
-            </div>
+      <InviteInterviewersModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        interviewId={interviewId}
+        candidateName={interviewData.candidateName}
+        scheduledDate={date}
+        scheduledTime={time}
+        onInviteSuccess={() => {
+          fetchInterviewDetails();
+        }}
+      />
 
-            {/* Search Input - Fixed */}
-            <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiSearch className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all"
-                  placeholder="Search panelists by name, email, or role..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Panelists List - Scrollable with Fixed Height */}
-            <div className="flex-1 overflow-hidden flex flex-col">
-              {transferLoading ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                      <FiRefreshCw className="w-8 h-8 animate-spin text-blue-600" />
-                    </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">
-                      Loading Panelists
-                    </h4>
-                    <p className="text-gray-500">
-                      Please wait while we fetch available panelists...
-                    </p>
-                  </div>
-                </div>
-              ) : filteredPanelists.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                      <FiUsers className="w-8 h-8 text-gray-400" />
-                    </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">
-                      {availablePanelists.length === 0
-                        ? 'No Panelists Available'
-                        : 'No Results Found'}
-                    </h4>
-                    <p className="text-gray-500">
-                      {availablePanelists.length === 0
-                        ? 'There are currently no available panelists for transfer.'
-                        : 'Try adjusting your search criteria to find panelists.'}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 overflow-y-auto px-6 py-4">
-                  <div className="space-y-3">
-                    {filteredPanelists.map(panelist => {
-                      const fullName =
-                        `${panelist.user.firstName} ${panelist.user.lastName}`.trim();
-                      return (
-                        <div
-                          key={panelist.id}
-                          className={`border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
-                            selectedPanelist === panelist.id
-                              ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200 shadow-md'
-                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-sm'
-                          }`}
-                          onClick={() => setSelectedPanelist(panelist.id)}
-                        >
-                          <div className="flex items-center space-x-4">
-                            <div className="flex-shrink-0">
-                              <div
-                                className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                                  selectedPanelist === panelist.id
-                                    ? 'bg-blue-600 ring-2 ring-blue-300'
-                                    : 'bg-blue-600'
-                                }`}
-                              >
-                                <FiUser className="w-6 h-6 text-white" />
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1">
-                                <h4 className="text-base font-semibold text-gray-900 truncate">
-                                  {fullName}
-                                </h4>
-                                {selectedPanelist === panelist.id && (
-                                  <div className="flex-shrink-0 ml-2">
-                                    <FiCheck className="w-5 h-5 text-blue-600" />
-                                  </div>
-                                )}
-                              </div>
-                              <p className="text-sm text-gray-600 mb-1 truncate">
-                                {panelist.user.email}
-                              </p>
-                              <div className="flex items-center text-xs text-gray-500 mb-2">
-                                <span className="font-medium">
-                                  {panelist.designation}
-                                </span>
-                                {panelist.department && (
-                                  <>
-                                    <span className="mx-1">•</span>
-                                    <span>{panelist.department}</span>
-                                  </>
-                                )}
-                              </div>
-                              {panelist.skills &&
-                                panelist.skills.length > 0 && (
-                                  <div className="flex flex-wrap gap-1">
-                                    {panelist.skills
-                                      .slice(0, 3)
-                                      .map((skill, index) => (
-                                        <span
-                                          key={index}
-                                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                                        >
-                                          {skill}
-                                        </span>
-                                      ))}
-                                    {panelist.skills.length > 3 && (
-                                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                        +{panelist.skills.length - 3} more
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Selected Panelist Confirmation - Show when panelist is selected */}
-            {selectedPanelist &&
-              availablePanelists.find(p => p.id === selectedPanelist) && (
-                <div className="px-6 py-4 bg-orange-50 border-t border-orange-200 flex-shrink-0">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                        <FiRepeat className="w-4 h-4 text-orange-600" />
-                      </div>
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <h4 className="text-sm font-medium text-orange-900 mb-2">
-                        Transfer Confirmation
-                      </h4>
-                      <div className="text-sm text-orange-700 space-y-1">
-                        <div>
-                          <strong>Transfer to:</strong>{' '}
-                          {`${availablePanelists.find(p => p.id === selectedPanelist)?.user.firstName} ${availablePanelists.find(p => p.id === selectedPanelist)?.user.lastName}`.trim()}
-                        </div>
-                        <div>
-                          <strong>Email:</strong>{' '}
-                          {
-                            availablePanelists.find(
-                              p => p.id === selectedPanelist
-                            )?.user.email
-                          }
-                        </div>
-                      </div>
-                      <div className="mt-3 p-3 bg-orange-100 border border-orange-200 rounded-lg">
-                        <div className="flex items-center">
-                          <FiX className="w-4 h-4 text-orange-600 mr-2 flex-shrink-0" />
-                          <span className="text-xs text-orange-800 font-medium">
-                            This action cannot be undone. You will no longer be
-                            a panelist for this interview.
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            {/* Modal Footer - Fixed */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3 flex-shrink-0">
-              <button
-                onClick={() => {
-                  setShowTransferModal(false);
-                  setSelectedPanelist('');
-                  setSearchQuery('');
-                }}
-                className="flex-1 px-4 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                disabled={transferLoading}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleTransferInterview}
-                disabled={!selectedPanelist || transferLoading}
-                className="flex-1 px-4 py-3 text-sm font-medium text-white bg-orange-600 border border-transparent rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center"
-              >
-                {transferLoading ? (
-                  <>
-                    <FiRefreshCw className="w-4 h-4 animate-spin mr-2" />
-                    Transferring...
-                  </>
-                ) : (
-                  <>
-                    <FiRepeat className="w-4 h-4 mr-2" />
-                    Transfer Interview
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirm Interview Modal */}
+      {/* UPDATED: Confirm Modal - Different behavior based on invitation status */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
           <div className="relative bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md">
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center">
                 <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
@@ -1423,10 +1198,14 @@ function InterviewDetails() {
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg leading-6 font-semibold text-gray-900">
-                    Confirm Interview
+                    {/* UPDATED: Different title based on invitation status */}
+                    {isInvited ? 'Accept Invitation' : 'Confirm Interview'}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    You will be expected to attend this interview
+                    {/* UPDATED: Different subtitle based on invitation status */}
+                    {isInvited
+                      ? 'You will be expected to attend this interview'
+                      : 'You will be expected to attend this interview'}
                   </p>
                 </div>
               </div>
@@ -1437,8 +1216,6 @@ function InterviewDetails() {
                 <FiX className="h-5 w-5" />
               </button>
             </div>
-
-            {/* Modal Content */}
             <div className="px-6 py-4">
               <div className="space-y-4">
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -1456,37 +1233,24 @@ function InterviewDetails() {
                           {interviewData?.candidateName}
                         </div>
                         <div>
-                          <strong>Date:</strong>{' '}
-                          {
-                            formatDateTime(
-                              interviewData?.scheduledDateandTime || ''
-                            ).date
-                          }
+                          <strong>Date:</strong> {date}
                         </div>
                         <div>
-                          <strong>Time:</strong>{' '}
-                          {
-                            formatDateTime(
-                              interviewData?.scheduledDateandTime || ''
-                            ).time
-                          }
+                          <strong>Time:</strong> {time}
                         </div>
+                        {/* UPDATED: Show invitation info if applicable */}
+                        {isInvited && interviewData.invitedBy && (
+                          <div>
+                            <strong>Invited by:</strong>{' '}
+                            {interviewData.invitedBy}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
-
-                <div className="text-sm text-gray-600">
-                  <p>
-                    Once confirmed, you will be expected to attend this
-                    interview. The meeting link will be available when
-                    confirmed.
-                  </p>
-                </div>
               </div>
             </div>
-
-            {/* Modal Footer */}
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3">
               <button
                 onClick={() => setShowConfirmModal(false)}
@@ -1496,19 +1260,21 @@ function InterviewDetails() {
                 Cancel
               </button>
               <button
-                onClick={handleConfirmInterview}
+                onClick={
+                  isInvited ? handleAcceptInvitation : handleConfirmInterview
+                }
                 disabled={actionLoading}
                 className="flex-1 px-4 py-3 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center"
               >
                 {actionLoading ? (
                   <>
                     <FiRefreshCw className="w-4 h-4 animate-spin mr-2" />
-                    Confirming...
+                    {isInvited ? 'Accepting...' : 'Confirming...'}
                   </>
                 ) : (
                   <>
                     <FiUserCheck className="w-4 h-4 mr-2" />
-                    Confirm Interview
+                    {isInvited ? 'Accept Invitation' : 'Confirm Interview'}
                   </>
                 )}
               </button>
@@ -1517,11 +1283,10 @@ function InterviewDetails() {
         </div>
       )}
 
-      {/* Reject Interview Modal */}
+      {/* UPDATED: Reject Modal - Different behavior based on invitation status */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
           <div className="relative bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md">
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center">
                 <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
@@ -1529,7 +1294,8 @@ function InterviewDetails() {
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg leading-6 font-semibold text-gray-900">
-                    Reject Interview
+                    {/* UPDATED: Different title based on invitation status */}
+                    {isInvited ? 'Decline Invitation' : 'Reject Interview'}
                   </h3>
                   <p className="text-sm text-gray-500">
                     This action cannot be undone
@@ -1543,8 +1309,6 @@ function InterviewDetails() {
                 <FiX className="h-5 w-5" />
               </button>
             </div>
-
-            {/* Modal Content */}
             <div className="px-6 py-4">
               <div className="space-y-4">
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -1562,36 +1326,24 @@ function InterviewDetails() {
                           {interviewData?.candidateName}
                         </div>
                         <div>
-                          <strong>Date:</strong>{' '}
-                          {
-                            formatDateTime(
-                              interviewData?.scheduledDateandTime || ''
-                            ).date
-                          }
+                          <strong>Date:</strong> {date}
                         </div>
                         <div>
-                          <strong>Time:</strong>{' '}
-                          {
-                            formatDateTime(
-                              interviewData?.scheduledDateandTime || ''
-                            ).time
-                          }
+                          <strong>Time:</strong> {time}
                         </div>
+                        {/* UPDATED: Show invitation info if applicable */}
+                        {isInvited && interviewData.invitedBy && (
+                          <div>
+                            <strong>Invited by:</strong>{' '}
+                            {interviewData.invitedBy}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
-
-                <div className="text-sm text-gray-600">
-                  <p>
-                    This action cannot be undone. The candidate will be notified
-                    of your decision.
-                  </p>
-                </div>
               </div>
             </div>
-
-            {/* Modal Footer */}
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3">
               <button
                 onClick={() => setShowRejectModal(false)}
@@ -1601,19 +1353,21 @@ function InterviewDetails() {
                 Cancel
               </button>
               <button
-                onClick={handleRejectInterview}
+                onClick={
+                  isInvited ? handleDeclineInvitation : handleRejectInterview
+                }
                 disabled={actionLoading}
                 className="flex-1 px-4 py-3 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center"
               >
                 {actionLoading ? (
                   <>
                     <FiRefreshCw className="w-4 h-4 animate-spin mr-2" />
-                    Rejecting...
+                    {isInvited ? 'Declining...' : 'Rejecting...'}
                   </>
                 ) : (
                   <>
                     <FiUserX className="w-4 h-4 mr-2" />
-                    Reject Interview
+                    {isInvited ? 'Decline Invitation' : 'Reject Interview'}
                   </>
                 )}
               </button>

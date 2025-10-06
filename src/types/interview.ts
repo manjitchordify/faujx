@@ -104,6 +104,7 @@ interface User {
   verificationTokenExpiry: string | null;
   isSubscribed: boolean;
   subscribedAt: string | null;
+  currentStatus: string | null;
 }
 
 // Interviewer details
@@ -151,4 +152,11 @@ export interface InterviewDetails {
   completedAt: string | null;
   cancelledAt: string | null;
   interviewer: Interviewer;
+  role: string;
+  candidate: {
+    roleTitle: string;
+  };
+  expert: {
+    role: string;
+  };
 }

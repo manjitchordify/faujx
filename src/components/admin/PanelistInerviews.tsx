@@ -1,7 +1,13 @@
 'use client';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiSearch, FiEye, FiRefreshCw } from 'react-icons/fi';
+import {
+  FiSearch,
+  FiEye,
+  FiRefreshCw,
+  FiUsers,
+  FiBriefcase,
+} from 'react-icons/fi';
 import {
   getInterviewPanelInterviews,
   type Interview,
@@ -10,6 +16,8 @@ import {
 } from '@/services/admin-panelist-services/interviewPanelService';
 import { showToast } from '@/utils/toast/Toast';
 
+type TabType = 'engineer' | 'expert';
+
 function PanelistInterviews() {
   const router = useRouter();
   const [interviews, setInterviews] = useState<Interview[]>([]);
@@ -17,8 +25,8 @@ function PanelistInterviews() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Set default filter to 'pending' instead of empty string
   const [myActionFilter, setMyActionFilter] = useState<string>('pending');
+  const [activeTab, setActiveTab] = useState<TabType>('engineer');
 
   // Pagination state from API
   const [pagination, setPagination] = useState({
@@ -30,26 +38,33 @@ function PanelistInterviews() {
     hasPreviousPage: false,
   });
 
-  // Filter interviews based on search term (client-side filtering)
+  // Separate counts for each tab (fetched from API separately if needed)
+  const [tabCounts, setTabCounts] = useState({
+    engineer: 0,
+    expert: 0,
+  });
+
+  // Client-side search filtering (only filters current page results)
   const filteredInterviews = useMemo(() => {
-    const safeInterviews = interviews || [];
-    if (!searchTerm) return safeInterviews;
+    if (!searchTerm) return interviews || [];
 
-    return safeInterviews.filter(interview => {
-      if (!interview) return false;
-
-      const searchLower = searchTerm.toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+    return (interviews || []).filter(interview => {
       return (
-        (interview.candidateName || '').toLowerCase().includes(searchLower) ||
-        (interview.candidateEmail || '').toLowerCase().includes(searchLower) ||
-        (interview.id || '').toLowerCase().includes(searchLower)
+        (interview?.candidateName || '').toLowerCase().includes(searchLower) ||
+        (interview?.candidateEmail || '').toLowerCase().includes(searchLower) ||
+        (interview?.id || '').toLowerCase().includes(searchLower)
       );
     });
   }, [interviews, searchTerm]);
 
-  // Fetch interviews from API
+  // Fetch interviews from API with proper parameters
   const fetchInterviews = useCallback(
-    async (page: number = 1, myAction?: string) => {
+    async (
+      page: number = 1,
+      myAction?: string,
+      participantType?: 'candidate' | 'expert'
+    ) => {
       try {
         setLoading(true);
         setError(null);
@@ -65,10 +80,13 @@ function PanelistInterviews() {
           params.myAction = myAction;
         }
 
+        if (participantType) {
+          params.participantType = participantType;
+        }
+
         const response: InterviewListResponse =
           await getInterviewPanelInterviews(params);
 
-        // Set the interviews data with proper null checks
         setInterviews(response?.data || []);
         setPagination(
           response?.pagination || {
@@ -80,6 +98,19 @@ function PanelistInterviews() {
             hasPreviousPage: false,
           }
         );
+
+        // Update tab count for current tab
+        if (participantType === 'candidate') {
+          setTabCounts(prev => ({
+            ...prev,
+            engineer: response?.pagination?.totalCount || 0,
+          }));
+        } else if (participantType === 'expert') {
+          setTabCounts(prev => ({
+            ...prev,
+            expert: response?.pagination?.totalCount || 0,
+          }));
+        }
       } catch (err: unknown) {
         let errorMessage = 'Failed to fetch interviews';
 
@@ -107,15 +138,63 @@ function PanelistInterviews() {
     []
   );
 
-  // Combined effect for handling both filter changes and page changes
-  useEffect(() => {
-    fetchInterviews(currentPage, myActionFilter);
-  }, [currentPage, myActionFilter, fetchInterviews]);
+  // Fetch count for the other tab (optional - for display purposes)
+  const fetchTabCount = useCallback(
+    async (participantType: 'candidate' | 'expert') => {
+      try {
+        const params: InterviewListParams = {
+          page: 1,
+          limit: 1, // We only need the count
+          participantType,
+          myAction: myActionFilter,
+        };
 
-  // Handle filter changes - reset to page 1 when filter changes
+        const response: InterviewListResponse =
+          await getInterviewPanelInterviews(params);
+
+        if (participantType === 'candidate') {
+          setTabCounts(prev => ({
+            ...prev,
+            engineer: response?.pagination?.totalCount || 0,
+          }));
+        } else {
+          setTabCounts(prev => ({
+            ...prev,
+            expert: response?.pagination?.totalCount || 0,
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching tab count:', err);
+      }
+    },
+    [myActionFilter]
+  );
+
+  // Main effect: Fetch interviews when page, filter, or tab changes
+  useEffect(() => {
+    const participantType = activeTab === 'engineer' ? 'candidate' : 'expert';
+    fetchInterviews(currentPage, myActionFilter, participantType);
+
+    // Also fetch count for the other tab
+    const otherParticipantType =
+      activeTab === 'engineer' ? 'expert' : 'candidate';
+    fetchTabCount(otherParticipantType);
+  }, [currentPage, myActionFilter, activeTab, fetchInterviews, fetchTabCount]);
+
+  // Reset to page 1 when tab or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, myActionFilter]);
+
+  // Handle filter changes
   const handleMyActionFilterChange = (myAction: string) => {
     setMyActionFilter(myAction);
-    setCurrentPage(1); // Reset to page 1 when filter changes
+  };
+
+  // Handle tab change
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setSearchTerm(''); // Clear search when switching tabs
   };
 
   const handleViewDetails = (interviewId: string) => {
@@ -123,7 +202,8 @@ function PanelistInterviews() {
   };
 
   const handleRefresh = () => {
-    fetchInterviews(currentPage, myActionFilter);
+    const participantType = activeTab === 'engineer' ? 'candidate' : 'expert';
+    fetchInterviews(currentPage, myActionFilter, participantType);
   };
 
   const formatDateTime = (dateString: string) => {
@@ -169,6 +249,7 @@ function PanelistInterviews() {
       case 'in_progress':
         return 'bg-amber-100 text-amber-800';
       case 'pending':
+      case 'pending_confirmation':
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -214,6 +295,8 @@ function PanelistInterviews() {
         return 'CANCELLED';
       case 'rejected':
         return 'REJECTED';
+      case 'pending_confirmation':
+        return 'PENDING CONFIRMATION';
       default:
         return status.replace('_', ' ').toUpperCase();
     }
@@ -308,11 +391,68 @@ function PanelistInterviews() {
       <div className="mb-6 md:mb-8">
         <div className="text-center sm:text-left">
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
-            Engineer Interview Management
+            Interview Management
           </h1>
           <p className="text-gray-600 mt-2 text-sm md:text-base lg:text-lg">
-            Manage engineer interviews, schedules, and assessments
+            Manage interviews, schedules, and assessments for engineers and
+            experts
           </p>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => handleTabChange('engineer')}
+            className={`flex-1 px-4 md:px-6 py-3 md:py-4 text-sm md:text-base font-medium transition-all relative ${
+              activeTab === 'engineer'
+                ? 'text-green-600 bg-green-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <FiUsers className="w-4 h-4 md:w-5 md:h-5" />
+              <span>Engineer Interviews</span>
+              <span
+                className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full ${
+                  activeTab === 'engineer'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-200 text-gray-700'
+                }`}
+              >
+                {tabCounts.engineer}
+              </span>
+            </div>
+            {activeTab === 'engineer' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-600" />
+            )}
+          </button>
+          <button
+            onClick={() => handleTabChange('expert')}
+            className={`flex-1 px-4 md:px-6 py-3 md:py-4 text-sm md:text-base font-medium transition-all relative ${
+              activeTab === 'expert'
+                ? 'text-green-600 bg-green-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <FiBriefcase className="w-4 h-4 md:w-5 md:h-5" />
+              <span>Expert Interviews</span>
+              <span
+                className={`inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full ${
+                  activeTab === 'expert'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-200 text-gray-700'
+                }`}
+              >
+                {tabCounts.expert}
+              </span>
+            </div>
+            {activeTab === 'expert' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-600" />
+            )}
+          </button>
         </div>
       </div>
 
@@ -323,14 +463,18 @@ function PanelistInterviews() {
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 md:w-5 md:h-5" />
             <input
               type="text"
-              placeholder="Search by name, email, or ID..."
+              placeholder={`Search ${activeTab === 'engineer' ? 'engineers' : 'experts'} by name, email, or ID...`}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="w-full pl-10 md:pl-11 pr-4 py-2.5 md:py-3 border border-gray-300 text-gray-900 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors placeholder:text-gray-500"
             />
+            {searchTerm && (
+              <p className="text-xs text-gray-500 mt-1 ml-1">
+                Note: Search filters current page only
+              </p>
+            )}
           </div>
           <div>
-            {/* Updated filter dropdown - removed "All My Actions", added "Transferred" */}
             <select
               value={myActionFilter}
               onChange={e => handleMyActionFilterChange(e.target.value)}
@@ -365,13 +509,16 @@ function PanelistInterviews() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Candidate
+                  {activeTab === 'engineer' ? 'Candidate' : 'Expert'}
                 </th>
                 <th className="hidden sm:table-cell px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
                 </th>
                 <th className="hidden md:table-cell px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Scheduled Time
+                </th>
+                <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
                 </th>
                 <th className="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -419,6 +566,11 @@ function PanelistInterviews() {
                       {time && (
                         <div className="text-sm text-gray-500">{time}</div>
                       )}
+                    </td>
+                    <td className="px-3 md:px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                        {interview.interviewType?.toUpperCase() || 'N/A'}
+                      </span>
                     </td>
                     <td className="px-3 md:px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col gap-1">
@@ -481,35 +633,25 @@ function PanelistInterviews() {
           <div className="text-center py-16">
             <div className="flex flex-col items-center gap-4">
               <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-2">
-                <svg
-                  className="w-10 h-10 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="1.5"
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                  />
-                </svg>
+                {activeTab === 'engineer' ? (
+                  <FiUsers className="w-10 h-10 text-gray-400" />
+                ) : (
+                  <FiBriefcase className="w-10 h-10 text-gray-400" />
+                )}
               </div>
               <div className="max-w-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No interviews found
+                  No {activeTab === 'engineer' ? 'engineer' : 'expert'}{' '}
+                  interviews found
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  {searchTerm || myActionFilter
-                    ? 'No interviews match your current search criteria. Try adjusting your filters.'
-                    : "You don't have any interviews scheduled yet. New interviews will appear here when available."}
+                  {searchTerm
+                    ? `No ${activeTab === 'engineer' ? 'engineer' : 'expert'} interviews match your search on this page.`
+                    : `No ${activeTab === 'engineer' ? 'engineer' : 'expert'} interviews with "${myActionFilter}" status found.`}
                 </p>
-                {(searchTerm || myActionFilter) && (
+                {searchTerm && (
                   <button
-                    onClick={() => {
-                      setSearchTerm('');
-                      setMyActionFilter('pending'); // Reset to pending instead of empty
-                    }}
+                    onClick={() => setSearchTerm('')}
                     className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
                   >
                     <svg
@@ -548,21 +690,20 @@ function PanelistInterviews() {
                   safePagination.currentPage * safePagination.limit,
                   safePagination.totalCount
                 )}{' '}
-                of {safePagination.totalCount} interviews
+                of {safePagination.totalCount}{' '}
+                {activeTab === 'engineer' ? 'engineer' : 'expert'} interviews
               </span>
             </div>
 
             <div className="flex items-center gap-1 md:gap-2">
-              {/* Previous button */}
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={!safePagination.hasPreviousPage || loading}
-                className="px-2 md:px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 md:px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Prev
               </button>
 
-              {/* Page numbers */}
               <div className="flex items-center gap-1">
                 {Array.from(
                   { length: Math.min(safePagination.totalPages, 7) },
@@ -583,7 +724,7 @@ function PanelistInterviews() {
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
                         disabled={loading}
-                        className={`px-2 md:px-3 py-1 text-sm border rounded-md disabled:opacity-50 ${
+                        className={`px-2 md:px-3 py-1 text-sm border rounded-md disabled:opacity-50 transition-colors ${
                           currentPage === pageNum
                             ? 'bg-green-600 text-white border-green-600'
                             : 'border-gray-300 hover:bg-gray-50'
@@ -596,7 +737,6 @@ function PanelistInterviews() {
                 )}
               </div>
 
-              {/* Next button */}
               <button
                 onClick={() =>
                   setCurrentPage(prev =>
@@ -604,7 +744,7 @@ function PanelistInterviews() {
                   )
                 }
                 disabled={!safePagination.hasNextPage || loading}
-                className="px-2 md:px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 md:px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>

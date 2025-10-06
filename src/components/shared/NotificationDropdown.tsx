@@ -245,9 +245,9 @@ export default function NotificationDropdown({
   // Handle notification click with action URL
   const handleNotificationAction = (notification: Notification) => {
     handleMarkAsRead(notification);
-    if (notification.actionUrl) {
-      window.location.href = notification.actionUrl;
-    }
+    // if (notification.actionUrl) {
+    //   window.location.href = notification.actionUrl;
+    // }
   };
 
   // Refresh notifications

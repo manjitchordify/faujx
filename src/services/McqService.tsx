@@ -1,6 +1,7 @@
 import { McqUserResponse, resumeDataType } from '@/types/mcq';
 import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
+import { AI_API_BASE_URL } from '@/utils/apiHeader';
 
 // Enhanced error interface for better error handling
 interface ApiError {
@@ -85,9 +86,6 @@ function handleApiError(error: unknown): never {
   } as ApiError;
 }
 
-const baseUrlGenerateMcq =
-  'https://faujx-ai-dev.73eak0edvm4a2.us-east-2.cs.amazonlightsail.com';
-
 const REQUEST_TIMEOUT = 60000;
 
 export const getUserMCQSubmission = async (userId: string) => {
@@ -118,7 +116,7 @@ export const generateMCQs = async (payload: {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const res = await axios.post(
-          `${baseUrlGenerateMcq}/generate-mcqs-s3`,
+          `${AI_API_BASE_URL}/generate-mcqs-s3`,
           payload,
           {
             timeout: REQUEST_TIMEOUT,

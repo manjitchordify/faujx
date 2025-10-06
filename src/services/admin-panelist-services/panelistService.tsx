@@ -1,4 +1,4 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
 // TypeScript interfaces for API responses and requests
@@ -231,12 +231,6 @@ export const getAllPanelists = async (
 }> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     // Build query parameters
     const params = new URLSearchParams({
@@ -261,7 +255,7 @@ export const getAllPanelists = async (
     }
 
     const response = await axios.get(
-      `https://devapi.faujx.com/api/interview-panel?${params.toString()}`,
+      `/interview-panel?${params.toString()}`,
       config
     );
 
@@ -307,14 +301,6 @@ export const submitInterviewFeedback = async (
 ): Promise<InterviewFeedbackResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     const requestBody = {
       feedback: JSON.stringify(feedbackData.feedback),
       rating: feedbackData.rating,
@@ -327,7 +313,7 @@ export const submitInterviewFeedback = async (
 
     // Updated URL to include interviewId as query parameter
     const response = await axios.post(
-      `https://devapi.faujx.com/api/interview-panel/interviewer-feedback?interviewId=${interviewId}`,
+      `/interview-panel/interviewer-feedback?interviewId=${interviewId}`,
       requestBody, // Send feedback, rating, evaluationStatus, and comments in body
       config
     );
@@ -346,26 +332,8 @@ export const registerUser = async (
 ): Promise<RegisterUserResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
     // For registration, we might not need auth token, but keeping consistent
-    if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
-    }
-
-    config.headers = {
-      ...config.headers,
-      'Content-Type': 'application/json',
-    };
-
-    const response = await axios.post(
-      'https://devapi.faujx.com/api/auth/register',
-      userData,
-      config
-    );
+    const response = await axios.post('/auth/register', userData, config);
 
     return {
       userId: response.data.userId || response.data.user?.id,
@@ -383,19 +351,7 @@ export const createPanelist = async (
 ): Promise<CreatePanelistResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
-    const response = await axios.post(
-      'https://devapi.faujx.com/api/interview-panel',
-      panelistData,
-      config
-    );
+    const response = await axios.post('/interview-panel', panelistData, config);
 
     return response.data;
   } catch (error: unknown) {
@@ -461,13 +417,6 @@ export const updatePanelist = async (
 ): Promise<CreatePanelistResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
 
     // Prepare update data for panelist
     const panelistUpdateData = {
@@ -503,7 +452,7 @@ export const updatePanelist = async (
 
     // Step 1: Update panelist profile
     const panelistResponse = await axios.put(
-      `https://devapi.faujx.com/api/interview-panel/${panelistId}`,
+      `/interview-panel/${panelistId}`,
       panelistUpdateData,
       config
     );
@@ -514,18 +463,14 @@ export const updatePanelist = async (
     try {
       // Get current panelist to find userId
       const currentPanelistResponse = await axios.get(
-        `https://devapi.faujx.com/api/interview-panel/${panelistId}`,
+        `/interview-panel/${panelistId}`,
         config
       );
 
       const userId = currentPanelistResponse.data.userId;
 
       if (userId) {
-        await axios.put(
-          `https://devapi.faujx.com/api/users/${userId}`,
-          userUpdateData,
-          config
-        );
+        await axios.put(`/users/${userId}`, userUpdateData, config);
       }
     } catch (userUpdateError) {
       // Log user update error but don't fail the entire operation
@@ -545,16 +490,8 @@ export const updatePanelistStatus = async (
 ): Promise<{ success: boolean; message: string }> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     await axios.patch(
-      `https://devapi.faujx.com/api/interview-panel/${panelistId}/status`,
+      `/interview-panel/${panelistId}/status`,
       { isActive },
       config
     );
@@ -566,10 +503,7 @@ export const updatePanelistStatus = async (
   } catch (error: unknown) {
     // If PATCH to /status endpoint fails, try alternative approach
     try {
-      await axios.put(
-        `https://devapi.faujx.com/api/interview-panel/${panelistId}`,
-        { isActive }
-      );
+      await axios.put(`/interview-panel/${panelistId}`, { isActive });
 
       return {
         success: true,

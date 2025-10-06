@@ -1,4 +1,4 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import {
   SubmitCodingTestParams,
@@ -6,8 +6,12 @@ import {
   CodingTestSubmissionResponse,
   CodingTestSubmissionData,
   CodingTestAISubmissionResponse,
+  FetchEvaluationParams,
   ApiError,
+  CodingTestAIMLSubmissionResponse,
+  SubmitCodingTestParamsForAIML,
 } from '../types/codingTestTypes';
+import { AI_API_BASE_URL } from '@/utils/apiHeader';
 
 // ----------------------
 // Common error handling
@@ -51,24 +55,38 @@ export async function submitCodingTestApi(
 ): Promise<CodingTestSubmissionResponse> {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
     // Ensure the hardcoded token is included
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
     const response: AxiosResponse<CodingTestSubmissionResponse> =
       await axios.post('/candidates/submit-coding-test', params, config);
 
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+}
+
+export async function submitAIMLCodingTestApi(
+  params: SubmitCodingTestParamsForAIML
+): Promise<CodingTestSubmissionResponse> {
+  try {
+    const config = {
+      ...getAuthAxiosConfig(),
+      headers: {
+        ...getAuthAxiosConfig().headers,
+        'Content-Type': 'multipart/form-data', // override only for this call
+      },
+    };
+    const formData = new FormData();
+    params.files.forEach((file: File) => {
+      formData.append('files', file);
+    });
+    formData.append('problem_statement', params.problem_statement);
+
+    const response: AxiosResponse<CodingTestSubmissionResponse> =
+      await axios.post('/candidates/submit-ml-coding-test', formData, config);
+
     // Store coding test submission data in localStorage if needed
-    if (response.data.data) {
-      localStorage.setItem(
-        'codingTestSubmission',
-        JSON.stringify(response.data.data)
-      );
-    }
 
     return response.data;
   } catch (error: unknown) {
@@ -82,11 +100,24 @@ export async function submitCodingTestToAI(
     const config = getAuthAxiosConfig();
     const response: AxiosResponse<CodingTestAISubmissionResponse> =
       await axios.post(
-        'https://faujx-ai-dev.73eak0edvm4a2.us-east-2.cs.amazonlightsail.com/FBFS_analyze-assessment',
+        `${AI_API_BASE_URL}/FBFS_analyze-assessment`,
         params,
         config
       );
 
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+}
+
+export async function fetchAIMLCodingEvaluation(
+  params: FetchEvaluationParams
+): Promise<CodingTestAIMLSubmissionResponse> {
+  try {
+    const config = getAuthAxiosConfig();
+    const response: AxiosResponse<CodingTestAIMLSubmissionResponse> =
+      await axios.post('/candidates/evaluate-ml-coding-test', params, config);
     return response.data;
   } catch (error: unknown) {
     handleApiError(error);

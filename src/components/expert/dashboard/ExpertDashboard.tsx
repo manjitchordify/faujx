@@ -5,6 +5,7 @@ import SessionCard, { Session } from '../shared/SessionCard';
 import { useInterviews } from '@/services/expert/useInterviews';
 import { useAppSelector } from '@/store/store';
 import { jitsiLiveUrl } from '@/services/jitsiService';
+import Cookies from 'js-cookie';
 
 const ExpertDashboard: React.FC = () => {
   const [showMySessions, setShowMySessions] = useState(false);
@@ -67,7 +68,6 @@ const ExpertDashboard: React.FC = () => {
     },
     [declineSession]
   );
-
   const handleJoin = useCallback(
     async (session: Session): Promise<void> => {
       try {
@@ -81,6 +81,8 @@ const ExpertDashboard: React.FC = () => {
           });
 
           if (response?.url) {
+            Cookies.set('jwt_token', response?.jwt);
+            Cookies.set('roleTitle', loggedInUser?.userType as string);
             window.open(
               `/expert/interview/${session.id}/meeting?room=${sessionId}`
             );
@@ -149,10 +151,22 @@ const ExpertDashboard: React.FC = () => {
             <button
               type="button"
               onClick={handleShowMySessions}
-              className="px-4 py-2 rounded-lg transition-colors border-2 border-green-500 bg-white text-gray-700 hover:bg-gray-200 flex items-center relative"
+              className={`px-4 py-2 rounded-lg transition-colors border-2 flex items-center relative
+              ${
+                showMySessions
+                  ? 'bg-green-600 border-green-600 text-white hover:bg-green-600'
+                  : 'bg-white border-green-500 text-gray-700 hover:bg-green-200'
+              }`}
             >
               {confirmedCount > 0 && (
-                <span className="absolute -top-2 -right-2 inline-flex items-center justify-center w-5 h-5 text-xs font-sm text-white bg-green-600 rounded-full border-2 border-white">
+                <span
+                  className={`absolute -top-2 -right-2 inline-flex items-center justify-center w-5 h-5 text-xs font-medium rounded-full border-2
+                  ${
+                    showMySessions
+                      ? 'bg-white text-green-600 border-green-500'
+                      : 'bg-green-600 text-white border-white'
+                  }`}
+                >
                   {confirmedCount}
                 </span>
               )}

@@ -47,17 +47,6 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ profile }) => {
             </p> */}
           </div>
           <div className="flex flex-col items-end space-y-2">
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
-                candidate?.vettingStatus === 'passed'
-                  ? 'bg-green-100 text-green-800'
-                  : candidate?.vettingStatus === 'pending'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-gray-100 text-gray-800'
-              }`}
-            >
-              Vetting: {candidate?.vettingStatus || 'N/A'}
-            </span>
             <span className="text-sm text-gray-600">
               Score: {candidate?.vettingScore || 0}/100
             </span>

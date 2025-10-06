@@ -1,4 +1,4 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
 // TypeScript interfaces for My Interviews
@@ -104,6 +104,42 @@ export interface SubmitInterviewFeedbackRequest {
   culturalFitRating?: number;
 }
 
+// New interfaces for pending slots
+export interface TimeSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface Customer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  companyName: string;
+}
+
+export interface PendingSlotGroup {
+  slotGroupId: string;
+  customer: Customer;
+  createdAt: string;
+  slots: TimeSlot[];
+}
+
+export type PendingSlotsResponse = PendingSlotGroup[];
+
+// Interface for confirm slot request
+export interface ConfirmSlotRequest {
+  slotId: string;
+}
+
+// Interface for confirm slot response (you can adjust this based on your actual API response)
+export interface ConfirmSlotResponse {
+  success: boolean;
+  message: string;
+  interviewId?: string;
+}
+
 // Error handling function
 function handleApiError(error: unknown): never {
   if (axios.isAxiosError(error)) {
@@ -126,13 +162,6 @@ function handleApiError(error: unknown): never {
 export const getMyInterviews = async (): Promise<MyInterviewsResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
     const response = await axios.get(`/customer/interviews`, config);
 
     return response.data;
@@ -145,13 +174,6 @@ export const getMyInterviews = async (): Promise<MyInterviewsResponse> => {
 export const getInterviewStats = async (): Promise<InterviewStats> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
     const response = await axios.get(`/customer/interviews/stats`, config);
 
     return response.data;
@@ -166,15 +188,45 @@ export const getInterviewById = async (
 ): Promise<InterviewDetails> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
     const response = await axios.get(
       `/customer/interviews/${interviewId}`,
+      config
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+// GET pending interview slots
+export const getPendingSlots = async (): Promise<PendingSlotsResponse> => {
+  try {
+    const config = getAuthAxiosConfig();
+    const response = await axios.get(
+      `/customer/interviews/pending-slots`,
+      config
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+// POST confirm interview slot
+export const confirmInterviewSlot = async (
+  slotId: string
+): Promise<ConfirmSlotResponse> => {
+  try {
+    const config = getAuthAxiosConfig();
+    const requestBody: ConfirmSlotRequest = {
+      slotId,
+    };
+
+    const response = await axios.post(
+      `/customer/interviews/confirm-slot`,
+      requestBody,
       config
     );
 
@@ -191,14 +243,6 @@ export const updateInterviewStatus = async (
 ): Promise<InterviewDetails> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     const response = await axios.patch(
       `/customer/interviews/${interviewId}/status`,
       statusData,
@@ -218,14 +262,6 @@ export const submitInterviewFeedback = async (
 ): Promise<InterviewDetails> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     const response = await axios.post(
       `/customer/interviews/${interviewId}/feedback`,
       feedbackData,
@@ -242,13 +278,6 @@ export const submitInterviewFeedback = async (
 export const deleteInterview = async (interviewId: string): Promise<void> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
     await axios.delete(`/customer/interviews/${interviewId}`, config);
   } catch (error: unknown) {
     handleApiError(error);
@@ -261,12 +290,6 @@ export const getUpcomingInterviews = async (
 ): Promise<InterviewDetails[]> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     const response = await axios.get(
       `/customer/interviews/upcoming?limit=${limit}`,

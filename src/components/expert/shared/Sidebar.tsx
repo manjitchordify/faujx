@@ -139,7 +139,9 @@ const Sidebar: React.FC<SidebarProps> = ({
             </li>
             <li>
               <button
-                onClick={() => handleItemClick('settings', '/expert/settings')}
+                onClick={() =>
+                  handleItemClick('settings', '/expert/dashboard/settings')
+                }
                 className={`w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-left transition-all duration-200 text-sm ${
                   activeItem === 'settings'
                     ? 'bg-[#1F514C] text-white shadow-sm'

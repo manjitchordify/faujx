@@ -4,19 +4,32 @@ import Button from '@/components/ui/Button';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React from 'react';
+import { useAppSelector } from '@/store/store';
 
 const Page = () => {
   const router = useRouter();
+  const { enginnerRole } = useAppSelector(state => state.persist);
 
-  const details = [
+  const baseDetails = [
     'The coding test time will be specified in the question.',
     'Please ensure you have a stable internet connection.',
     'Use a laptop or desktop for the best experience.',
     'Once you start, the timer will not pause — complete it in one sitting.',
     'Make sure you are in a quiet environment free from interruptions.',
-    'The coding test will be conducted on CodeSandbox.',
-    'If you are not familiar with CodeSandbox, Please review the instructions beforehand. Otherwise you may proceed to take the test now.',
   ];
+
+  const roleBasedDetails =
+    enginnerRole === 'aiml'
+      ? [
+          'You have to write your answers in a file.',
+          'Upload the completed file before submitting the test.',
+        ]
+      : [
+          'The coding test will be conducted on CodeSandbox.',
+          'If you are not familiar with CodeSandbox, please review the instructions beforehand. Otherwise, you may proceed to take the test now.',
+        ];
+
+  const details = [...baseDetails, ...roleBasedDetails];
 
   const handleTakeTestNow = () => {
     router.push('/engineer/coding');
@@ -57,11 +70,16 @@ const Page = () => {
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6 lg:gap-8 xl:gap-12 mt-4 sm:mt-6 md:mt-8 w-full sm:w-auto">
-            <Button
-              text="Coding Instructions"
-              onClick={() => router.push('/engineer/coding/codesandbox-intro')}
-              className="text-sm sm:text-base md:text-[16px] bg-[#1F514C] text-white rounded-xl sm:rounded-2xl px-6 sm:px-8 md:px-10 lg:px-12 py-2 sm:py-3 md:py-4 hover:bg-[#164239] transition-colors duration-200 whitespace-nowrap"
-            />
+            {enginnerRole != 'aiml' && (
+              <Button
+                text="Coding Instructions"
+                onClick={() =>
+                  router.push('/engineer/coding/codesandbox-intro')
+                }
+                className="text-sm sm:text-base md:text-[16px] bg-[#1F514C] text-white rounded-xl sm:rounded-2xl px-6 sm:px-8 md:px-10 lg:px-12 py-2 sm:py-3 md:py-4 hover:bg-[#164239] transition-colors duration-200 whitespace-nowrap"
+              />
+            )}
+
             <Button
               text="Take Test Now"
               onClick={handleTakeTestNow}

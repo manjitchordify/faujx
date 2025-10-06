@@ -1,4 +1,4 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
 // TypeScript interfaces
@@ -26,6 +26,7 @@ export interface AdminUser {
   location: string | null;
   userType: 'candidate' | 'admin' | 'expert' | 'interview_panel';
   isVerified: boolean;
+  isPublished?: boolean;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -84,17 +85,7 @@ function handleApiError(error: unknown): never {
 export const getUserStats = async (): Promise<UserStats> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    const response = await axios.get(
-      `https://devapi.faujx.com/api/users/stats`,
-      config
-    );
+    const response = await axios.get(`/users/stats`, config);
 
     return response.data;
   } catch (error: unknown) {
@@ -106,19 +97,10 @@ export const getUserStats = async (): Promise<UserStats> => {
 export const getUserStatsWorkaround = async (): Promise<UserStats> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     // Get all users with a large perPage to get actual counts
     // Note: This is not ideal for large datasets
-    const response = await axios.get(
-      `https://devapi.faujx.com/api/users?page=1&perPage=1000`,
-      config
-    );
+    const response = await axios.get(`/users?page=1&perPage=1000`, config);
 
     const allUsers: AdminUser[] = response.data.data;
     const total = response.data.total;
@@ -158,18 +140,11 @@ export const getAllUsers = async (
 ): Promise<PaginatedUsersResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
     const userRole = userType === 'engineer' ? 'candidate' : userType;
     const typeParam = userType !== 'all' ? `userType=${userRole}&` : '';
 
     const response = await axios.get(
-      `https://devapi.faujx.com/api/users?${typeParam}page=${page}&perPage=${perPage}`,
+      `/users?${typeParam}page=${page}&perPage=${perPage}`,
       config
     );
 
@@ -186,19 +161,7 @@ export const updateUser = async (
 ): Promise<AdminUser> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
-    const response = await axios.put(
-      `https://devapi.faujx.com/api/users/${userId}`,
-      userData,
-      config
-    );
+    const response = await axios.put(`/users/${userId}`, userData, config);
 
     return response.data;
   } catch (error: unknown) {
@@ -210,14 +173,8 @@ export const updateUser = async (
 export const deleteUser = async (userId: string): Promise<void> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    await axios.delete(`https://devapi.faujx.com/api/users/${userId}`, config);
+    await axios.delete(`/users/${userId}`, config);
   } catch (error: unknown) {
     handleApiError(error);
   }
@@ -227,15 +184,8 @@ export const deleteUser = async (userId: string): Promise<void> => {
 export const deleteMultipleUsers = async (userIds: string[]): Promise<void> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
-    await axios.delete('https://devapi.faujx.com/api/users/bulk', {
+    await axios.delete('/users/bulk', {
       ...config,
       data: { userIds },
     });
@@ -251,16 +201,8 @@ export const updateUserStatus = async (
 ): Promise<AdminUser> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     const response = await axios.patch(
-      `https://devapi.faujx.com/api/users/${userId}/status`,
+      `/users/${userId}/status`,
       { isActive },
       config
     );
@@ -275,17 +217,7 @@ export const updateUserStatus = async (
 export const getUserById = async (userId: string): Promise<AdminUser> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    const response = await axios.get(
-      `https://devapi.faujx.com/api/users/${userId}`,
-      config
-    );
+    const response = await axios.get(`/users/${userId}`, config);
 
     return response.data;
   } catch (error: unknown) {

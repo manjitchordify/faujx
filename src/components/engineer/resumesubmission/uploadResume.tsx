@@ -226,8 +226,8 @@ const UploadResume: React.FC<UploadResumeProps> = ({ candidateId }) => {
     return (
       <div className="">
         <SuccessComponent
-          title="Let's move on to the AI MCQ round"
-          buttonText="Start AI MCQ Test"
+          title="Let's move on to the MCQ round"
+          buttonText="Start MCQ Test"
           onButtonClick={handleSuccessAction}
           description="Your resume has been successfully uploaded and processed. Ready to test your skills?"
           // Optional: Add a retry button if the SuccessComponent supports it

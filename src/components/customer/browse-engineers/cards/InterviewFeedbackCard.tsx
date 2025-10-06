@@ -65,7 +65,7 @@ const InterviewFeedbackCard: FC<InterviewFeedbackCardProps> = ({
             <button
               onClick={() =>
                 router.push(
-                  `/customer/browse-engineers/${candidate.id}/candidate-pricing`
+                  `/customer/browse-engineers/${candidate.candidate_id}/candidate-pricing`
                 )
               }
               className="w-full py-2 px-3 bg-green-500 text-white rounded-lg text-xs font-semibold hover:bg-green-600 transition-colors"

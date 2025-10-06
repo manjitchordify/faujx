@@ -428,6 +428,7 @@ const MyInterviews: FC<MyInterviewsProps> = ({}) => {
                   interview.candidate.profilePic || '/images/blurPic.png',
                 date: startDateTime.toDateString(),
                 duration: `${startDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${endDateTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+                candidate_id: interview?.candidate?.id,
               };
 
               return (

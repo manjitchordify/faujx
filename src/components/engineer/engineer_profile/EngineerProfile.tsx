@@ -60,7 +60,7 @@ const EngineerProfile: React.FC = () => {
     id: profile.data.id,
     name:
       profile.data.fullName ||
-      `${profile.data.firstName} ${profile.data.lastName}`,
+      `${profile.data.firstName} ${profile?.data?.lastName || ''}`,
     role: `${profile.data.candidate?.currentDesignation || ''} - ${
       profile.data.candidate?.roleTitle || ''
     }`,

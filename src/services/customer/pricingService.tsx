@@ -1,4 +1,4 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
 // TypeScript interfaces for Plan API
@@ -47,17 +47,7 @@ export const getAllPlanFeatures =
   async (): Promise<GetAllPlanFeaturesResult> => {
     try {
       const config = getAuthAxiosConfig();
-      const token = getAuthToken();
-
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
-
-      const response = await axios.get(
-        'https://devapi.faujx.com/api/stripe/plans',
-        config
-      );
+      const response = await axios.get('/stripe/plans', config);
 
       const responseData = response.data;
 

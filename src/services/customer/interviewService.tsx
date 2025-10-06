@@ -1,4 +1,4 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
 // TypeScript interfaces for Schedule Interview API
@@ -53,16 +53,8 @@ export const scheduleInterview = async (
 ): Promise<ScheduleInterviewResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     const response = await axios.post(
-      'https://devapi.faujx.com/api/customer/interviews/schedule',
+      '/customer/interviews/schedule',
       interviewData,
       config
     );

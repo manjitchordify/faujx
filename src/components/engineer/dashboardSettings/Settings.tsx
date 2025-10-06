@@ -112,7 +112,7 @@ const Settings: React.FC = () => {
           const country = preferredLocations[1] || '';
 
           setFormData({
-            salary: data.candidate?.expectedSalary?.toString() || '',
+            salary: data.candidate?.preferredMonthlySalary || '',
             currencyType: data.candidate?.currencyType || '',
             country,
             city,
@@ -344,7 +344,7 @@ const Settings: React.FC = () => {
                 {/* Salary Section */}
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-2">
-                    Salary Expectation{' '}
+                    Preferred Monthly Salary
                     {formData.currencyType ? `(${formData.currencyType})` : ''}
                   </label>
                   <div className="flex gap-3">

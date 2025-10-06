@@ -4,7 +4,10 @@ import {
   GenerateCodingAssignmentsParams,
   CodingAssignmentsResponse,
   ApiError,
+  GenerateCodingAIMLAssignmentsParams,
+  CodingAIMLAssignmentResponse,
 } from './codingAssignmentsTypes';
+import { AI_API_BASE_URL } from '@/utils/apiHeader';
 
 // ----------------------
 // Common error handling
@@ -40,6 +43,38 @@ function handleApiError(error: unknown): never {
   } as ApiError;
 }
 
+export async function generateCodingAIAssignmentsApi(
+  params: GenerateCodingAIMLAssignmentsParams
+): Promise<CodingAIMLAssignmentResponse> {
+  try {
+    const config = getAuthAxiosConfig();
+
+    if (!AI_API_BASE_URL) {
+      throw new Error(
+        'NEXT_PUBLIC_API_GENERATE_MCQ_BASE_URL environment variable is not configured'
+      );
+    }
+
+    const response: AxiosResponse<CodingAIMLAssignmentResponse> =
+      await axios.post(
+        `${AI_API_BASE_URL}/api/v1/select-problem`,
+        params,
+        config
+      );
+
+    console.log('response', response);
+
+    // Store coding assignments data in localStorage if needed
+    if (response.data) {
+      localStorage.setItem('codingAssignments', JSON.stringify(response.data));
+    }
+
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+}
+
 // ----------------------
 // Generate Coding Assignments API
 // ----------------------
@@ -57,17 +92,14 @@ export async function generateCodingAssignmentsApi(
       'Content-Type': 'application/json',
     };
 
-    const baseUrl =
-      'https://faujx-ai-dev.73eak0edvm4a2.us-east-2.cs.amazonlightsail.com';
-
-    if (!baseUrl) {
+    if (!AI_API_BASE_URL) {
       throw new Error(
         'NEXT_PUBLIC_API_GENERATE_MCQ_BASE_URL environment variable is not configured'
       );
     }
 
     const response: AxiosResponse<CodingAssignmentsResponse> = await axios.post(
-      `${baseUrl}/generate-coding-assignments-s3`,
+      `${AI_API_BASE_URL}/generate-coding-assignments-s3`,
       params,
       config
     );

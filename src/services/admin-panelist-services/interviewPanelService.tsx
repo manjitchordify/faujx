@@ -1,7 +1,7 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
-// TypeScript interfaces for List API response
+// TypeScript interfaces for List API response - UPDATED
 export interface Interview {
   id: string;
   candidateName: string;
@@ -9,6 +9,12 @@ export interface Interview {
   scheduledSlotTime: string;
   interviewStatus: string;
   myAction: string;
+  participantType: 'candidate' | 'expert' | string; // NEW FIELD
+  interviewType: string; // NEW FIELD
+  isInvited: boolean; // NEW FIELD
+  isAssigned: boolean; // NEW FIELD
+  invitationStatus: string | null; // NEW FIELD
+  createdAt: string; // NEW FIELD
 }
 
 export interface InterviewListPagination {
@@ -35,6 +41,7 @@ export interface InterviewListResponse {
 export interface AttendeeInfo {
   email: string;
   interviewerName: string;
+  participationType?: string;
 }
 
 export interface AttendeeStatus {
@@ -49,18 +56,59 @@ export interface Attendee {
   status: AttendeeStatus;
 }
 
+// Coding Test interfaces
+export interface CodingTestEvaluationResult {
+  passed: boolean;
+  summary: string;
+  max_score: number;
+  strengths: string[];
+  code_issues: string[];
+  improvements: string[];
+  overall_score: number;
+  processing_time: number;
+  score_breakdown: {
+    performance: number;
+    code_quality: number;
+    completeness: number;
+    functionality: number;
+    best_practices: number;
+  };
+  confidence_level: number;
+}
+
+export interface CodingTest {
+  id: string;
+  candidateId: string;
+  question: string;
+  answerFiles: Record<string, string>;
+  url: string;
+  evaluationResult?: CodingTestEvaluationResult;
+  totalScore: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Fixed InterviewDetails interface to match actual API response
 export interface InterviewDetails {
   myAction: string;
+  participantType: string;
+  userId: string;
   candidateName: string;
   candidateEmail: string;
+  scheduledDateAndTime: string;
   resumeUrl: string | null;
-  candidateReport: string | null;
-  scheduledDateandTime: string;
   meetingLink: string;
-  interviewstatus: string;
+  interviewStatus: string;
+  interviewType: string;
   attendees: Attendee[];
-  candidateRole: string;
-  userId?: string;
+  isInvited: boolean;
+  invitedBy: string | null;
+  canInviteOthers: boolean;
+  durationMinutes: number;
+  notes: string | null;
+  candidateReport: string | null;
+  candidateRole: string | null;
+  codingTest?: CodingTest;
 }
 
 export interface DashboardStats {
@@ -135,6 +183,19 @@ export interface TransferInterviewResponse {
   status?: string;
 }
 
+// Interface for invite to interview request
+export interface InviteToInterviewRequest {
+  inviteeId: string;
+  invitationMessage: string;
+}
+
+// Interface for invite to interview response
+export interface InviteToInterviewResponse {
+  message: string;
+  status?: string;
+  invitationId?: string;
+}
+
 // Interview feedback interfaces - Updated to include comments
 export interface InterviewFeedbackData {
   feedback: Record<string, number>;
@@ -152,7 +213,7 @@ export interface InterviewFeedbackResponse {
   message: string;
 }
 
-// Query parameters interface for list API
+// Query parameters interface for list API - UPDATED with participantType and search
 export interface InterviewListParams {
   page?: number;
   limit?: number;
@@ -163,6 +224,8 @@ export interface InterviewListParams {
     | 'completed'
     | 'transferred'
     | string;
+  participantType?: 'candidate' | 'expert' | string;
+  search?: string;
   sortBy?: 'candidateName' | 'scheduledAt' | 'createdAt' | string;
   sortOrder?: 'ASC' | 'DESC';
 }
@@ -186,31 +249,29 @@ function handleApiError(error: unknown): never {
 
 /**
  * Get list of interviews for interview panel
+ * UPDATED: Now supports participantType and search parameters
  */
 export const getInterviewPanelInterviews = async (
   params?: InterviewListParams
 ): Promise<InterviewListResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     // Build query parameters
     const queryParams = new URLSearchParams();
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.myAction) queryParams.append('myAction', params.myAction);
+    if (params?.participantType)
+      queryParams.append('participantType', params.participantType);
+    if (params?.search) queryParams.append('search', params.search);
     if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
     if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 
     const queryString = queryParams.toString();
     const url = queryString
-      ? `https://devapi.faujx.com/api/interview-panel/interviews/list?${queryString}`
-      : 'https://devapi.faujx.com/api/interview-panel/interviews/list';
+      ? `/interview-panel/interviews/list?${queryString}`
+      : '/interview-panel/interviews/list';
 
     const response = await axios.get(url, config);
     return response.data;
@@ -227,15 +288,9 @@ export const getInterviewDetails = async (
 ): Promise<InterviewDetails> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     const response = await axios.get(
-      `https://devapi.faujx.com/api/interview-panel/interviews/details/${interviewId}`,
+      `/interview-panel/interviews/details/${interviewId}`,
       config
     );
     return response.data;
@@ -251,15 +306,9 @@ export const getAvailablePanelists =
   async (): Promise<AvailablePanelistsResponse> => {
     try {
       const config = getAuthAxiosConfig();
-      const token = getAuthToken();
-
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
 
       const response = await axios.get(
-        'https://devapi.faujx.com/api/interview-panel',
+        '/interview-panel/other-panel-members',
         config
       );
       return response.data;
@@ -279,19 +328,13 @@ export const transferInterview = async (
 ): Promise<TransferInterviewResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     const payload = {
       newPanelId: panelistId,
     };
 
     const response = await axios.post(
-      `https://devapi.faujx.com/api/interview-panel/interviews/transfer/${interviewId}`,
+      `/interview-panel/interviews/transfer/${interviewId}`,
       payload,
       config
     );
@@ -302,22 +345,45 @@ export const transferInterview = async (
 };
 
 /**
- * Confirm an interview
+ * Invite someone to an interview
+ * POST /interview-panel/interviews/{interviewId}/invite
+ * Body: { inviteeId: string, invitationMessage: string }
+ */
+export const inviteToInterview = async (
+  interviewId: string,
+  inviteeId: string,
+  invitationMessage: string
+): Promise<InviteToInterviewResponse> => {
+  try {
+    const config = getAuthAxiosConfig();
+
+    const payload: InviteToInterviewRequest = {
+      inviteeId,
+      invitationMessage,
+    };
+
+    const response = await axios.post(
+      `/interview-panel/interviews/${interviewId}/invite`,
+      payload,
+      config
+    );
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+/**
+ * Confirm an interview (for regular interviews, not invitations)
  */
 export const confirmInterview = async (
   interviewId: string
 ): Promise<{ message: string; status?: string }> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     const response = await axios.post(
-      `https://devapi.faujx.com/api/interview-panel/interviews/${interviewId}/confirm`,
+      `/interview-panel/interviews/${interviewId}/confirm`,
       {},
       config
     );
@@ -328,7 +394,7 @@ export const confirmInterview = async (
 };
 
 /**
- * Reject an interview
+ * Reject an interview (for regular interviews, not invitations)
  */
 export const rejectInterview = async (
   interviewId: string,
@@ -336,17 +402,56 @@ export const rejectInterview = async (
 ): Promise<{ message: string; status?: string }> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     const payload = reason ? { reason } : {};
 
     const response = await axios.post(
-      `https://devapi.faujx.com/api/interview-panel/interviews/${interviewId}/reject`,
+      `/interview-panel/interviews/${interviewId}/reject`,
+      payload,
+      config
+    );
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+/**
+ * Accept an interview invitation
+ * Note: Using interviewId as invitationId (assuming they are the same based on API structure)
+ */
+export const acceptInvitation = async (
+  invitationId: string
+): Promise<{ message: string; status?: string }> => {
+  try {
+    const config = getAuthAxiosConfig();
+
+    const response = await axios.post(
+      `/interview-panel/invitations/${invitationId}/accept`,
+      {},
+      config
+    );
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+/**
+ * Decline an interview invitation
+ * Note: Using interviewId as invitationId (assuming they are the same based on API structure)
+ */
+export const declineInvitation = async (
+  invitationId: string,
+  reason?: string
+): Promise<{ message: string; status?: string }> => {
+  try {
+    const config = getAuthAxiosConfig();
+
+    const payload = reason ? { reason } : {};
+
+    const response = await axios.post(
+      `/interview-panel/invitations/${invitationId}/decline`,
       payload,
       config
     );
@@ -365,11 +470,10 @@ export const submitInterviewFeedback = async (
 ): Promise<InterviewFeedbackResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
+    // Override content-type for this specific request
     config.headers = {
       ...config.headers,
-      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     };
 
@@ -385,8 +489,8 @@ export const submitInterviewFeedback = async (
 
     // Updated URL to include interviewId as query parameter
     const response = await axios.post(
-      `https://devapi.faujx.com/api/interview-panel/interviewer-feedback?interviewId=${interviewId}`,
-      requestBody, // Send feedback, rating, evaluationStatus, and comments in body
+      `/interview-panel/interviewer-feedback?interviewId=${interviewId}`,
+      requestBody,
       config
     );
 
@@ -401,15 +505,9 @@ export const submitInterviewFeedback = async (
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     const response = await axios.get(
-      'https://devapi.faujx.com/api/interview-panel/dashboard/stats',
+      '/interview-panel/dashboard/stats',
       config
     );
     return response.data;
@@ -424,7 +522,10 @@ export const interviewPanelService = {
   getInterviewDetails,
   getAvailablePanelists,
   transferInterview,
+  inviteToInterview,
   confirmInterview,
   rejectInterview,
+  acceptInvitation,
+  declineInvitation,
   submitInterviewFeedback,
 };

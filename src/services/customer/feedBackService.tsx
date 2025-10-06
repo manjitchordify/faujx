@@ -1,4 +1,4 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
 // Customer feedback interface
@@ -69,16 +69,8 @@ export const submitCustomerInterviewFeedback = async (
 ): Promise<FeedbackResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     const response = await axios.post(
-      `https://devapi.faujx.com/api/customer/interviews/${interviewId}/feedback`,
+      `/customer/interviews/${interviewId}/feedback`,
       feedback,
       config
     );
@@ -95,15 +87,8 @@ export const getInterviewDetails = async (
 ): Promise<InterviewDetailsResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
     const response = await axios.get(
-      `https://devapi.faujx.com/api/customer/interviews/${interviewId}`,
+      `/customer/interviews/${interviewId}`,
       config
     );
 

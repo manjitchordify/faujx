@@ -5,6 +5,7 @@ import {
   CandidateReportResponse,
 } from '@/services/reportService';
 import { useParams } from 'next/navigation';
+import ShareModal from './components/shareModal';
 declare global {
   interface Window {
     html2pdf?: unknown; // or a more specific type if you know it
@@ -468,7 +469,7 @@ const mapApiDataToCandidate = (
     growthAreas: uniqueGrowthAreas,
     interviewStructure: [
       {
-        duration: '45 min',
+        duration: '40 min',
         title: 'Technical Deep Dive',
         description:
           'System design, backend architecture, and cloud technologies',
@@ -476,7 +477,7 @@ const mapApiDataToCandidate = (
         emoji: '🔧',
       },
       {
-        duration: '25 min',
+        duration: '20 min',
         title: 'Leadership & Problem Solving',
         description:
           'Team management, technical decision making, and troubleshooting',
@@ -484,7 +485,7 @@ const mapApiDataToCandidate = (
         emoji: '🧩',
       },
       {
-        duration: '20 min',
+        duration: '10 min',
         title: 'Culture & Communication',
         description:
           'Communication skills, team collaboration, and growth mindset',
@@ -668,6 +669,7 @@ const VettingReport: React.FC<InfographicReportProps> = ({ candidateData }) => {
   const reportRef = useRef<HTMLDivElement>(null);
   const params = useParams();
   const candidateId = params?.id as string;
+  const [isOpen, setIsOpen] = useState(false);
 
   // Use provided candidateData or API data
   const displayData = candidateData || apiCandidateData;
@@ -716,6 +718,123 @@ const VettingReport: React.FC<InfographicReportProps> = ({ candidateData }) => {
     }
   }, [displayData]);
 
+  // Add print styles
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+        
+       @page {
+          margin: 0.4in 0.5in;
+          size: A4;
+          /* Remove headers and footers */
+          @top-left { content: none; }
+          @top-center { content: none; }
+          @top-right { content: none; }
+          @bottom-left { content: none; }
+          @bottom-center { content: none; }
+          @bottom-right { content: none; }
+        }
+        
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        
+        .print-container {
+          background: white !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          max-width: none !important;
+          width: 100% !important;
+        }
+        
+        .skill-fill {
+          width: var(--skill-width) !important;
+          transition: none !important;
+        }
+        
+        /* Page break control */
+        .print-page {
+          page-break-after: always !important;
+          break-after: page !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+          min-height: 90vh;
+        }
+        
+      
+        
+        /* Keep sections together */
+        .print-section,
+        .assessment-grid > div,
+        .skills-grid > div {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+        
+        /* Interview Strategy specific */
+        .interview-strategy-container {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+        
+        /* Grid layouts */
+        .assessment-grid,
+        .skills-grid {
+          display: grid !important;
+          grid-template-columns: repeat(2, 1fr) !important;
+          gap: 12px !important;
+        }
+        
+        /* Compact spacing */
+        h1 { font-size: 20pt !important; margin: 0 0 6px 0 !important; }
+        h2 { font-size: 16pt !important; margin: 0 0 6px 0 !important; }
+        h3 { font-size: 13pt !important; margin: 0 0 4px 0 !important; }
+        p { font-size: 9pt !important; line-height: 1.3 !important; }
+        
+        .hero-section {
+          padding: 20px 15px !important;
+          min-height: 30vh !important;
+        }
+        
+        .content-section {
+          padding: 12px !important;
+        }
+        
+        .mb-10, .mb-12 {
+          margin-bottom: 8px !important;
+        }
+        
+        .p-8, .p-10 {
+          padding: 10px !important;
+        }
+        
+        .gap-8, .gap-10 {
+          gap: 8px !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   const showNotificationMessage = (message: string): void => {
     setNotificationMessage(message);
     setShowNotification(true);
@@ -728,56 +847,27 @@ const VettingReport: React.FC<InfographicReportProps> = ({ candidateData }) => {
     try {
       setIsDownloading(true);
 
-      if (typeof window.html2pdf !== 'undefined') {
-        // const element = reportRef.current;
+      // Set skill widths immediately
+      const skillBars = document.querySelectorAll(
+        '.skill-fill'
+      ) as NodeListOf<HTMLElement>;
+      skillBars.forEach(bar => {
+        const targetWidth = bar.getAttribute('data-width');
+        if (targetWidth) {
+          bar.style.setProperty('--skill-width', targetWidth + '%');
+          bar.style.width = targetWidth + '%';
+        }
+      });
 
-        // if (window.html2pdf) {
-        //   await window
-        //     .html2pdf()
-        //     .set(options)
-        //     .from(element as HTMLElement)
-        //     .save();
-        // }
-
-        showNotificationMessage(
-          'Infographic PDF generated successfully with all visual elements!'
-        );
-      } else {
+      setTimeout(() => {
         window.print();
-        showNotificationMessage('Print dialog opened - save as PDF');
-      }
+        showNotificationMessage('PDF generation initiated');
+      }, 100);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      showNotificationMessage(
-        'PDF generation encountered an issue. Using print dialog instead.'
-      );
-      setTimeout(() => window.print(), 500);
+      showNotificationMessage('Error generating PDF. Please try again.');
     } finally {
       setIsDownloading(false);
-    }
-  };
-
-  const shareReport = async (): Promise<void> => {
-    if (!displayData) return;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `${displayData.name} - Assessment Report`,
-          text: 'Candidate assessment report showing strong technical skills and growth potential.',
-          url: window.location.href,
-        });
-      } catch (error) {
-        console.error('Error sharing:', error);
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(window.location.href);
-        showNotificationMessage('Report URL copied to clipboard!');
-      } catch (error) {
-        console.error('Error copying to clipboard:', error);
-        showNotificationMessage('Could not copy URL to clipboard');
-      }
     }
   };
 
@@ -816,177 +906,201 @@ const VettingReport: React.FC<InfographicReportProps> = ({ candidateData }) => {
   return (
     <>
       <div
-        className="font-inter bg-gray-50 leading-normal max-w-4xl mx-auto my-5 bg-white rounded-3xl shadow-2xl overflow-hidden"
+        className="font-inter bg-gray-50 leading-normal max-w-4xl mx-auto my-5 bg-white rounded-3xl shadow-2xl overflow-hidden print-container"
         ref={reportRef}
       >
-        {/* Hero Section */}
-        <div
-          className="text-white py-16 px-10 relative overflow-hidden"
-          style={{
-            background:
-              'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
-          }}
-        >
+        {/* PAGE 1: Hero + Assessment */}
+        <div className="print-page">
           <div
-            className="absolute opacity-20 rounded-full"
+            className="text-white py-16 px-10 relative overflow-hidden hero-section"
             style={{
-              top: '-50%',
-              right: '-25%',
-              width: '400px',
-              height: '400px',
-              background: 'rgba(255, 255, 255, 0.08)',
+              background:
+                'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
             }}
-          ></div>
-          <div
-            className="absolute opacity-15 rounded-full"
-            style={{
-              bottom: '-30%',
-              left: '-20%',
-              width: '300px',
-              height: '300px',
-              background: 'rgba(255, 255, 255, 0.05)',
-            }}
-          ></div>
-
-          <div className="relative z-10 text-center">
+          >
             <div
-              style={{ background: 'rgba(255, 255, 255, 0.05)' }}
-              className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-black mx-auto mb-5 border-4 border-white border-opacity-30"
-            >
-              <span text-blue>{displayData.initials}</span>
-            </div>
-            <h1 className="text-4xl font-black mb-2 drop-shadow-sm">
-              {displayData.name}
-            </h1>
-            <p className="text-xl opacity-90 mb-5">{displayData.role}</p>
+              className="absolute opacity-20 rounded-full"
+              style={{
+                top: '-50%',
+                right: '-25%',
+                width: '400px',
+                height: '400px',
+                background: 'rgba(255, 255, 255, 0.08)',
+              }}
+            ></div>
+            <div
+              className="absolute opacity-15 rounded-full"
+              style={{
+                bottom: '-30%',
+                left: '-20%',
+                width: '300px',
+                height: '300px',
+                background: 'rgba(255, 255, 255, 0.05)',
+              }}
+            ></div>
 
-            <div className="flex justify-center gap-10 mt-8 flex-wrap">
-              <div className="text-center">
-                <span className="text-4xl font-black block mb-1">
-                  {displayData.overallScore}
-                </span>
-                <span className="text-sm opacity-80 uppercase tracking-wider">
-                  Overall Score
-                </span>
+            <div className="relative z-10 text-center">
+              <div
+                style={{ background: 'rgba(255, 255, 255, 0.05)' }}
+                className="w-32 h-32 rounded-full flex items-center justify-center text-5xl font-black mx-auto mb-5 border-4 border-white border-opacity-30"
+              >
+                <span>{displayData?.initials}</span>
               </div>
-              <div className="text-center">
-                <span className="text-4xl font-black block mb-1">
-                  {displayData.stageProgress}
-                </span>
-                <span className="text-sm opacity-80 uppercase tracking-wider">
-                  Stages Passed
-                </span>
+              <h1 className="text-4xl font-black mb-2 drop-shadow-sm">
+                {displayData.name}
+              </h1>
+              <p className="text-xl opacity-90 mb-5">{displayData.role}</p>
+
+              <div className="flex justify-center gap-10 mt-8 flex-wrap">
+                <div className="text-center">
+                  <span className="text-4xl font-black block mb-1">
+                    {displayData.overallScore}
+                  </span>
+                  <span className="text-sm opacity-80 uppercase tracking-wider">
+                    Overall Score
+                  </span>
+                </div>
+                <div className="text-center">
+                  <span className="text-4xl font-black block mb-1">
+                    {displayData.stageProgress}
+                  </span>
+                  <span className="text-sm opacity-80 uppercase tracking-wider">
+                    Stages Passed
+                  </span>
+                </div>
+                <div className="text-center">
+                  <span className="text-4xl font-black block mb-1">2-3</span>
+                  <span className="text-sm opacity-80 uppercase tracking-wider">
+                    Months to Independence
+                  </span>
+                </div>
               </div>
-              <div className="text-center">
-                <span className="text-4xl font-black block mb-1">2-3</span>
-                <span className="text-sm opacity-80 uppercase tracking-wider">
-                  Months to Independence
-                </span>
+            </div>
+          </div>
+
+          <div className="p-12 content-section">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-gray-800 mb-3">
+                Assessment Performance
+              </h2>
+              <p className="text-gray-600">
+                Comprehensive evaluation across all key areas
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 assessment-grid">
+              {displayData.assessmentScores.map((score, index) => (
+                <div key={index} className="print-section">
+                  <ScoreVisual {...score} delay={index * 0.2} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* PAGE 2: Skills Analysis */}
+        <div className="print-page">
+          <div className="p-12 content-section">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-gray-800 mb-3">
+                Skills Analysis
+              </h2>
+              <p className="text-gray-600">
+                Current proficiency levels and growth opportunities
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12 skills-grid">
+              <div className="print-section">
+                <SkillsColumn
+                  type="strengths"
+                  title="Core Strengths"
+                  skills={displayData.strengths}
+                />
+              </div>
+              <div className="print-section">
+                <SkillsColumn
+                  type="growth"
+                  title="Growth Areas"
+                  skills={displayData.growthAreas}
+                />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Content Section */}
-        <div className="p-12">
-          {/* Assessment Performance */}
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-800 mb-3">
-              Assessment Performance
-            </h2>
-            <p className="text-gray-600">
-              Comprehensive evaluation across all key areas
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            {displayData.assessmentScores.map((score, index) => (
-              <ScoreVisual key={index} {...score} delay={index * 0.2} />
-            ))}
-          </div>
-
-          {/* Skills Analysis */}
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-800 mb-3">
-              Skills Analysis
-            </h2>
-            <p className="text-gray-600">
-              Current proficiency levels and growth opportunities
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-12">
-            <SkillsColumn
-              type="strengths"
-              title="Core Strengths"
-              skills={displayData.strengths}
-            />
-            <SkillsColumn
-              type="growth"
-              title="Growth Areas"
-              skills={displayData.growthAreas}
-            />
-          </div>
-
-          {/* Panel Interview Strategy */}
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-800 mb-3">
-              Panel Interview Strategy
-            </h2>
-            <p className="text-gray-600">
-              Comprehensive evaluation plan and focus areas
-            </p>
-          </div>
-
-          <InterviewStrategySection candidateData={displayData} />
-
-          {/* Development Journey */}
-          <TimelineInfographic phases={displayData.developmentPhases} />
-
-          {/* Recommendation */}
-          <div className="bg-gradient-to-r from-green-600 to-green-600 text-white rounded-2xl p-10 text-center relative overflow-hidden mb-10">
-            <div className="absolute top-5 left-8 text-5xl opacity-30">🌟</div>
-            <div className="absolute bottom-5 right-8 text-5xl opacity-30">
-              🚀
+        {/* PAGE 3: Interview Strategy */}
+        <div className="print-page">
+          <div className="p-8 content-section">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                Panel Interview Strategy
+              </h2>
+              <p className="text-gray-600 text-sm">
+                Comprehensive evaluation plan and focus areas
+              </p>
             </div>
 
-            <h2 className="text-3xl font-black mb-4 relative z-10">
-              Strong Hire Recommended
-            </h2>
-            <p className="text-lg opacity-95 max-w-2xl mx-auto relative z-10">
-              {displayData.name} demonstrates exceptional technical skills with
-              a clear growth mindset. Strong foundation in modern frontend
-              practices, combined with excellent accessibility awareness, makes
-              them an ideal candidate for immediate contribution and long-term
-              team growth.
-            </p>
+            <div className="">
+              <InterviewStrategySection candidateData={displayData} />
+            </div>
+          </div>
+        </div>
+
+        {/* PAGE 4: Development Journey + Final Recommendation */}
+        <div className="print-page">
+          <div className="p-12 content-section">
+            <div className="print-section">
+              <TimelineInfographic phases={displayData.developmentPhases} />
+            </div>
+
+            <div className="print-section">
+              <div className="bg-gradient-to-r from-green-600 to-green-600 text-white rounded-2xl p-10 text-center relative overflow-hidden mb-10">
+                <div className="absolute top-5 left-8 text-5xl opacity-30">
+                  🌟
+                </div>
+                <div className="absolute bottom-5 right-8 text-5xl opacity-30">
+                  🚀
+                </div>
+
+                <h2 className="text-3xl font-black mb-4 relative z-10">
+                  Strong Hire Recommended
+                </h2>
+                <p className="text-lg opacity-95 max-w-2xl mx-auto relative z-10">
+                  {displayData.name} demonstrates exceptional technical skills
+                  with a clear growth mindset. Strong foundation in modern
+                  frontend practices, combined with excellent accessibility
+                  awareness, makes them an ideal candidate for immediate
+                  contribution and long-term team growth.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Download Section */}
-        <div className="py-8 px-10 bg-gray-50 text-center">
+        <div className="py-8 px-10 bg-gray-50 text-center no-print">
           <div className="flex justify-center gap-4 flex-wrap">
-            <button
-              className="px-7 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-2"
-              onClick={() => window.print()}
-            >
-              🖨️ Print Report
-            </button>
             <button
               className="px-7 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50"
               onClick={downloadInfographicPDF}
               disabled={isDownloading}
             >
-              {isDownloading
-                ? '⏳ Generating Infographic PDF...'
-                : '📄 Download PDF'}
+              {isDownloading ? '⏳ Generating PDF...' : '📄 Download PDF'}
             </button>
-            <button
-              className="px-7 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-2"
-              onClick={shareReport}
-            >
-              📤 Share Report
-            </button>
+            <div className="relative inline-block">
+              <button
+                className="px-7 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-2"
+                onClick={() => setIsOpen(true)}
+              >
+                📤 Share Report
+              </button>
+              <ShareModal
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+                link={window.location.href}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -1105,7 +1219,12 @@ const SkillBar: React.FC<Skill & { isStrengths: boolean }> = ({
         <div
           className={`skill-fill h-full rounded-full transition-all duration-1000 ease-out ${gradientClass}`}
           data-width={percentage}
-          style={{ width: '0%' }}
+          style={
+            {
+              width: '0%',
+              '--skill-width': `${percentage}%`,
+            } as React.CSSProperties
+          }
         />
       </div>
     </div>
@@ -1118,107 +1237,64 @@ const InterviewStrategySection: React.FC<{ candidateData: CandidateData }> = ({
 }) => {
   return (
     <div
-      className="rounded-2xl p-10 mb-10"
+      className="rounded-2xl p-6 mb-6"
       style={{
         background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
       }}
     >
-      <div className="bg-white rounded-2xl p-8 shadow-lg mb-10 border-l-8 border-blue-400">
-        <div className="flex items-start gap-5">
+      <div className="bg-white rounded-2xl p-6 shadow-lg mb-6 border-l-8 border-blue-400 print-section">
+        <div className="flex items-start gap-4">
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl flex-shrink-0"
+            className="w-12 h-12 rounded-full flex items-center justify-center text-xl flex-shrink-0 text-white"
             style={{ background: 'linear-gradient(135deg, #4299e1, #3182ce)' }}
           >
             📅
           </div>
           <div className="flex-1">
-            <h3 className="text-2xl font-bold mb-3 text-gray-800">
+            <h3 className="text-xl font-bold mb-2 text-gray-800">
               Technical Deep Dive Interview
             </h3>
-            <p className="text-gray-600 mb-2 text-lg">
+            <p className="text-gray-600 mb-1 text-sm">
               <strong>Date:</strong> {candidateData.interviewDate}
             </p>
-            <p className="text-gray-600 mb-4 text-lg">
-              <strong>Format:</strong> Virtual • 90 minutes • 2 Interviewers
+            <p className="text-gray-600 mb-2 text-sm">
+              <strong>Format:</strong> Virtual • 60 minutes • 1 Interviewer
             </p>
-            <div className="flex gap-3 flex-wrap">
-              <span className="bg-teal-50 text-teal-800 px-4 py-2 rounded-full text-sm font-medium">
-                Lead Frontend Engineer
-              </span>
-              <span className="bg-teal-50 text-teal-800 px-4 py-2 rounded-full text-sm font-medium">
-                Engineering Manager
-              </span>
-            </div>
           </div>
         </div>
       </div>
 
-      <div className="mb-10">
-        <h3 className="text-xl font-bold mb-6 text-gray-800">
+      <div className="mb-6 print-section">
+        <h3 className="text-lg font-bold mb-4 text-gray-800">
           Interview Structure & Timeline
         </h3>
-        <div className="flex flex-col gap-4 mb-10">
+        <div className="flex flex-col gap-3 mb-6">
           {candidateData.interviewStructure.map((block, index) => (
             <TimeBlock key={index} {...block} />
           ))}
         </div>
       </div>
 
-      <div className="mb-10">
-        <h3 className="text-xl font-bold mb-6 text-gray-800">
+      <div className="mb-4 print-section">
+        <h3 className="text-lg font-bold mb-4 text-gray-800">
           Key Evaluation Areas
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           {candidateData.evaluationCriteria.map((criteria, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl p-6 text-center shadow-md hover:-translate-y-1 transition-transform duration-300"
+              className="bg-white rounded-xl p-4 text-center shadow-md hover:-translate-y-1 transition-transform duration-300 print-section"
             >
-              <div className="text-3xl font-black text-blue-500 mb-3">
+              <div className="text-2xl font-black text-blue-500 mb-2">
                 {criteria.percentage}
               </div>
               <div className="text-center">
-                <h4 className="text-lg font-semibold mb-2 text-gray-700 whitespace-normal break-words w-full max-w-full">
+                <h4 className="text-sm font-semibold mb-1 text-gray-700 whitespace-normal break-words w-full max-w-full">
                   {criteria.title}
                 </h4>
-                {/* <div className="text-sm text-gray-600 leading-relaxed">{criteria.details}</div> */}
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl p-8 shadow-lg">
-        <h3 className="text-xl font-bold mb-6 text-gray-800">
-          Interview Success Prediction
-        </h3>
-        <div className="text-center">
-          <div className="w-full h-6 bg-gray-200 rounded-full relative mb-6 overflow-hidden">
-            <div
-              className="h-full rounded-full relative"
-              style={{
-                width: '82%',
-                background: 'linear-gradient(135deg, #48bb78, #38a169)',
-              }}
-            />
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-sm font-bold text-white z-10">
-              82%
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
-            <div className="px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-800">
-              ✅ Strong technical foundation
-            </div>
-            <div className="px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-800">
-              ✅ Clear communication in assessment
-            </div>
-            <div className="px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-800">
-              ✅ Growth mindset indicators
-            </div>
-            <div className="px-3 py-2 rounded-lg text-sm font-medium bg-yellow-50 text-yellow-800">
-              ⚡ Validate: Performance optimization experience
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -1248,16 +1324,16 @@ const TimeBlock: React.FC<InterviewStructureBlock> = ({
 
   return (
     <div
-      className={`flex items-center bg-white rounded-xl p-5 shadow-md border-l-8 ${getBorderColor()}`}
+      className={`flex items-center bg-white rounded-xl p-4 shadow-md border-l-8 ${getBorderColor()} print-section`}
     >
-      <div className="text-lg font-bold text-gray-700 min-w-20 flex-shrink-0">
+      <div className="text-sm font-bold text-gray-700 min-w-16 flex-shrink-0">
         {duration}
       </div>
-      <div className="ml-5">
-        <h4 className="text-lg font-semibold mb-1.5 text-gray-700">
+      <div className="ml-4">
+        <h4 className="text-sm font-semibold mb-1 text-gray-700">
           {emoji} {title}
         </h4>
-        <p className="text-gray-600 text-sm">{description}</p>
+        <p className="text-gray-600 text-xs">{description}</p>
       </div>
     </div>
   );
@@ -1269,7 +1345,7 @@ const TimelineInfographic: React.FC<{ phases: DevelopmentPhase[] }> = ({
 }) => {
   return (
     <div
-      className="text-white mb-10 relative overflow-hidden p-10"
+      className="text-white mb-8 relative overflow-hidden p-8"
       style={{
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         borderRadius: '25px',
@@ -1286,18 +1362,18 @@ const TimelineInfographic: React.FC<{ phases: DevelopmentPhase[] }> = ({
         }}
       ></div>
 
-      <div className="text-center mb-10 relative z-10">
+      <div className="text-center mb-8 relative z-10">
         <h2 className="text-2xl font-bold mb-2">Development Journey</h2>
         <p className="opacity-90">
           Roadmap to mastery with realistic timelines
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
         {phases.map((phase, index) => (
           <div
             key={index}
-            className="rounded-2xl p-6 text-center border border-white border-opacity-20"
+            className="rounded-2xl p-6 text-center border border-white border-opacity-20 print-section"
             style={{
               background: 'rgba(255, 255, 255, 0.15)',
               backdropFilter: 'blur(10px)',

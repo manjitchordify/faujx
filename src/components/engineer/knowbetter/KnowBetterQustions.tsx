@@ -245,11 +245,13 @@ const KnowBetterQuestions: React.FC = () => {
       case 2:
         const salary = parseInt(formData.monthlyCompensation || '0');
         const maxSalary = formData.currency === 'INR' ? 99999 : 9999;
+        const minSalary = 1000;
         return (
           formData.monthlyCompensation.trim() !== '' &&
-          salary > 0 &&
+          salary >= minSalary && // Changed from > 0 to >= minSalary
           salary <= maxSalary
         );
+
       case 3:
         return formData.workArrangement.length > 0;
       case 4:
@@ -395,6 +397,19 @@ const KnowBetterQuestions: React.FC = () => {
                     const maxDigits = formData.currency === 'INR' ? 5 : 4;
                     const maxSalary =
                       formData.currency === 'INR' ? 99999 : 9999;
+                    const minSalary = 1000;
+
+                    // Check if value is less than minimum
+                    if (
+                      value &&
+                      parseInt(value) < minSalary &&
+                      value.length >= 4
+                    ) {
+                      setError(
+                        `Minimum salary is ${minSalary} ${formData.currency}`
+                      );
+                      return;
+                    }
 
                     // If the new value exceeds max digits, don't update (keep previous value)
                     if (
@@ -412,9 +427,9 @@ const KnowBetterQuestions: React.FC = () => {
 
                     updateFormData('monthlyCompensation', value);
                   }}
-                  min="0"
+                  min={formData.currency === 'INR' ? '1000' : '100'}
                   max={formData.currency === 'INR' ? '99999' : '9999'}
-                  placeholder={`Enter amount (${formData.currency === 'INR' ? 'up to 5 digits' : 'up to 4 digits'})`}
+                  placeholder={`Enter amount (min 1000, ${formData.currency === 'INR' ? 'max 99999' : 'max 9999'})`}
                   className="w-full px-4 py-4 border border-gray-300 rounded-xl focus:border-[#1F514C] focus:outline-none transition-colors duration-200 text-lg"
                   autoFocus
                   disabled={isLoading}
@@ -426,19 +441,20 @@ const KnowBetterQuestions: React.FC = () => {
                 </div>
               </div>
             </div>
-
             {/* Show current value in full format */}
-            {formData.monthlyCompensation && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-green-800 text-sm font-bold">
-                  Monthly salary:{' '}
-                  <strong>
-                    {parseInt(formData.monthlyCompensation).toLocaleString()}{' '}
-                    {formData.currency}
-                  </strong>
-                </p>
-              </div>
-            )}
+            {formData.monthlyCompensation &&
+              !error &&
+              parseInt(formData.monthlyCompensation) >= 1000 && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-green-800 text-sm font-bold">
+                    Monthly salary:{' '}
+                    <strong>
+                      {parseInt(formData.monthlyCompensation).toLocaleString()}{' '}
+                      {formData.currency}
+                    </strong>
+                  </p>
+                </div>
+              )}
           </div>
         );
 

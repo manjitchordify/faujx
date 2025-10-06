@@ -104,15 +104,15 @@ const adminLinks = [
 const interviewPanelLinks = [
   { name: 'Dashboard', href: '/panelist/dashboard', icon: FiHome },
   {
-    name: 'Manage Engineer Interviews',
+    name: 'Manage Interviews',
     href: '/panelist/interviews',
     icon: FiCalendar,
   },
-  {
-    name: 'Manage Expert Interviews',
-    href: '/panelist/expert-interviews',
-    icon: FiCheckCircle,
-  },
+  // {
+  //   name: 'Manage Expert Interviews',
+  //   href: '/panelist/expert-interviews',
+  //   icon: FiCheckCircle,
+  // },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {

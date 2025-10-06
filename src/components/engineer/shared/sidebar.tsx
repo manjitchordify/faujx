@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   User,
   LayoutDashboard,
@@ -9,10 +9,6 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronDown,
-  Star,
-  Code,
-  Briefcase,
   UserRound,
 } from 'lucide-react';
 import { useAppSelector } from '@/store/store';
@@ -22,32 +18,6 @@ interface SidebarProps {
   activeItem?: string;
   onItemClick?: (item: string) => void;
 }
-
-const SKILL_OPTIONS = [
-  'All Skills',
-  'JavaScript',
-  'Python',
-  'Java',
-  'C++',
-  'React',
-  'Node.js',
-  'SQL',
-  'Machine Learning',
-  'Data Science',
-  'DevOps',
-  'Mobile Development',
-] as const;
-
-const RATING_OPTIONS = ['All Ratings', '1+', '2+', '3+', '4+', '5'] as const;
-
-const EXPERIENCE_OPTIONS = [
-  'All Experience',
-  '0-1 years',
-  '1-3 years',
-  '3-5 years',
-  '5-10 years',
-  '10+ years',
-] as const;
 
 const MOBILE_BREAKPOINT = 768;
 
@@ -134,18 +104,11 @@ const useDropdownState = () => {
 
 const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
   const router = useRouter();
-  const pathname = usePathname();
   const { loggedInUser } = useAppSelector(state => state.user);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
-  const {
-    dropdownStates,
-    selections,
-    closeAllDropdowns,
-    toggleDropdown,
-    handleSelection,
-  } = useDropdownState();
+  const { closeAllDropdowns } = useDropdownState();
 
   const closeMobileMenu = useCallback(() => setIsMobileMenuOpen(false), []);
   const toggleMobileMenu = useCallback(
@@ -154,11 +117,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
   );
 
   useOutsideClick(isMobileMenuOpen && isMobile, closeMobileMenu);
-
-  const isBrowseMentorsPage = useMemo(
-    () => pathname?.endsWith('browse-mentors'),
-    [pathname]
-  );
 
   //   const isUserVetted = useMemo(
   //   () => !!loggedInUser?.profileSetup,
@@ -193,7 +151,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
         icon: ClipboardList,
         route: '/engineer/my-interviews',
         active: false,
-        hideOnBrowseMentors: isBrowseMentorsPage || !isUserVetted,
+        hideOnBrowseMentors: !isUserVetted,
       },
       {
         id: 'Profile',
@@ -201,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
         icon: UserRound,
         route: '/engineer/dashboard/profile',
         active: false,
-        hideOnBrowseMentors: isBrowseMentorsPage || !isUserVetted,
+        hideOnBrowseMentors: !isUserVetted,
       },
       {
         id: 'settings',
@@ -209,10 +167,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
         icon: Settings,
         route: '/engineer/dashboard/settings',
         active: false,
-        hideOnBrowseMentors: isBrowseMentorsPage || !isUserVetted,
+        hideOnBrowseMentors: !isUserVetted,
       },
     ],
-    [isUserVetted, isBrowseMentorsPage]
+    [isUserVetted]
   );
 
   const visibleMenuItems = useMemo(
@@ -240,46 +198,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
     if (isMobile) closeMobileMenu();
     router.push('/');
   }, [closeAllDropdowns, isMobile, closeMobileMenu, router]);
-
-  const DropdownMenu = React.memo(function DropdownMenu({
-    isOpen,
-    options,
-    selected,
-    onSelect,
-    icon: Icon,
-  }: {
-    isOpen: boolean;
-    options: readonly string[];
-    selected: string;
-    onSelect: (value: string) => void;
-    icon: React.ComponentType<{ size: number; className: string }>;
-  }) {
-    return isOpen ? (
-      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-        {options.map(option => (
-          <button
-            key={option}
-            onClick={() => onSelect(option)}
-            className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base transition-colors duration-150 ${
-              selected === option
-                ? 'bg-[#1F514C] text-white'
-                : 'text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <div className="flex items-center space-x-3">
-              <Icon
-                size={18}
-                className={`sm:w-5 sm:h-5 flex-shrink-0 ${
-                  selected === option ? 'text-white' : 'text-gray-400'
-                }`}
-              />
-              <span className="font-medium truncate">{option}</span>
-            </div>
-          </button>
-        ))}
-      </div>
-    ) : null;
-  });
 
   const sidebarBaseClasses = `fixed left-0 top-0 bottom-0 w-64 sm:w-72 lg:w-80 bg-white flex flex-col shadow-lg border-r border-gray-100 z-50 overflow-y-auto transition-transform duration-300 ease-in-out`;
   const sidebarVisibilityClasses = isMobile
@@ -362,87 +280,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem = 'dashboard' }) => {
                       <span className="font-medium truncate">{item.label}</span>
                     </button>
                   </li>
-
-                  {/* Filter Dropdowns for Browse Mentors */}
-                  {item.id === 'dashboard' && isBrowseMentorsPage && (
-                    <>
-                      <li className="relative">
-                        <button
-                          onClick={() => toggleDropdown('skill')}
-                          className="cursor-pointer border-1 w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-left transition-all duration-200 text-sm sm:text-base text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                        >
-                          <span className="font-medium truncate">
-                            {selections.skill}
-                          </span>
-                          <ChevronDown
-                            size={18}
-                            className={`sm:w-5 sm:h-5 flex-shrink-0 transition-transform duration-200 ${
-                              dropdownStates.skill ? 'rotate-180' : ''
-                            }`}
-                          />
-                        </button>
-                        <DropdownMenu
-                          isOpen={dropdownStates.skill}
-                          options={SKILL_OPTIONS}
-                          selected={selections.skill}
-                          onSelect={value => handleSelection('skill', value)}
-                          icon={Code}
-                        />
-                      </li>
-
-                      {/* Rating Dropdown */}
-                      <li className="relative">
-                        <button
-                          onClick={() => toggleDropdown('rating')}
-                          className="cursor-pointer border-1 w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-left transition-all duration-200 text-sm sm:text-base text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                        >
-                          <span className="font-medium truncate">
-                            {selections.rating}
-                          </span>
-                          <ChevronDown
-                            size={18}
-                            className={`sm:w-5 sm:h-5 flex-shrink-0 transition-transform duration-200 ${
-                              dropdownStates.rating ? 'rotate-180' : ''
-                            }`}
-                          />
-                        </button>
-                        <DropdownMenu
-                          isOpen={dropdownStates.rating}
-                          options={RATING_OPTIONS}
-                          selected={selections.rating}
-                          onSelect={value => handleSelection('rating', value)}
-                          icon={Star}
-                        />
-                      </li>
-
-                      {/* Experience Dropdown */}
-                      <li className="relative">
-                        <button
-                          onClick={() => toggleDropdown('experience')}
-                          className="cursor-pointer border-1 w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-left transition-all duration-200 text-sm sm:text-base text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                        >
-                          <span className="font-medium truncate">
-                            {selections.experience}
-                          </span>
-                          <ChevronDown
-                            size={18}
-                            className={`sm:w-5 sm:h-5 flex-shrink-0 transition-transform duration-200 ${
-                              dropdownStates.experience ? 'rotate-180' : ''
-                            }`}
-                          />
-                        </button>
-                        <DropdownMenu
-                          isOpen={dropdownStates.experience}
-                          options={EXPERIENCE_OPTIONS}
-                          selected={selections.experience}
-                          onSelect={value =>
-                            handleSelection('experience', value)
-                          }
-                          icon={Briefcase}
-                        />
-                      </li>
-                    </>
-                  )}
                 </React.Fragment>
               );
             })}

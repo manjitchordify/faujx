@@ -1,4 +1,4 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
 // TypeScript interfaces for Plan API
@@ -75,16 +75,8 @@ export const createPlan = async (
 ): Promise<CreatePlanResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     const response = await axios.post(
-      'https://devapi.faujx.com/api/stripe/admin/create-plan',
+      '/stripe/admin/create-plan',
       planData,
       config
     );
@@ -99,17 +91,8 @@ export const createPlan = async (
 export const getAllPlans = async (): Promise<GetAllPlansResult> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    const response = await axios.get(
-      'https://devapi.faujx.com/api/stripe/plans',
-      config
-    );
+    const response = await axios.get('/stripe/plans', config);
 
     return response.data;
   } catch (error: unknown) {
@@ -121,17 +104,8 @@ export const getAllPlans = async (): Promise<GetAllPlansResult> => {
 export const getPlanById = async (id: string): Promise<GetPlanResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
 
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    const response = await axios.get(
-      `https://devapi.faujx.com/api/stripe/plans/${id}`,
-      config
-    );
+    const response = await axios.get(`/stripe/plans/${id}`, config);
 
     return response.data;
   } catch (error: unknown) {

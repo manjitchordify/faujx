@@ -61,10 +61,13 @@ const publicPaths: (string | RegExp)[] = [
   '/admin/login',
   /^\/vetting-report\/candidate\/[a-zA-Z0-9-]+$/,
   /^\/summary-report\/candidate\/[a-zA-Z0-9-]+$/,
+
   '/payment/success',
   '/payment/failure',
   '/subscription/success',
   '/subscription/failure',
+  /^\/customer\/browse-engineers\/[a-zA-Z0-9-]+\/hiring\/success$/,
+  /^\/customer\/browse-engineers\/[a-zA-Z0-9-]+\/hiring\/failure$/,
 ];
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {

@@ -1,4 +1,4 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
 // TypeScript interfaces for Customer API
@@ -57,17 +57,7 @@ function handleApiError(error: unknown): never {
 export const getAllCustomers = async (): Promise<GetAllCustomersResult> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
-    const response = await axios.get(
-      'https://devapi.faujx.com/api/admin-dashboard/customers',
-      config
-    );
+    const response = await axios.get('/admin-dashboard/customers', config);
 
     const responseData = response.data;
 

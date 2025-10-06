@@ -4,18 +4,23 @@ import { Check, CreditCard } from 'lucide-react';
 import { getAllPlanFeatures } from '@/services/customer/pricingService';
 import { hirePayment, HireRequest } from '@/services/paymentService';
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 interface PricingComponentProps {
   candidateId: string;
+  interviewId: string;
 }
 
 export default function PricingComponent({
   candidateId,
+  interviewId,
 }: PricingComponentProps) {
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [features, setFeatures] = useState<string[]>([]);
   const [isLoadingFeatures, setIsLoadingFeatures] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const userId = searchParams.get('userId') as string | null;
 
   useEffect(() => {
     const fetchFeatures = async () => {
@@ -55,8 +60,8 @@ export default function PricingComponent({
       const subscriptionData: HireRequest = {
         contract_type: 'full_time',
         payment_type: 'monthly',
-        success_url: `${window.location.origin}/${candidateId}/hiring/success`,
-        cancel_url: `${window.location.origin}/${candidateId}/hiring/cancel`,
+        success_url: `${window.location.origin}/customer/browse-engineers/${candidateId}/interview/${interviewId}/hiring/success?userId=${userId}`,
+        cancel_url: `${window.location.origin}/customer/browse-engineers/${candidateId}/interview/${interviewId}/hiring/cancel`,
         additional_notes: 'Candidate pricing',
       };
 

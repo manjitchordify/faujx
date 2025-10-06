@@ -5,24 +5,34 @@ import { CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { useParams } from 'next/navigation';
+import { useAppSelector } from '@/store/store';
 
 const SessionCompleted = () => {
   const [feedback, setFeedback] = useState('');
   const router = useRouter();
   const interviewId = useParams<{ interviewId: string }>().interviewId;
+  const userType = useAppSelector(
+    state => state.user.loggedInUser?.userType
+  ) as string;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle feedback submission logic here
     console.log('Feedback submitted:', feedback);
 
     try {
       const res = await submitInterviewCandidateFeedback({
-        feedback: feedback,
-        interviewId: interviewId,
+        feedback,
+        interviewId,
+        userType,
       });
       console.log('FEEDBACK : ', res);
-      router.push('/engineer/interview/interview-completed');
+
+      // Navigate based on userType
+      const redirectPath =
+        userType === 'expert'
+          ? '/expert/interview/interview-completed'
+          : '/engineer/interview/interview-completed';
+      router.push(redirectPath);
     } catch (error) {
       console.log(error);
       showToast('Try Again');

@@ -77,11 +77,11 @@ const McqAssessment = ({ mcqData }: McqAssessmentProps) => {
         return router.replace(`/engineer/feedback?score=${score}&type=mcq`);
       }
 
-      if (['devops', 'aiml'].some(role => enginnerRole?.includes(role))) {
+      if (enginnerRole == 'devops') {
         return router.replace('/engineer/interview/select-slot');
+      } else {
+        return router.replace('/engineer/coding/coding-intro');
       }
-
-      return router.replace('/engineer/coding/coding-intro');
     };
 
     try {

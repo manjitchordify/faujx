@@ -14,6 +14,7 @@ import {
   getVideoSummaryApi,
   uploadProfileVideoApi,
 } from '@/services/profileSetupService';
+import { toast } from 'react-toastify';
 
 interface VideoUploadResponse {
   data?: {
@@ -153,7 +154,17 @@ const SettingsVideoUploadModal: React.FC<SettingsVideoUploadModalProps> = ({
       }, 100);
     } catch (error) {
       console.error('Error accessing camera:', error);
-      alert('Unable to access camera. Please check permissions.');
+      // alert('Unable to access camera. Please check permissions.');
+      if (error instanceof Error) {
+        console.error('Error accessing camera:', error.message);
+        toast.error(`Unable to access camera: ${error.message}`);
+      } else {
+        console.error('Unknown error accessing camera:', error);
+        toast.error('Unable to access camera. Please check permissions.');
+      }
+
+      // Optional: reset to initial view if access fails
+      setCurrentView('initial');
     }
   };
 

@@ -10,7 +10,7 @@ const PaymentSuccess = () => {
   const handleContinue = () => {
     router.push('/engineer/dashboard/browse-mentors'); // redirect logic here
   };
-  return <Success onContinue={handleContinue} />;
+  return <Success onContinue={handleContinue} interviewId="" />;
 };
 
 export default PaymentSuccess;

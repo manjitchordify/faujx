@@ -3,11 +3,13 @@ import { getAllInterviewsCandidate } from '@/services/interviewService';
 import { InterviewDetails } from '@/types/interview';
 import { formatInterviewDate } from '@/utils/helper/Helper';
 import { showToast } from '@/utils/toast/Toast';
-import { Calendar, Clock, Video } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Calendar, Clock, Video, RefreshCw } from 'lucide-react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Loader from '../ui/Loader';
 import { jitsiLiveUrl } from '@/services/jitsiService';
 import { useAppSelector } from '@/store/store';
+import usePreventBackNavigation from '@/app/hooks/usePreventBackNavigation';
 
 const Interview = () => {
   const [userInterviews, setUserInterviews] = useState<
@@ -16,6 +18,52 @@ const Interview = () => {
   const { loggedInUser } = useAppSelector(state => state.user);
   const userType = loggedInUser?.userType as string;
   const [loader, setLoader] = useState<boolean>(false);
+  const router = useRouter();
+  usePreventBackNavigation();
+  const sortedInterviews = useMemo(() => {
+    if (!userInterviews || userInterviews.length === 0) return [];
+    return [...userInterviews].sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.scheduledAt || 0).getTime();
+      const dateB = new Date(b.createdAt || b.scheduledAt || 0).getTime();
+      return dateB - dateA; // Most recent first
+    });
+  }, [userInterviews]);
+
+  // Get the most recent interview
+  const mostRecentInterview = useMemo(() => {
+    return sortedInterviews.length > 0 ? sortedInterviews[0] : null;
+  }, [sortedInterviews]);
+
+  // Check if there's any pending interview
+  const hasPendingInterview = useMemo(() => {
+    if (!userInterviews) return false;
+    return userInterviews.some(
+      interview => interview.status === 'pending_confirmation'
+    );
+  }, [userInterviews]);
+
+  // Check if there's any cancelled interview
+  const hasCancelledInterview = useMemo(() => {
+    if (!userInterviews) return false;
+    return userInterviews.some(interview => interview.status === 'cancelled');
+  }, [userInterviews]);
+
+  const isRescheduleEnabled = useMemo(() => {
+    if (!mostRecentInterview) return false;
+
+    // Most recent interview must be cancelled
+    if (mostRecentInterview.status !== 'cancelled') return false;
+
+    // No pending interviews should exist
+    if (hasPendingInterview) return false;
+
+    return true;
+  }, [mostRecentInterview, hasPendingInterview]);
+
+  // Determine if reschedule button should be shown
+  const showRescheduleButton = useMemo(() => {
+    return hasCancelledInterview;
+  }, [hasCancelledInterview]);
 
   function formatTimeWithDuration(
     date: Date,
@@ -46,8 +94,8 @@ const Interview = () => {
         return 'Join Interview';
       case 'completed':
         return 'Completed';
-      case 'rejected':
-        return 'Rejected';
+      case 'cancelled':
+        return 'Cancelled';
       case 'pending_confirmation':
         return 'Awaiting Confirmation';
       default:
@@ -65,8 +113,8 @@ const Interview = () => {
         return `${baseStyles} bg-blue-500 hover:bg-blue-600 focus:ring-blue-500 cursor-pointer`;
       case 'completed':
         return `${baseStyles} bg-gray-500 cursor-not-allowed`;
-      case 'rejected':
-        return `${baseStyles} bg-red-500 cursor-not-allowed`;
+      case 'cancelled':
+        return `${baseStyles} bg-red-700 cursor-not-allowed`;
       case 'pending_confirmation':
         return `${baseStyles} bg-gray-400 cursor-not-allowed`;
       default:
@@ -102,6 +150,24 @@ const Interview = () => {
     }
   };
 
+  const handleReschedule = () => {
+    if (!isRescheduleEnabled) {
+      if (hasPendingInterview) {
+        showToast(
+          'You already have a pending interview. Please wait for confirmation or cancel it first.',
+          'warning'
+        );
+      } else if (mostRecentInterview?.status !== 'cancelled') {
+        showToast(
+          'You can only reschedule if your most recent interview was cancelled.',
+          'warning'
+        );
+      }
+      return;
+    }
+    router.push('interview/select-slot');
+  };
+
   const getUserInterview = useCallback(async () => {
     try {
       setLoader(true);
@@ -110,7 +176,7 @@ const Interview = () => {
       console.log('INTERVIEW OF USER : ', res);
     } catch (error) {
       console.log(error);
-      showToast('Try Again', 'error');
+      // showToast('Try Again', 'error');
     } finally {
       setLoader(false);
     }
@@ -130,10 +196,10 @@ const Interview = () => {
             Awaiting Confirmation
           </span>
         );
-      case 'rejected':
+      case 'cancelled':
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 w-fit">
-            Rejected
+            Cancelled
           </span>
         );
       case 'completed':
@@ -149,6 +215,39 @@ const Interview = () => {
           </span>
         );
     }
+  };
+
+  // Get the primary status message based on most recent interview
+  const getPrimaryStatusMessage = () => {
+    if (!mostRecentInterview) return '';
+
+    switch (mostRecentInterview.status) {
+      case 'confirmed':
+        return 'Great news! Your interview is confirmed and ready to join. Details are below.';
+      case 'pending_confirmation':
+        return "Your interview is scheduled. We're waiting for panelist confirmation. You'll be notified once confirmed.";
+      case 'cancelled':
+        return isRescheduleEnabled
+          ? 'Your interview was cancelled. You can reschedule for a new slot using the reschedule option below.'
+          : hasPendingInterview
+            ? 'Your interview was cancelled but you have another interview pending confirmation.'
+            : 'Your interview was cancelled.';
+      case 'completed':
+        return 'Your interview has been completed. Thank you for participating!';
+      default:
+        return 'Your interview details are below.';
+    }
+  };
+
+  // Get reschedule button disabled reason
+  const getRescheduleDisabledReason = () => {
+    if (hasPendingInterview) {
+      return 'Reschedule Disabled (Pending Interview Exists)';
+    }
+    if (mostRecentInterview?.status !== 'cancelled') {
+      return 'Reschedule Disabled (Recent Interview Not Cancelled)';
+    }
+    return 'Reschedule Interview';
   };
 
   useEffect(() => {
@@ -170,30 +269,87 @@ const Interview = () => {
                 </h1>
               </div>
               <p className="text-sm text-gray-600 leading-relaxed">
-                {userInterviews[0].status === 'confirmed'
-                  ? 'Great news! Your interview is confirmed and ready to join. Details are below.'
-                  : userInterviews[0].status === 'completed'
-                    ? 'Your interview has been completed. Thank you for participating!'
-                    : "Your interview is scheduled. We're waiting for panelist confirmation. You'll be notified once confirmed."}
-                You&apos;ll also receive an email with the interview details
-                shortly.
+                {getPrimaryStatusMessage()} You&apos;ll also receive an email
+                with the interview details shortly.
               </p>
+
+              {/* Warning message when reschedule is disabled due to pending interview */}
+              {/* {showRescheduleButton &&
+                !isRescheduleEnabled &&
+                hasPendingInterview && (
+                  <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-xs sm:text-sm text-yellow-800">
+                      <strong>Note:</strong> You have a pending interview
+                      awaiting confirmation. Rescheduling is disabled until the
+                      pending interview is confirmed or cancelled.
+                    </p>
+                  </div>
+                )} */}
+
+              {/* Warning message when reschedule is disabled because recent interview is not cancelled */}
+              {/* {showRescheduleButton &&
+                !isRescheduleEnabled &&
+                !hasPendingInterview &&
+                mostRecentInterview?.status !== 'cancelled' && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-xs sm:text-sm text-blue-800">
+                      <strong>Note:</strong> You can only reschedule if your
+                      most recent interview was cancelled. Your most recent
+                      interview status is: {mostRecentInterview?.status}.
+                    </p>
+                  </div>
+                )} */}
+
+              {/* Common Reschedule Button */}
+              {showRescheduleButton && (
+                <div className="mt-4">
+                  <button
+                    onClick={handleReschedule}
+                    disabled={!isRescheduleEnabled}
+                    className={
+                      isRescheduleEnabled
+                        ? 'w-full sm:w-auto text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-sm font-medium py-2.5 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer flex items-center justify-center gap-2'
+                        : 'w-full sm:w-auto text-gray-400 bg-gray-100 border border-gray-200 text-sm font-medium py-2.5 px-6 rounded-lg cursor-not-allowed flex items-center justify-center gap-2'
+                    }
+                    title={
+                      !isRescheduleEnabled
+                        ? hasPendingInterview
+                          ? 'Cannot reschedule while another interview is pending'
+                          : 'Can only reschedule if most recent interview was cancelled'
+                        : 'Reschedule your interview'
+                    }
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    {isRescheduleEnabled
+                      ? 'Reschedule Interview'
+                      : getRescheduleDisabledReason()}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           {userInterviews && userInterviews.length > 0 ? (
             <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-              {userInterviews.map((item, index) => (
-                <div key={index} className="w-full">
+              {sortedInterviews.map((item, index) => (
+                <div key={item.id} className="w-full">
                   {/* Interview Details Card */}
                   <div
                     className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 h-full flex flex-col transform transition-transform duration-300 
                    hover:scale-105"
                   >
                     <div className="flex justify-between items-start mb-4 sm:mb-6">
-                      <h2 className="text-base sm:text-lg font-medium text-gray-900">
-                        Frontend Engineer &apos; FaujX
-                      </h2>
+                      <div className="flex-1">
+                        <h2 className="text-base sm:text-lg font-medium text-gray-900">
+                          {item?.expert?.role || item?.candidate?.roleTitle}{' '}
+                          Interview
+                        </h2>
+                        {index === 0 && (
+                          <span className="text-xs text-gray-500 mt-1">
+                            Most Recent
+                          </span>
+                        )}
+                      </div>
                       {/* Show status badge for each interview */}
                       {getStatusBadge(item.status)}
                     </div>
@@ -255,6 +411,10 @@ const Interview = () => {
                             <p className="text-sm sm:text-base text-gray-500 break-words">
                               Interview completed
                             </p>
+                          ) : item.status === 'cancelled' ? (
+                            <p className="text-sm sm:text-base text-red-500 break-words">
+                              Interview cancelled
+                            </p>
                           ) : (
                             <p className="text-sm sm:text-base text-gray-500 break-words">
                               Available after confirmation
@@ -264,19 +424,22 @@ const Interview = () => {
                       </div>
                     </div>
 
-                    {/* Action Button */}
+                    {/* Action Buttons */}
                     <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
-                      <button
-                        onClick={() =>
-                          item.status === 'confirmed'
-                            ? joinInterview(item)
-                            : undefined
-                        }
-                        disabled={item.status !== 'confirmed'}
-                        className={getButtonStyles(item.status)}
-                      >
-                        {getButtonText(item.status)}
-                      </button>
+                      <div className="space-y-3">
+                        {/* Primary Action Button */}
+                        <button
+                          onClick={() =>
+                            item.status === 'confirmed'
+                              ? joinInterview(item)
+                              : undefined
+                          }
+                          disabled={item.status !== 'confirmed'}
+                          className={getButtonStyles(item.status)}
+                        >
+                          {getButtonText(item.status)}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

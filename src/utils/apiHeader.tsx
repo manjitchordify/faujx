@@ -6,7 +6,11 @@ export interface ApiHeaders {
 }
 
 // Base API configuration
+// export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+// export const AI_API_BASE_URL = process.env.NEXT_PUBLIC_API_GENERATE_MCQ_BASE_URL;
 export const API_BASE_URL = 'https://devapi.faujx.com/api';
+export const AI_API_BASE_URL =
+  'https://faujx-ai-dev.73eak0edvm4a2.us-east-2.cs.amazonlightsail.com';
 
 export const getApiHeaders = (): ApiHeaders => {
   const headers: ApiHeaders = {

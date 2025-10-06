@@ -1,4 +1,4 @@
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
 // TypeScript interfaces
@@ -107,17 +107,26 @@ export const processPaymentSuccess = async (
 ): Promise<PaymentSuccessResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     const response = await axios.post(
       `/booking/booking/payment-success?session_id=${sessionId}`,
       {},
+      config
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    handleApiError(error);
+  }
+};
+
+export const updateHiringProcessStatus = async (
+  interviewId: string
+): Promise<PaymentSuccessResponse> => {
+  try {
+    const config = getAuthAxiosConfig();
+    const response = await axios.post(
+      `/booking/${interviewId}/update-hire-status`,
+      { hireStatus: 'proceed_to_hire' },
       config
     );
 
@@ -133,14 +142,6 @@ export const processPaymentCancel = async (
 ): Promise<{ success: boolean; message: string }> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    };
-
     const response = await axios.post(
       `/booking/booking/payment-cancel?session_id=${sessionId}`,
       {},

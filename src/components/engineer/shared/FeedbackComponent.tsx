@@ -69,7 +69,7 @@ const FeedbackComponent: React.FC<FeedbackComponentProps> = ({
         {/* REPORT BOX AND SUPPORT TEXT */}
         <div className="w-full h-fit flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-12">
           {/* REPORT BOX */}
-          <div className="w-full lg:w-1/3 h-fit flex flex-col gap-2 p-4 sm:p-6 lg:p-8 bg-white shadow-[0px_4px_65.9px_8px_#00000040] rounded-[20px]">
+          <div className="max-h-[50vh] overflow-y-auto w-full lg:w-1/3 h-fit flex flex-col gap-2 p-4 sm:p-6 lg:p-8 bg-white shadow-[0px_4px_65.9px_8px_#00000040] rounded-[20px]">
             {type == 'mcq' ? (
               <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl shadow-sm">
                 {/* <XCircle className="w-6 h-6" /> */}

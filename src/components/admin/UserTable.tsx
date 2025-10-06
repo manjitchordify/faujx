@@ -10,9 +10,7 @@ import {
   FiX,
   FiUserCheck,
   FiUserX,
-  FiDollarSign,
   FiAlertTriangle,
-  FiFileText,
   FiUsers,
   FiShield,
   FiClock,
@@ -26,6 +24,7 @@ import {
   FiMail,
   FiPhone,
   FiClipboard,
+  FiGlobe,
 } from 'react-icons/fi';
 import { useAppSelector } from '@/store/store';
 import {
@@ -53,30 +52,9 @@ const InfoCard = ({
   </div>
 );
 
-const ActivityCard = ({
-  icon,
-  title,
-  time,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  time: string;
-}) => (
-  <div className="flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
-    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-      {icon}
-    </div>
-    <div>
-      <p className="text-sm font-medium text-gray-900">{title}</p>
-      <p className="text-xs text-gray-500">{time}</p>
-    </div>
-  </div>
-);
-
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -395,6 +373,20 @@ export default function UsersPage() {
     }
   };
 
+  // Toggle publish/unpublish - same pattern as vetting
+  const handleTogglePublish = async (user: AdminUser) => {
+    // TODO: Integrate API endpoint for publish/unpublish user
+    // This should call an API similar to updateCandidatePublishStatus
+    console.log('Toggle publish for user:', user.id);
+
+    // Placeholder - shows if published or not
+    if (user.isPublished) {
+      alert('Unpublish feature - API integration pending');
+    } else {
+      alert('Publish feature - API integration pending');
+    }
+  };
+
   const handleNext = () => {
     if (pagination.page < pagination.totalPages) {
       fetchUsers(pagination.page + 1, roleFilter);
@@ -412,13 +404,8 @@ export default function UsersPage() {
   };
 
   const handleFilterChange = (filterType: string, value: string) => {
-    switch (filterType) {
-      case 'role':
-        setRoleFilter(value);
-        break;
-      case 'status':
-        setStatusFilter(value);
-        break;
+    if (filterType === 'role') {
+      setRoleFilter(value);
     }
   };
 
@@ -591,7 +578,7 @@ export default function UsersPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-lg p-4 sm:p-6 shadow mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -614,18 +601,6 @@ export default function UsersPage() {
             <option value="expert">Experts</option>
             <option value="admin">Admins</option>
             <option value="interview_panel">Interview Panel</option>
-          </select>
-
-          <select
-            value={statusFilter}
-            onChange={e => handleFilterChange('status', e.target.value)}
-            className="px-3 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="suspended">Suspended</option>
-            <option value="pending">Pending</option>
           </select>
         </div>
       </div>
@@ -788,26 +763,25 @@ export default function UsersPage() {
                         <FiEdit className="w-4 h-4" />
                       </button>
                       <button
+                        onClick={() => handleTogglePublish(user)}
+                        className={`${
+                          user.isPublished
+                            ? 'text-red-600 hover:text-red-900'
+                            : 'text-green-600 hover:text-green-900'
+                        }`}
+                        title={
+                          user.isPublished ? 'Unpublish User' : 'Publish User'
+                        }
+                      >
+                        <FiGlobe className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => handleDeleteUser(user)}
                         className="text-red-600 hover:text-red-900"
                         title="Delete User"
                       >
                         <FiTrash2 className="w-4 h-4" />
                       </button>
-                      {user.userType === 'candidate' && (
-                        <button
-                          onClick={() =>
-                            window.open(
-                              `/vetting-report/candidate/${user.id}`,
-                              '_blank'
-                            )
-                          }
-                          className="text-purple-600 hover:text-purple-900"
-                          title="Vetting Report"
-                        >
-                          <FiFileText className="w-4 h-4" />
-                        </button>
-                      )}
                     </div>
                   </td>
                 </tr>
@@ -828,19 +802,16 @@ export default function UsersPage() {
                   No users found
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  {searchTerm || roleFilter !== 'all' || statusFilter !== 'all'
+                  {searchTerm || roleFilter !== 'all'
                     ? 'No users match your current search criteria. Try adjusting your filters.'
                     : 'No users are currently available in the system.'}
                 </p>
 
-                {(searchTerm ||
-                  roleFilter !== 'all' ||
-                  statusFilter !== 'all') && (
+                {(searchTerm || roleFilter !== 'all') && (
                   <button
                     onClick={() => {
                       setSearchTerm('');
                       setRoleFilter('all');
-                      setStatusFilter('all');
                     }}
                     className="mt-4 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                   >
@@ -1304,7 +1275,7 @@ export default function UsersPage() {
                   <h4 className="text-lg font-medium text-gray-900 mb-3">
                     Account Status
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <InfoCard
                       label="Active Status"
                       value={
@@ -1336,43 +1307,6 @@ export default function UsersPage() {
                           </span>
                         )
                       }
-                    />
-                    <InfoCard
-                      label="Account Security"
-                      value={
-                        selectedUser.isVerified && selectedUser.isActive ? (
-                          <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                            <FiShield className="w-3 h-3 mr-1" />
-                            Secure
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-800">
-                            <FiAlertTriangle className="w-3 h-3 mr-1" />
-                            Needs Attention
-                          </span>
-                        )
-                      }
-                    />
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h4 className="text-lg font-medium text-gray-900 mb-3">
-                    Recent Activity
-                  </h4>
-                  <div className="space-y-3">
-                    <ActivityCard
-                      icon={<FiUser className="w-4 h-4 text-green-600" />}
-                      title="Profile updated"
-                      time="1 day ago"
-                    />
-                    <ActivityCard
-                      icon={
-                        <FiDollarSign className="w-4 h-4 text-purple-600" />
-                      }
-                      title="Account activity"
-                      time="3 days ago"
                     />
                   </div>
                 </div>

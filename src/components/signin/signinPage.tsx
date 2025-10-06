@@ -108,9 +108,10 @@ export default function SignInPage() {
 
       if (response?.data?.user && response?.data?.accessToken) {
         const userType = response.data.user.userType;
+        const roleTitle = response.data.roleTitle;
         const phase1Completed = response.data.phase1Completed;
         const profileStages = response.data.profileStages;
-
+        const currentStatus = response.data.user.currentStatus;
         // Validate userType matches current route
         const routeUserTypeMapping: Record<string, string[]> = {
           engineer: ['candidate'],
@@ -149,7 +150,7 @@ export default function SignInPage() {
           router.push(`/${userRole}/email-sent`);
           return;
         }
-        const dashboard = roleDashboards[userType] || '/engineer/dashboard';
+        const dashboard = roleDashboards[userType];
 
         // Store updated role in localStorage
         try {
@@ -157,21 +158,41 @@ export default function SignInPage() {
             'userRole',
             userType === 'candidate' ? 'candidate' : userType
           );
+          // Also store roleTitle if it exists for future reference
+          if (roleTitle) {
+            localStorage.setItem('roleTitle', roleTitle);
+          }
         } catch (error) {
           console.error('Error updating role in localStorage:', error);
         }
 
         // Navigate to appropriate route based on user completion status
         setTimeout(() => {
-          if (userType === 'candidate' && !phase1Completed) {
-            const nextRoute = getNextRouteFromStages(profileStages || null);
-            console.log(
-              'Routing candidate to:',
-              nextRoute,
-              'based on stages:',
-              profileStages
-            );
-            router.push(nextRoute);
+          if (userType === 'candidate') {
+            if (!phase1Completed) {
+              const nextRoute = getNextRouteFromStages(
+                profileStages || null,
+                roleTitle
+              );
+              console.log(
+                'Routing candidate to:',
+                nextRoute,
+                'based on stages:',
+                profileStages,
+                'and roleTitle:',
+                roleTitle
+              );
+              router.push(nextRoute);
+            } else if (phase1Completed && currentStatus === 'pending') {
+              router.push('/engineer/interview/interview-completed');
+            } else if (
+              phase1Completed &&
+              currentStatus === 'interview_failed'
+            ) {
+              router.push('/engineer/interview/rejected');
+            } else {
+              router.push(dashboard);
+            }
           } else {
             router.push(dashboard);
           }
@@ -189,7 +210,6 @@ export default function SignInPage() {
       setIsLoading(false);
     }
   };
-
   const handleSignupRedirect = () => {
     router.push(`/${role}/signup`);
   };

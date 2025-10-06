@@ -51,6 +51,7 @@ export const submitInterviewSlots = async (
         slots: payload,
         interviewType: 'technical',
         notes: 'Prefer technical interview focused on React and Node.js',
+        participantType: userType,
       },
       config
     );
@@ -63,12 +64,16 @@ export const submitInterviewSlots = async (
 export const submitInterviewCandidateFeedback = async (payload: {
   feedback: string;
   interviewId: string;
+  userType: string;
 }) => {
   try {
     const config = getAuthAxiosConfig();
     const res = await axios.post(
       `/candidates/candidate-feedback?interviewId=${payload.interviewId}`,
-      { feedback: payload.feedback },
+      {
+        feedback: payload.feedback,
+        participantType: payload.userType,
+      },
       config
     );
     return res.data;

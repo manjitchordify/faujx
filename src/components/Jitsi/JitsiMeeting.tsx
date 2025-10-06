@@ -11,7 +11,7 @@ import { FeedbackModal } from './feedbackModal';
 import { CustomerFeedbackModal } from './customerFeedbackModal';
 import { type Role } from '@/constants/capability';
 import { updateProfileStage } from '@/services/engineerService';
-
+import { MentorRatingModal } from './MentorRatingModal';
 interface JitsiMeetExternalAPI {
   dispose: () => void;
   addEventListener: (
@@ -37,6 +37,7 @@ export default function JitsiMeetingPage() {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const { loggedInUser } = useAppSelector(state => state.user);
   const interviewId = useParams<{ interviewId: string }>().interviewId;
+  const [showMentorRatingModal, setShowMentorRatingModal] = useState(false);
 
   // Function to handle modal close without submitting
   const handleModalClose = () => {
@@ -49,6 +50,16 @@ export default function JitsiMeetingPage() {
     setTimeout(() => {
       router.push('/panelist/interviews');
     }, 100);
+  };
+
+  const handleMentorRatingModalClose = () => {
+    setShowMentorRatingModal(false);
+
+    // Optional: dispose Jitsi if needed
+    if (apiRef.current) {
+      apiRef.current.dispose();
+      apiRef.current = null;
+    }
   };
 
   // Function to handle customer modal close without submitting
@@ -79,7 +90,7 @@ export default function JitsiMeetingPage() {
     // Show toast for 2 seconds, then navigate
     setTimeout(() => {
       setShowSuccessToast(false);
-      router.push('/customer/interviews');
+      router.push('/customer/browse-engineers/dashboard');
     }, 2000);
   };
 
@@ -158,6 +169,8 @@ export default function JitsiMeetingPage() {
   };
   const raw = searchParams.get('customerInterview');
   const customerInterview = raw?.toLowerCase() === 'true';
+  const sessionraw = searchParams.get('candidatesession');
+  const candidatesession = sessionraw?.toLowerCase() === 'true';
 
   useEffect(() => {
     const room = searchParams.get('room');
@@ -230,6 +243,9 @@ export default function JitsiMeetingPage() {
         if (loggedInUser?.userType === 'candidate') {
           if (customerInterview) {
             router.push('/engineer/my-interviews');
+          } else if (candidatesession) {
+            setShowMentorRatingModal(true);
+            // router.push('/engineer/dashboard/browse-mentors');
           } else {
             await updateProfileStage('interview', 'passed');
             router.push(`/engineer/interview/${interviewId}/session-completed`);
@@ -269,6 +285,7 @@ export default function JitsiMeetingPage() {
     roomName,
     router,
     customerInterview,
+    candidatesession,
   ]);
 
   return (
@@ -295,6 +312,12 @@ export default function JitsiMeetingPage() {
         onClose={handleCustomerModalClose}
         onSuccess={handleCustomerFeedbackSuccess}
         interviewId={interviewId}
+      />
+
+      <MentorRatingModal
+        isOpen={showMentorRatingModal}
+        onClose={handleMentorRatingModalClose}
+        sessionId={interviewId} // pass interviewId here
       />
 
       {/* Success Toast Notification */}

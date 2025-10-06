@@ -25,6 +25,7 @@ export interface CandidateStats {
 export interface Candidate {
   id: string;
   firstName: string;
+  userId: string;
   email: string;
   profilePic: string | null;
   resumeParsingScore: number;
@@ -34,7 +35,9 @@ export interface Candidate {
     | 'pending'
     | 'confirmed'
     | 'pending_confirmation'
-    | 'completed';
+    | 'completed'
+    | 'failed'
+    | 'cancelled';
   interviewPassed: boolean;
   notes: string | null;
   isPublished: boolean;
@@ -63,7 +66,9 @@ export interface CreateCandidateRequest {
     | 'pending'
     | 'confirmed'
     | 'pending_confirmation'
-    | 'completed';
+    | 'completed'
+    | 'failed'
+    | 'cancelled';
   interviewPassed?: boolean;
   notes?: string | null;
   isPublished?: boolean;
@@ -82,7 +87,9 @@ export interface UpdateCandidateRequest {
     | 'pending'
     | 'confirmed'
     | 'pending_confirmation'
-    | 'completed';
+    | 'completed'
+    | 'failed'
+    | 'cancelled';
   interviewPassed?: boolean;
   notes?: string | null;
   isPublished?: boolean;
@@ -103,7 +110,9 @@ export interface UpdateCandidateInterviewRequest {
     | 'pending'
     | 'confirmed'
     | 'pending_confirmation'
-    | 'completed';
+    | 'completed'
+    | 'failed'
+    | 'cancelled';
   interviewPassed?: boolean;
 }
 
@@ -287,7 +296,21 @@ export const getCandidateStatsWorkaround =
     }
   };
 
-// GET all candidates with pagination and filtering
+// GET all candidates with pagination, search, and filtering
+// NOTE: Backend API must support 'search' and 'filter' query parameters
+// API Requirements:
+// - 'search' parameter: Filter by candidate name or email (case-insensitive partial match)
+// - 'filter' parameter: Filter by status with the following values:
+//   * 'all' - No filtering (return all candidates)
+//   * 'passed' - Candidates who passed the interview
+//   * 'failed' - Candidates who failed the interview
+//   * 'published' - Published candidates
+//   * 'unpublished' - Not published candidates
+//   * 'pending' - Interview status: pending
+//   * 'confirmed' - Interview status: confirmed
+//   * 'pending_confirmation' - Interview status: pending_confirmation
+//   * 'completed' - Interview status: completed
+//   * 'cancelled' - Interview status: cancelled
 export const getAllCandidates = async (
   page: number = 1,
   perPage: number = 10,
@@ -308,7 +331,7 @@ export const getAllCandidates = async (
       params.append('search', search.trim());
     }
 
-    // Add filter parameter
+    // Add filter parameter if not 'all'
     if (filter !== 'all') {
       params.append('filter', filter);
     }
@@ -440,15 +463,16 @@ export const deleteMultipleCandidates = async (
   }
 };
 
-// PATCH update candidate publish status
+// PATCH update candidate publish status - UPDATED TO ACCEPT BOOLEAN PARAMETER
 export const updateCandidatePublishStatus = async (
-  candidateId: string
+  candidateId: string,
+  isPublished: boolean
 ): Promise<Candidate> => {
   try {
     const config = getAuthAxiosConfig();
 
     const requestBody: UpdateCandidatePublishRequest = {
-      isPublished: true,
+      isPublished,
     };
 
     const response = await axios.put<Candidate>(
@@ -549,17 +573,18 @@ export const rejectCandidate = async (
 export const publishCandidate = async (
   candidateId: string
 ): Promise<Candidate> => {
-  return updateCandidatePublishStatus(candidateId);
+  return updateCandidatePublishStatus(candidateId, true);
 };
 
 // PATCH unpublish candidate profile
 export const unpublishCandidate = async (
   candidateId: string
 ): Promise<Candidate> => {
-  return updateCandidatePublishStatus(candidateId);
+  return updateCandidatePublishStatus(candidateId, false);
 };
 
 // GET published candidates only
+// NOTE: Uses filter parameter - backend must implement filtering
 export const getPublishedCandidates = async (
   page: number = 1,
   perPage: number = 10,
@@ -569,25 +594,24 @@ export const getPublishedCandidates = async (
 };
 
 // GET candidates by interview status
+// NOTE: Uses filter parameter - backend must implement filtering
 export const getCandidatesByInterviewStatus = async (
   interviewStatus:
     | 'pending'
     | 'confirmed'
     | 'pending_confirmation'
-    | 'completed',
+    | 'completed'
+    | 'failed'
+    | 'cancelled',
   page: number = 1,
   perPage: number = 10,
   search: string = ''
 ): Promise<PaginatedCandidatesResponse> => {
-  return getAllCandidates(
-    page,
-    perPage,
-    search,
-    `interview_${interviewStatus}`
-  );
+  return getAllCandidates(page, perPage, search, interviewStatus);
 };
 
 // GET candidates by vetting status
+// NOTE: Uses filter parameter - backend must implement filtering
 export const getCandidatesByVettingStatus = async (
   vettingStatus: 'pending' | 'approved' | 'rejected',
   page: number = 1,
@@ -659,7 +683,9 @@ export const bulkUpdateCandidateVettingStatus = async (
   }
 };
 
-// GET all hired candidates
+// GET all hired candidates with pagination and search
+// NOTE: Backend API must support 'search' query parameter
+// API Requirement: 'search' parameter should filter by candidate name or email
 export const getAllHiredCandidates = async (
   page: number = 1,
   perPage: number = 10,

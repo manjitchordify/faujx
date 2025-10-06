@@ -1,6 +1,6 @@
 import React from 'react';
-import SummaryReport from '@/components/vetting-report/vettingReport';
+import CandidateSummary from '@/components/vetting-report/summaryReport';
 
 export default async function Page() {
-  return <SummaryReport />;
+  return <CandidateSummary />;
 }

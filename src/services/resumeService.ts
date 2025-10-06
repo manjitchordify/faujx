@@ -6,6 +6,7 @@ import {
   ResumeDeleteResponse,
   ApiError,
 } from '@/types/resume.types';
+import { AI_API_BASE_URL } from '@/utils/apiHeader';
 
 // ----------------------
 // Profile submission types
@@ -244,8 +245,6 @@ export async function submitProfileApi(
 // ----------------------
 // Match Capabilities API - Analyze resume against job requirements
 // ----------------------
-const baseUrlGenerateMcq =
-  'https://faujx-ai-dev.73eak0edvm4a2.us-east-2.cs.amazonlightsail.com';
 export async function matchCapabilitiesApi(
   jdCandidate: string,
   resumeData: ResumeDataForMatching
@@ -260,7 +259,7 @@ export async function matchCapabilitiesApi(
 
     const response: AxiosResponse<CapabilityMatchingResponse> =
       await axios.post(
-        `${baseUrlGenerateMcq}/match-capabilities-s3`,
+        `${AI_API_BASE_URL}/match-capabilities-s3`,
         requestData,
         config
       );

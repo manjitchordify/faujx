@@ -1,5 +1,6 @@
 'use client';
 
+import usePreventBackNavigation from '@/app/hooks/usePreventBackNavigation';
 import McqAssessment from '@/components/engineer/mcq/McqAssessment';
 import Button from '@/components/ui/Button';
 import { generateMCQs } from '@/services/McqService';
@@ -35,6 +36,7 @@ const Mcq = ({ jd_s3_key = '', resume_data }: mcqProps) => {
   const cacheRef = useRef<Map<string, CacheEntry>>(new Map());
   const sessionIdRef = useRef<string>('');
   const isGeneratingRef = useRef(false);
+  usePreventBackNavigation();
 
   // Generate unique cache key - memoized to prevent unnecessary recalculations
   const cacheKey = useRef<string>('');

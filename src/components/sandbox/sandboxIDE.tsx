@@ -20,6 +20,7 @@ import { setEvaluationResult } from '@/store/slices/persistSlice';
 import { CodingAssignmentsResponse } from '@/services/codingAssignmentsTypes';
 import { useAppSelector } from '@/store/store';
 import { completeCodingTestStage } from '@/services/engineerService';
+import usePreventBackNavigation from '@/app/hooks/usePreventBackNavigation';
 
 const LS_KEY = 'playground:sandpack:files';
 
@@ -34,7 +35,7 @@ interface SandpackFiles {
 }
 
 interface SandpackIDEProps {
-  assignments: CodingAssignmentsResponse;
+  assignments: CodingAssignmentsResponse | null;
   disabled?: boolean;
   readOnly?: boolean;
 }
@@ -111,7 +112,7 @@ function EditorWithPersistence({
 // Submit function
 async function submitToBackend(
   files: SandpackFiles,
-  assignments: CodingAssignmentsResponse,
+  assignments: CodingAssignmentsResponse | null,
   enginnerRole: string,
   sandboxUrl?: string
 ) {
@@ -125,7 +126,7 @@ async function submitToBackend(
       ),
       assessment_type: enginnerRole,
       max_score: 100,
-      problem_statement: assignments.assignments[0]?.problem_statement ?? '',
+      problem_statement: assignments?.assignments[0]?.problem_statement ?? '',
     };
 
     console.log('submission data', submissionData);
@@ -191,10 +192,7 @@ function getTemplateConfig(enginnerRole: string): TemplateConfig {
               start: 'node index.js',
               dev: 'node index.js',
             },
-            dependencies: {
-              express: '^4.18.2',
-              cors: '^2.8.5',
-            },
+            dependencies: {}, // no express, no cors
           },
           null,
           2
@@ -202,26 +200,40 @@ function getTemplateConfig(enginnerRole: string): TemplateConfig {
       },
       '/index.js': {
         code: [
-          `import express from "express";`,
-          `import cors from "cors";`,
+          `import http from "http";`,
           ``,
-          `// Start server`,
-          `app.listen(PORT, () => {`,
-          `  console.log(\`🚀 Server running on http://localhost:\${PORT}\`);`,
+          `const PORT = process.env.PORT || 3000;`,
+          ``,
+          `const server = http.createServer((req, res) => {`,
+          `  res.writeHead(200, { "Content-Type": "application/json" });`,
+          ``,
+          `  if (req.url === "/" && req.method === "GET") {`,
+          `    res.end(JSON.stringify({ message: "Hello from FaujX Backend!" }));`,
+          `  } else if (req.url === "/about" && req.method === "GET") {`,
+          `    res.end(JSON.stringify({ message: "This is the about page" }));`,
+          `  } else if (req.url === "/echo" && req.method === "POST") {`,
+          `    let body = "";`,
+          `    req.on("data", chunk => { body += chunk.toString(); });`,
+          `    req.on("end", () => {`,
+          `      res.end(JSON.stringify({ you_sent: body }));`,
+          `    });`,
+          `  } else {`,
+          `    res.writeHead(404, { "Content-Type": "application/json" });`,
+          `    res.end(JSON.stringify({ error: "Not Found" }));`,
+          `  }`,
+          `});`,
+          ``,
+          `server.listen(PORT, () => {`,
+          `  console.log(\`🚀 Server running at http://localhost:\${PORT}\`);`,
           `});`,
         ].join('\n'),
         active: true,
       },
     },
     customSetup: {
-      dependencies: {
-        express: '^4.18.2',
-        cors: '^2.8.5',
-      },
       entry: '/index.js',
     },
   };
-
   const fullstackConfig: TemplateConfig = {
     template: 'react',
     files: {
@@ -249,22 +261,6 @@ function getTemplateConfig(enginnerRole: string): TemplateConfig {
           null,
           2
         ),
-      },
-      '/server.js': {
-        code: [
-          `import express from "express";`,
-          `import cors from "cors";`,
-          ``,
-          `const app = express();`,
-          `const PORT = 3001;`,
-          ``,
-          `app.use(cors());`,
-          `app.use(express.json());`,
-          ``,
-          `app.listen(PORT, () => {`,
-          `  console.log(\`🚀 API Server running on http://localhost:\${PORT}\`);`,
-          `});`,
-        ].join('\n'),
       },
       '/index.js': {
         code: [
@@ -309,7 +305,7 @@ const SandpackIDE: React.FC<SandpackIDEProps> = React.memo(
   ({ assignments, disabled = false, readOnly = false }) => {
     const [mounted, setMounted] = useState(false);
     const { enginnerRole } = useAppSelector(state => state.persist);
-
+    usePreventBackNavigation();
     const [templateConfig, setTemplateConfig] = useState<TemplateConfig>(() =>
       getTemplateConfig(enginnerRole || 'frontend')
     );
@@ -387,7 +383,7 @@ function Toolbar({
   assignments,
   disabled = false,
 }: {
-  assignments: CodingAssignmentsResponse;
+  assignments: CodingAssignmentsResponse | null;
   disabled?: boolean;
 }) {
   const { sandpack } = useSandpack();

@@ -13,7 +13,7 @@ const PaymentSuccess = () => {
     dispatch(updateIsPremium(true));
     router.push('/customer/browse-engineers/dashboard?tab=Shortlisted');
   };
-  return <Success onContinue={handleContinue} />;
+  return <Success onContinue={handleContinue} interviewId="" />;
 };
 
 export default PaymentSuccess;

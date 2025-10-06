@@ -1,6 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { ResumeData } from '@/types/resume.types';
-import { CodingAssignmentsResponse } from '@/services/codingAssignmentsTypes';
+import {
+  CodingAIMLAssignmentResponse,
+  CodingAssignmentsResponse,
+} from '@/services/codingAssignmentsTypes';
 
 interface CapabilityResponse {
   score: number;
@@ -47,6 +50,7 @@ interface persistState {
   capabilityResponse: CapabilityResponse | null;
   evaluationResult: EvaluationResult | null;
   assignmentsData: CodingAssignmentsResponse | null;
+  assignmentsAIMLData: CodingAIMLAssignmentResponse | null;
 }
 
 const initialState: persistState = {
@@ -56,6 +60,7 @@ const initialState: persistState = {
   capabilityResponse: null,
   evaluationResult: null,
   assignmentsData: null,
+  assignmentsAIMLData: null,
 };
 
 // -------------------- Slice --------------------
@@ -84,6 +89,13 @@ const persistSlice = createSlice({
     ) => {
       state.assignmentsData = action.payload;
     },
+    setAIMLAssignmentsData: (
+      state,
+      action: PayloadAction<CodingAIMLAssignmentResponse | null>
+    ) => {
+      state.assignmentsAIMLData = action.payload;
+    },
+
     clearCapabilityResponse: state => {
       state.capabilityResponse = null;
     },
@@ -96,6 +108,7 @@ const persistSlice = createSlice({
       state.capabilityResponse = null;
       state.evaluationResult = null;
       state.assignmentsData = null;
+      state.assignmentsAIMLData = null;
     },
   },
 });
@@ -107,6 +120,7 @@ export const {
   setCapabilityResponse,
   setEvaluationResult,
   setAssignmentsData,
+  setAIMLAssignmentsData,
   clearCapabilityResponse,
   clearAssignmentsData,
   clearAllData,

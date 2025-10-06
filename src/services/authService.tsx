@@ -3,7 +3,10 @@ import Cookies from 'js-cookie';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import { store } from '@/store/store';
 import { setLoggedInUser } from '@/store/slices/userSlice';
-import { setAssignmentsData } from '@/store/slices/persistSlice';
+import {
+  setAIMLAssignmentsData,
+  setAssignmentsData,
+} from '@/store/slices/persistSlice';
 
 // ----------------------
 // Profile Stages Types (imported from your routing utility)
@@ -55,6 +58,8 @@ export interface User {
   companyName?: string;
   companyWebsite?: string;
   phase1Completed?: boolean;
+  currentStatus: string;
+  isPremium?: boolean;
 }
 
 export interface SignupResponse {
@@ -79,6 +84,8 @@ export interface LoginResponse {
     isPublished?: boolean;
     profileStages?: ProfileStages;
     isPremium?: boolean;
+    roleTitle?: string;
+    currentStatus: string;
   };
 }
 
@@ -200,6 +207,7 @@ export function clearAuthCookies() {
 
   store.dispatch(setLoggedInUser(null));
   store.dispatch(setAssignmentsData(null));
+  store.dispatch(setAIMLAssignmentsData(null));
 }
 
 // ----------------------
@@ -246,7 +254,7 @@ export async function loginApi(params: LoginParams): Promise<LoginResponse> {
           response.data.data.isPreliminaryVideoCompleted,
         phase1Completed: response.data.data.phase1Completed,
         isPublished: response.data.data.isPublished,
-        isPremium: response.data.data.isPremium ?? false, // Provide default false value
+        isPremium: response.data.data.user.isPremium ?? false, // Provide default false value
         profileStages: response.data.data.profileStages,
       });
     }

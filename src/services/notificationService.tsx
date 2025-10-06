@@ -1,5 +1,5 @@
 // services/notificationService.ts
-import { getAuthAxiosConfig, getAuthToken } from '@/utils/apiHeader';
+import { getAuthAxiosConfig } from '@/utils/apiHeader';
 import axios, { AxiosError } from 'axios';
 
 // TypeScript interfaces matching your actual data structure
@@ -100,13 +100,6 @@ export const getNotifications = async (
 ): Promise<NotificationResponse> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
     // Build query parameters
     const queryParams = new URLSearchParams();
     if (params.limit) queryParams.append('limit', params.limit.toString());
@@ -134,15 +127,6 @@ export const createNotification = async (
 ): Promise<Notification> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      accept: '*/*',
-    };
-
     const response = await axios.post('/notifications', payload, config);
     return response.data;
   } catch (error: unknown) {
@@ -170,13 +154,6 @@ export const markNotificationAsRead = async (
 ): Promise<void> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
     await axios.put(`/notifications/${notificationId}/read`, {}, config);
   } catch (error: unknown) {
     console.error('Failed to mark notification as read:', error);
@@ -187,13 +164,6 @@ export const markNotificationAsRead = async (
 export const markAllNotificationsAsRead = async (): Promise<void> => {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
-
     await axios.put('/notifications/mark-all-read', {}, config);
   } catch (error: unknown) {
     console.error('Failed to mark all notifications as read:', error);

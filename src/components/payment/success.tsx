@@ -3,13 +3,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { processPaymentSuccess } from '@/services/paymentService';
+import {
+  processPaymentSuccess,
+  updateHiringProcessStatus,
+} from '@/services/paymentService';
 import { showToast } from '@/utils/toast/Toast';
 interface SuccessProps {
   onContinue: () => void;
+  interviewId: string;
 }
 
-const Success: React.FC<SuccessProps> = ({ onContinue }) => {
+const Success: React.FC<SuccessProps> = ({ onContinue, interviewId = '' }) => {
   const hasProcessedPayment = useRef(false);
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
@@ -23,6 +27,9 @@ const Success: React.FC<SuccessProps> = ({ onContinue }) => {
         hasProcessedPayment.current = true; // Mark as processed
 
         await processPaymentSuccess(sessionId);
+        if (interviewId) {
+          updateCandidateHiringStatus();
+        }
         showToast('Payment processed successfully!', 'success');
       } catch (error: unknown) {
         hasProcessedPayment.current = false; // Reset on error
@@ -33,8 +40,21 @@ const Success: React.FC<SuccessProps> = ({ onContinue }) => {
       }
     };
 
+    const updateCandidateHiringStatus = async () => {
+      try {
+        if (!sessionId) return;
+
+        await updateHiringProcessStatus(interviewId);
+      } catch (error: unknown) {
+        const message = (error as Error)?.message || 'An error occurred';
+        console.log('Error', message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     confirmPayment();
-  }, [sessionId]);
+  }, [sessionId, interviewId]);
 
   return (
     <div className="flex items-center justify-center px-6">

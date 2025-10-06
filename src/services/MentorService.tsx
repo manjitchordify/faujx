@@ -54,6 +54,7 @@ export interface Mentor {
   skills: string[];
   experience: string;
   price: number;
+  isAvailable: boolean;
 }
 
 export interface FetchMentorsParams {
@@ -172,50 +173,39 @@ export async function fetchMentorsApi(
 ): Promise<{ mentors: Mentor[]; total: number }> {
   try {
     const { page = 1, limit = 6, search } = params;
+    const config = getAuthAxiosConfig();
 
-    let url = `https://devapi.faujx.com/api/experts/getexperts?page=${page}&limit=${limit}`;
+    let url = `/experts/getexperts?page=${page}&limit=${limit}`;
 
     if (search && search.trim()) {
       url += `&search=${encodeURIComponent(search.trim())}`;
     }
 
-    const response = await fetch(url);
+    const response: AxiosResponse<ExpertResponse> = await axios.get(
+      url,
+      config
+    );
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch experts: ${response.statusText}`);
-    }
-
-    const data: ExpertResponse = await response.json();
-
-    const transformedMentors: Mentor[] = data.data.map((expert: Expert) => ({
-      id: expert.id,
-      name: `${expert.user.firstName} ${expert.user.lastName}`,
-      role: expert.role.trim(),
-      avatar: expert.profilePic || '/default-avatar.png',
-      rating: expert.rating,
-      skills: expert.skills,
-      experience: expert.experience,
-      price: parseFloat(expert.price),
-    }));
+    const transformedMentors: Mentor[] = response.data.data.map(
+      (expert: Expert) => ({
+        id: expert.id,
+        name: `${expert.user.firstName} ${expert.user.lastName}`,
+        role: expert.role.trim(),
+        avatar: expert.profilePic || '/default-avatar.png',
+        rating: expert.rating,
+        skills: expert.skills,
+        experience: expert.experience,
+        price: parseFloat(expert.price),
+        isAvailable: expert.isAvailable,
+      })
+    );
 
     return {
       mentors: transformedMentors,
-      total: data.total,
+      total: response.data.total,
     };
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      throw {
-        status: 0,
-        message: error.message,
-        code: 'FETCH_ERROR',
-      } as ApiError;
-    }
-
-    throw {
-      status: 0,
-      message: 'Failed to fetch mentors',
-      code: 'UNKNOWN_ERROR',
-    } as ApiError;
+    handleApiError(error);
   }
 }
 

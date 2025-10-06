@@ -1,7 +1,19 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Clock, Code, Zap } from 'lucide-react';
+import {
+  Clock,
+  Code,
+  Zap,
+  ChevronDown,
+  ChevronUp,
+  Info,
+  TestTube,
+  Lightbulb,
+  GitBranch,
+  Terminal,
+  FileCode,
+} from 'lucide-react';
 import { generateCodingAssignmentsApi } from '@/services/codingAssignmentsService';
 import {
   CodingAssignmentsResponse,
@@ -38,6 +50,9 @@ const CodingTest: React.FC<CodingTestProps> = () => {
     useState<CodingAssignmentsResponse | null>(storedAssignments || null);
   const [isLoadingAssignments, setIsLoadingAssignments] =
     useState(!storedAssignments);
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({});
 
   const jd_s3_key = get_jd_s3_key_role(enginnerRole ?? '');
 
@@ -49,7 +64,7 @@ const CodingTest: React.FC<CodingTestProps> = () => {
       resume_data: resumeData,
       num_assignments: 1,
       difficulty_mix: 'balanced',
-      languages: ['python', 'javascript', 'java'],
+      languages: ['javascript'],
     };
 
     return requestData;
@@ -104,6 +119,13 @@ const CodingTest: React.FC<CodingTestProps> = () => {
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
   };
 
   // Loading state
@@ -167,7 +189,7 @@ const CodingTest: React.FC<CodingTestProps> = () => {
         {/* Assignments Section */}
         {localAssignmentsData && (
           <div className="mb-8">
-            <div className="md:grid-cols-1 lg:grid-cols-2">
+            <div className="space-y-6">
               {localAssignmentsData.assignments.map(
                 (assignment: Assignment) => (
                   <div
@@ -216,6 +238,376 @@ const CodingTest: React.FC<CodingTestProps> = () => {
                           ))}
                         </div>
                       </div>
+
+                      {/* Time and Complexity Info */}
+                      <div className="flex flex-wrap gap-4 pt-2">
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <Clock className="w-3 h-3" />
+                          <span className="text-xs">
+                            Est. {assignment.estimated_time_minutes} mins
+                          </span>
+                        </div>
+                        {assignment.time_complexity && (
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Zap className="w-3 h-3" />
+                            <span className="text-xs">
+                              Time: {assignment.time_complexity}
+                            </span>
+                          </div>
+                        )}
+                        {assignment.space_complexity && (
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Code className="w-3 h-3" />
+                            <span className="text-xs">
+                              Space: {assignment.space_complexity}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Additional Details - Collapsible Sections */}
+                    <div className="mt-6 space-y-3 border-t pt-4">
+                      {/* Constraints */}
+                      {assignment.constraints &&
+                        assignment.constraints.length > 0 && (
+                          <div className="border rounded-xl overflow-hidden">
+                            <button
+                              onClick={() =>
+                                toggleSection(
+                                  `constraints-${assignment.assignment_id}`
+                                )
+                              }
+                              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Info className="w-4 h-4 text-[#1F514C]" />
+                                <span className="font-medium text-gray-900">
+                                  Constraints
+                                </span>
+                              </div>
+                              {expandedSections[
+                                `constraints-${assignment.assignment_id}`
+                              ] ? (
+                                <ChevronUp className="w-4 h-4 text-gray-500" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                              )}
+                            </button>
+                            {expandedSections[
+                              `constraints-${assignment.assignment_id}`
+                            ] && (
+                              <div className="px-4 pb-4 bg-gray-50">
+                                <ul className="space-y-1">
+                                  {assignment.constraints.map(
+                                    (constraint, index) => (
+                                      <li
+                                        key={index}
+                                        className="text-sm text-gray-700 flex items-start"
+                                      >
+                                        <span className="text-[#1F514C] mr-2">
+                                          •
+                                        </span>
+                                        <span>{constraint}</span>
+                                      </li>
+                                    )
+                                  )}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                      {/* Examples */}
+                      {assignment.examples &&
+                        assignment.examples.length > 0 && (
+                          <div className="border rounded-xl overflow-hidden">
+                            <button
+                              onClick={() =>
+                                toggleSection(
+                                  `examples-${assignment.assignment_id}`
+                                )
+                              }
+                              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center gap-2">
+                                <FileCode className="w-4 h-4 text-[#1F514C]" />
+                                <span className="font-medium text-gray-900">
+                                  Examples
+                                </span>
+                              </div>
+                              {expandedSections[
+                                `examples-${assignment.assignment_id}`
+                              ] ? (
+                                <ChevronUp className="w-4 h-4 text-gray-500" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                              )}
+                            </button>
+                            {expandedSections[
+                              `examples-${assignment.assignment_id}`
+                            ] && (
+                              <div className="px-4 pb-4 bg-gray-50 space-y-3">
+                                {assignment.examples.map((example, index) => (
+                                  <div
+                                    key={index}
+                                    className="bg-white rounded-lg p-3 text-sm"
+                                  >
+                                    <div className="mb-2">
+                                      <span className="font-medium text-gray-700">
+                                        Input:
+                                      </span>
+                                      <pre className="mt-1 p-2 bg-gray-100 rounded overflow-x-auto text-xs">
+                                        {example.input}
+                                      </pre>
+                                    </div>
+                                    <div className="mb-2">
+                                      <span className="font-medium text-gray-700">
+                                        Output:
+                                      </span>
+                                      <pre className="mt-1 p-2 bg-gray-100 rounded overflow-x-auto text-xs">
+                                        {example.output}
+                                      </pre>
+                                    </div>
+                                    {example.explanation && (
+                                      <div>
+                                        <span className="font-medium text-gray-700">
+                                          Explanation:
+                                        </span>
+                                        <p className="mt-1 text-gray-600">
+                                          {example.explanation}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                      {/* Test Cases */}
+                      {assignment.test_cases &&
+                        assignment.test_cases.length > 0 && (
+                          <div className="border rounded-xl overflow-hidden">
+                            <button
+                              onClick={() =>
+                                toggleSection(
+                                  `testcases-${assignment.assignment_id}`
+                                )
+                              }
+                              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center gap-2">
+                                <TestTube className="w-4 h-4 text-[#1F514C]" />
+                                <span className="font-medium text-gray-900">
+                                  Test Cases
+                                </span>
+                                <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">
+                                  {
+                                    assignment.test_cases.filter(
+                                      tc => !tc.is_hidden
+                                    ).length
+                                  }{' '}
+                                  visible
+                                </span>
+                              </div>
+                              {expandedSections[
+                                `testcases-${assignment.assignment_id}`
+                              ] ? (
+                                <ChevronUp className="w-4 h-4 text-gray-500" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                              )}
+                            </button>
+                            {expandedSections[
+                              `testcases-${assignment.assignment_id}`
+                            ] && (
+                              <div className="px-4 pb-4 bg-gray-50 space-y-3">
+                                {assignment.test_cases
+                                  .filter(tc => !tc.is_hidden)
+                                  .map((testCase, index) => (
+                                    <div
+                                      key={index}
+                                      className="bg-white rounded-lg p-3 text-sm"
+                                    >
+                                      <div className="flex items-center justify-between mb-2">
+                                        <span className="font-medium text-gray-700">
+                                          Test Case {index + 1}
+                                        </span>
+                                      </div>
+                                      <div className="mb-2">
+                                        <span className="text-xs font-medium text-gray-600">
+                                          Description:
+                                        </span>
+                                        <p className="text-gray-700">
+                                          {testCase.description}
+                                        </p>
+                                      </div>
+                                      <div className="grid gap-2">
+                                        <div>
+                                          <span className="text-xs font-medium text-gray-600">
+                                            Input:
+                                          </span>
+                                          <pre className="mt-1 p-2 bg-gray-100 rounded overflow-x-auto text-xs">
+                                            {testCase.input}
+                                          </pre>
+                                        </div>
+                                        <div>
+                                          <span className="text-xs font-medium text-gray-600">
+                                            Expected Output:
+                                          </span>
+                                          <pre className="mt-1 p-2 bg-gray-100 rounded overflow-x-auto text-xs">
+                                            {testCase.expected_output}
+                                          </pre>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                {assignment.test_cases.filter(
+                                  tc => tc.is_hidden
+                                ).length > 0 && (
+                                  <p className="text-xs text-gray-500 italic text-center">
+                                    +{' '}
+                                    {
+                                      assignment.test_cases.filter(
+                                        tc => tc.is_hidden
+                                      ).length
+                                    }{' '}
+                                    hidden test case(s)
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                      {/* Starter Code */}
+                      {assignment.starter_code?.javascript && (
+                        <div className="border rounded-xl overflow-hidden">
+                          <button
+                            onClick={() =>
+                              toggleSection(
+                                `starter-${assignment.assignment_id}`
+                              )
+                            }
+                            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Terminal className="w-4 h-4 text-[#1F514C]" />
+                              <span className="font-medium text-gray-900">
+                                Starter Code
+                              </span>
+                              <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">
+                                JavaScript
+                              </span>
+                            </div>
+                            {expandedSections[
+                              `starter-${assignment.assignment_id}`
+                            ] ? (
+                              <ChevronUp className="w-4 h-4 text-gray-500" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-gray-500" />
+                            )}
+                          </button>
+                          {expandedSections[
+                            `starter-${assignment.assignment_id}`
+                          ] && (
+                            <div className="px-4 pb-4 bg-gray-50">
+                              {/* Code Display */}
+                              <pre className="p-4 bg-gray-900 text-gray-100 rounded-lg overflow-x-auto text-xs">
+                                <code>
+                                  {assignment.starter_code.javascript}
+                                </code>
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Solution Approach */}
+                      {assignment.solution_approach && (
+                        <div className="border rounded-xl overflow-hidden">
+                          <button
+                            onClick={() =>
+                              toggleSection(
+                                `solution-${assignment.assignment_id}`
+                              )
+                            }
+                            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <GitBranch className="w-4 h-4 text-[#1F514C]" />
+                              <span className="font-medium text-gray-900">
+                                Solution Approach
+                              </span>
+                            </div>
+                            {expandedSections[
+                              `solution-${assignment.assignment_id}`
+                            ] ? (
+                              <ChevronUp className="w-4 h-4 text-gray-500" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-gray-500" />
+                            )}
+                          </button>
+                          {expandedSections[
+                            `solution-${assignment.assignment_id}`
+                          ] && (
+                            <div className="px-4 pb-4 bg-gray-50">
+                              <p className="text-sm text-gray-700 leading-relaxed">
+                                {assignment.solution_approach}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Hints */}
+                      {assignment.hints && assignment.hints.length > 0 && (
+                        <div className="border rounded-xl overflow-hidden">
+                          <button
+                            onClick={() =>
+                              toggleSection(`hints-${assignment.assignment_id}`)
+                            }
+                            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Lightbulb className="w-4 h-4 text-[#1F514C]" />
+                              <span className="font-medium text-gray-900">
+                                Hints
+                              </span>
+                              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">
+                                {assignment.hints.length} hints
+                              </span>
+                            </div>
+                            {expandedSections[
+                              `hints-${assignment.assignment_id}`
+                            ] ? (
+                              <ChevronUp className="w-4 h-4 text-gray-500" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-gray-500" />
+                            )}
+                          </button>
+                          {expandedSections[
+                            `hints-${assignment.assignment_id}`
+                          ] && (
+                            <div className="px-4 pb-4 bg-gray-50">
+                              <div className="space-y-2">
+                                {assignment.hints.map((hint, index) => (
+                                  <div key={index} className="flex items-start">
+                                    <span className="text-[#1F514C] font-medium text-sm mr-2">
+                                      Hint {index + 1}:
+                                    </span>
+                                    <span className="text-sm text-gray-700">
+                                      {hint}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
@@ -241,7 +633,7 @@ const CodingTest: React.FC<CodingTestProps> = () => {
           </div>
         )}
 
-        {/* Add Link Button */}
+        {/* Continue Button */}
         <div className="flex justify-center px-6">
           <button
             onClick={handleContinue}

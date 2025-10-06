@@ -2,7 +2,7 @@
 import CustomSpinner from '@/components/ui/CustomSpinner';
 import { useAppSelector } from '@/store/store';
 import { Candidate } from '@/types/customer';
-import { Heart, Star, Eye, ChevronRight } from 'lucide-react';
+import { Heart, Eye, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { FC, ReactNode, useState } from 'react';
 import CandidateDetailsModal from './CandidateDetailsModal';
@@ -62,7 +62,7 @@ const CandidateCard: FC<CandidateCardProps> = ({
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Left Side - Profile Image Only */}
           <div className="w-full sm:w-1/2 flex items-center justify-center">
-            <div className="w-24 h-28 sm:w-full sm:h-32 md:h-36 lg:h-full rounded-lg bg-gradient-to-br from-orange-200 via-yellow-200 to-pink-200 overflow-hidden relative">
+            <div className="w-50 h-52 sm:w-full sm:h-83 md:h-83 lg:h-83 rounded-lg bg-gradient-to-br from-orange-200 via-yellow-200 to-pink-200 overflow-hidden relative">
               {/* Simulating the blurred profile image */}
               {candidate.user.profilePic ? (
                 <Image
@@ -101,9 +101,9 @@ const CandidateCard: FC<CandidateCardProps> = ({
               <h3 className="text-base sm:text-lg font-semibold text-green-600">
                 {candidate.roleTitle}
               </h3>
-              <div className="bg-gray-500 rounded-full p-1.5">
+              {/* <div className="bg-gray-500 rounded-full p-1.5">
                 <Star className="w-3 h-3 text-white fill-current" />
-              </div>
+              </div> */}
             </div>
 
             {/* Skills Section */}
@@ -135,7 +135,7 @@ const CandidateCard: FC<CandidateCardProps> = ({
               </h4>
               <ul className="text-xs sm:text-sm text-gray-600 space-y-1">
                 {candidate.capabilities
-                  ?.slice(0, 2)
+                  ?.slice(0, 1)
                   .map((capability, index) => (
                     <li key={index} className="flex items-start">
                       <span className="text-green-500 mr-2 mt-0.5 flex-shrink-0">
@@ -163,11 +163,11 @@ const CandidateCard: FC<CandidateCardProps> = ({
               <div className="flex items-center gap-1">
                 <span className="text-lg font-bold text-green-600">$</span>
                 <span className="text-sm font-semibold text-gray-900">
-                  {candidate.expectedSalary.toString().replace('$', '')}
+                  {candidate.preferredMonthlySalary}
                 </span>
               </div>
               <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
-                {candidate.location}
+                {candidate.preferredLocations?.join(', ')}
               </span>
             </div>
 

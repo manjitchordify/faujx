@@ -41,6 +41,7 @@ interface BookingData {
   status: string;
   notes: string;
   meeting_link?: string;
+  meeting_id?: string; // Add this missing property
   created_at: string;
   updated_at: string;
   // Default display properties
@@ -260,6 +261,14 @@ const UnifiedCard: React.FC<UnifiedCardProps> = ({
             className="cursor-pointer bg-[#54A044] hover:bg-[#4a8c3d] text-white font-bold py-2 px-4 sm:px-6 rounded-lg transition-colors duration-200 text-sm sm:text-base w-full sm:w-auto"
           >
             Join session
+          </button>
+        ) : data.status.toLowerCase() === 'cancelled' ? (
+          <button
+            onClick={onAction}
+            disabled={true} // Add this to actually disable the button
+            className="bg-gray-400 text-gray-200 font-bold py-2 px-4 sm:px-6 rounded-lg text-sm sm:text-base w-full sm:w-auto cursor-not-allowed opacity-60"
+          >
+            Cancelled
           </button>
         ) : (
           <div className="text-center w-full">

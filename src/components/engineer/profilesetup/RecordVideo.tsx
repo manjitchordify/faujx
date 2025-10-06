@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Play, Pause, Square } from 'lucide-react';
 import { getVideoSummaryApi } from '@/services/profileSetupService';
+import { toast } from 'react-toastify';
 
 interface RecordVideoProps {
   onBack: () => void;
@@ -40,8 +41,11 @@ const RecordVideo: React.FC<RecordVideoProps> = ({
 
     fetchScript();
   }, []);
+  const didInitialize = useRef(false);
 
   React.useEffect(() => {
+    if (didInitialize.current) return; // Prevent double execution
+    didInitialize.current = true;
     const initializeCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -54,6 +58,26 @@ const RecordVideo: React.FC<RecordVideoProps> = ({
         }
       } catch (error) {
         console.error('Error accessing camera:', error);
+        if (error instanceof DOMException) {
+          if (
+            error.name === 'NotAllowedError' ||
+            error.name === 'PermissionDeniedError'
+          ) {
+            toast.error(
+              'Camera access was denied. Please allow camera permissions.'
+            );
+            // Or: toast.error('Camera access was denied. Please allow camera permissions.');
+          } else if (error.name === 'NotFoundError') {
+            toast.error('No camera found on this device.');
+          } else {
+            toast.error('Unable to access camera. Please check your settings.');
+          }
+        } else {
+          toast.error('Unexpected error accessing camera.');
+        }
+
+        // Go back if needed
+        onBack();
       }
     };
 
@@ -68,7 +92,7 @@ const RecordVideo: React.FC<RecordVideoProps> = ({
         clearInterval(timerRef.current);
       }
     };
-  }, []);
+  }, [onBack]);
 
   const startRecording = () => {
     if (streamRef.current) {

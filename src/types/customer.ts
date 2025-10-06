@@ -2,9 +2,12 @@ export type CustomerTabs =
   | 'Candidates'
   | 'Favourites'
   | 'Shortlisted'
-  | 'My Interviews';
+  | 'Scheduled Interviews'
+  | 'Interviewed'
+  | 'Hired';
 
 export type InterviewCandidate = {
+  candidate_id: string;
   id: string;
   role: string;
   profileImage: string;
@@ -40,7 +43,20 @@ export interface CandidateAnalysis {
   };
 }
 
+export interface ParsedSkills {
+  soft?: string[];
+  tools?: string[];
+  languages?: string[];
+  technical?: string[];
+  frameworks?: string[];
+  certifications?: string[];
+  specializations?: string[];
+  area_of_expertise?: string[];
+  project_management?: string[];
+}
+
 export interface Candidate {
+  preferredMonthlySalary: string;
   id: string;
   user: CandidateUser;
   capabilities: CandidateAnalysis[];
@@ -51,6 +67,7 @@ export interface Candidate {
   expectedSalary: number;
   experienceYears: number;
   skills: string[];
+  parsedSkills?: ParsedSkills; // Add the parsedSkills property
   currencyType: string | null;
   workMode: string[];
   preferredLocations: string[];

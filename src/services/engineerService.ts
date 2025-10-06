@@ -1,11 +1,7 @@
 import { CodingTestAISubmissionResponse } from '@/types/codingTestTypes';
 import { Interview } from '@/types/interview';
 import { MCQData } from '@/types/mcq';
-import {
-  getAuthAxiosConfig,
-  getAuthToken,
-  getUserFromCookie,
-} from '@/utils/apiHeader';
+import { getAuthAxiosConfig, getUserFromCookie } from '@/utils/apiHeader';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 
 // ----------------------
@@ -18,7 +14,7 @@ export type StageKey =
   | 'codingTest'
   | 'interview';
 
-export type StageStatus = 'passed' | 'failed';
+export type StageStatus = 'passed' | 'failed' | 'scheduled';
 
 export interface ProfileStages {
   lastStage: StageKey;
@@ -137,14 +133,9 @@ export async function updateEngineerProfileApi(
 ): Promise<UpdateEngineerProfileResponse> {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
     const userData = getUserFromCookie();
 
     // Ensure the hardcoded token is included
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     const response: AxiosResponse<UpdateEngineerProfileResponse> =
       await axios.put(`/candidates/user/${userData?.id}`, params, config);
@@ -169,17 +160,11 @@ export async function updateEngineerProfileApi(
 export async function getEngineerProfileApi(): Promise<EngineerProfile | null> {
   try {
     const config = getAuthAxiosConfig();
-    const token = getAuthToken();
     const userData = getUserFromCookie();
 
     if (!userData?.id) {
       return null;
     }
-
-    config.headers = {
-      ...config.headers,
-      Authorization: `Bearer ${token}`,
-    };
 
     const response: AxiosResponse<{ data: EngineerProfile }> = await axios.get(
       `/candidates/user/${userData.id}`,
@@ -275,7 +260,7 @@ export function isCurrentStage(
   if (profileStages.lastStatus === 'passed') {
     return checkStageIndex === currentStageIndex + 1;
   } else {
-    // If last stage failed, user should retry that stage
+    // If last stage failed or scheduled, user should retry or proceed within that stage
     return checkStageIndex === currentStageIndex;
   }
 }
@@ -287,6 +272,8 @@ export function getStageDisplayStatus(status: StageStatus): string {
       return 'Passed';
     case 'failed':
       return 'Failed';
+    case 'scheduled':
+      return 'Scheduled';
     default:
       return 'Unknown';
   }
@@ -373,16 +360,17 @@ export async function completeCodingTestStage(
   }
 }
 
-// Function to handle Interview completion
+// Function to handle Interview completion (including scheduling)
 export async function completeInterviewStage(
-  interviewResults: Interview, // Replace with your interview result type
-  passed: boolean
+  interviewResults: Interview | null, // Replace with your interview result type; null for scheduling
+  status: StageStatus
 ): Promise<void> {
   try {
-    // Process interview results first
-    // const result = await submitInterviewResults(interviewResults);
+    if (status !== 'scheduled') {
+      // Process interview results first (for passed/failed)
+      // const result = await submitInterviewResults(interviewResults);
+    }
 
-    const status: StageStatus = passed ? 'passed' : 'failed';
     await updateProfileStage('interview', status);
   } catch (error) {
     await updateProfileStage('interview', 'failed');
